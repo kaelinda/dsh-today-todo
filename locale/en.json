@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Todo Tracker",
+    "description": "Tracks todo items in a left-sidebar panel, links each item to the DSH session that owns the work, and jumps back to that session in one click. The agent can read and update the same list with the todo_track tool."
+  }
+}
