@@ -1,240 +1,177 @@
-# dsh-todos
+<div align="center">
+  <img src="icon.svg" width="72" height="72" alt="DSH Todos 图标">
+  <h1>DSH Todos</h1>
+  <p><strong>理清待办，把今天交给专注。</strong></p>
+  <p>DeepSeek Harness 的待办与专注插件。<br>从清单、四象限，到 Three.js 心流轨道与番茄钟，让计划自然进入行动。</p>
+  <p>
+    <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-4763e4" alt="MIT License"></a>
+    <img src="https://img.shields.io/badge/Node.js-%E2%89%A520-21836c" alt="Node.js 20 或更高">
+    <img src="https://img.shields.io/badge/Three.js-%E6%9C%AC%E5%9C%B0%E6%89%93%E5%8C%85-315d75" alt="Three.js 本地打包">
+  </p>
+  <p>
+    <a href="#今天的动画">今天的动画</a> ·
+    <a href="#番茄钟">番茄钟</a> ·
+    <a href="#安装">安装</a> ·
+    <a href="#功能一览">功能</a> ·
+    <a href="#开发与验收">开发与验收</a>
+  </p>
+</div>
 
-DeepSeek Harness 的待办与专注插件：在左侧栏管理任务，用四象限理清优先级，再进入 Three.js「心流轨道」，一次专注一件事。
+![今天的专注空间：心流轨道、番茄钟和今日清单](docs/screenshots/today-orbit.png)
 
-![License](https://img.shields.io/github/license/kaelinda/dsh-today-todo)
-![Node](https://img.shields.io/badge/node-%3E%3D20-brightgreen)
+| 整理工作 | 进入专注 | 回到现场 |
+| --- | --- | --- |
+| 清单、优先级、标签与四象限，把事情安排清楚。 | 今日清单与 25 / 5 番茄钟，一次处理一件事。 | 任务关联 DSH 会话，与智能体共用同一份清单。 |
 
-[界面预览](#界面预览) · [功能](#功能) · [安装](#安装) · [开发](#开发)
+> 以下截图和动图均来自本地浏览器中的真实插件界面，使用演示数据。番茄钟阶段切换演示缩短了等待时间，产品时长仍为 **25 分钟专注 / 5 分钟休息**。
 
-## 界面预览
+## 今天的动画
 
-以下为本地浏览器预览截图，使用演示数据。
+### 心流轨道
 
-### 今天 · 心流轨道
+进入今天，粒子环与三条星轨围绕计时器缓慢流动。专注时粒子收拢为青绿色，休息时转为暖金色；暂停会定格场景，勾选完成任务会扩散一圈微光。
 
-粒子环与三维星轨围绕番茄钟缓慢流动，任务清单保持清晰可操作。右上角可随时切换动态 / 静态氛围。
+<p align="center">
+  <img src="docs/screenshots/today-orbit-motion.gif" width="640" alt="今天的动态轨道：星点与卫星沿三维轨道缓慢运动，中央计时器保持清晰">
+</p>
 
-![今天模式：蓝色粒子轨道环绕计时器，下方展示今日任务清单](docs/screenshots/today-orbit.png)
+### 从输入到行动
 
-### 输入框 · 聚焦流光
+| 聚焦流光 | 新增微光 |
+| --- | --- |
+| ![输入框聚焦时光晕展开，两道流光沿圆角边缘移动](docs/screenshots/input-focus-motion.gif) | ![新增成功后输入框发出光脉冲，新任务滑入并闪过微光与星点](docs/screenshots/today-add-motion.gif) |
+| 聚焦时展开光晕，双流光沿边框游走；失焦后淡出。 | 新增成功后，新卡片滑入、扫过微光，再渐渐回到普通状态。 |
 
-聚焦时光晕轻轻展开，两道微光沿圆角边框流动，离开输入框后淡出。列表跟随主题色，今天使用青绿色；重命名、标签和搜索框使用短暂的亮起反馈。关闭动态或开启系统「减少动态」时保留静态聚焦高亮。
+连续添加会分别反馈，同名任务也能正确识别。请求失败会保留草稿，等待期间输入的下一条内容也不会被清空。
 
-![今天输入框聚焦动效：光晕展开、双流光沿边缘移动、失焦后收起](docs/screenshots/input-focus-motion.gif)
+右上角的 **动态 / 静态氛围** 开关会记住偏好；系统开启「减少动态」时，保留静态聚焦和新增高亮。动画装饰不拦截点击，任务与计时器始终由可访问的 HTML 控件承载。无 WebGL 时显示静态轨道。
 
-### 新增待办 · 微光入场
+## 番茄钟
 
-今天页添加成功后，输入框发出一道光脉冲，新任务滑入清单，掠过微光与星点，再渐渐恢复普通样式。连续新增会分别反馈；失败时保留输入，等待期间写下的下一条也不会被清空。关闭动态时保留短暂高亮和读屏提示。
+**25 分钟专注 → 5 分钟休息 → 待开始。** 点击「开始专注」，计时器会记录当前排在首位的今日未完成任务；一轮休息结束后，由你决定何时开始下一轮。
 
-![今天页新增待办：输入框确认光脉冲、新卡片微光入场与高亮收起](docs/screenshots/today-add-motion.gif)
+| 开始、暂停、继续与结束 | 专注结束，进入休息 |
+| --- | --- |
+| ![番茄钟实际操作：开始专注，暂停定格，再继续和结束](docs/screenshots/pomodoro-controls.gif) | ![专注倒计时结束后，计时器切换为五分钟休息，轨道渐变为暖金色](docs/screenshots/pomodoro-break-transition.gif) |
+| 暂停同时定格倒计时与轨道，继续时接着剩余时间运行。 | 倒计时归零后自动切换阶段，颜色与状态文字同步变化。 |
+
+| 状态 | 时钟行为 | 视觉反馈 |
+| --- | --- | --- |
+| 准备 | 显示 `25:00`，等待开始 | 蓝色星轨缓慢流动 |
+| 专注 | 按截止时间递减 | 青绿色粒子收拢，进度环随时间变化 |
+| 暂停 | 保存剩余时间 | 场景静止，显示「已暂停」 |
+| 休息 | 自动开始 5 分钟倒计时 | 轨道与进度环转为暖金色 |
+| 结束 | 清除本轮计时，返回准备状态 | 显示开始按钮；全部任务完成时保留完成氛围 |
+
+计时依据绝对截止时间，动画停止不会让时钟变慢。有效的运行或暂停状态可在刷新、重新打开面板后恢复；截止时间已过去超过 5 分钟的运行记录会被视为过期。计时器与动态偏好保存在浏览器中，清理浏览器存储会重置它们。
 
 <details>
-<summary>更多截图：专注与休息、浅深色清单、四象限、移动端</summary>
+<summary><strong>更多界面：静态专注 / 休息、浅深主题、四象限与窄屏</strong></summary>
 
-### 专注与休息
+### 专注与休息 · 静态截图
 
-专注时粒子逐渐收拢，休息时转为暖金色；暂停会定格场景，完成任务会扩散一圈微光。
-
-| 25 分钟专注 | 5 分钟休息 |
+| 专注 | 休息 |
 | --- | --- |
-| ![专注状态：青绿色粒子环、倒计时与暂停和结束按钮](docs/screenshots/today-focus.png) | ![休息状态：暖金色粒子环和五分钟休息倒计时](docs/screenshots/today-break.png) |
+| ![专注状态的青绿色轨道与计时器](docs/screenshots/today-focus.png) | ![休息状态的暖金色轨道与计时器](docs/screenshots/today-break.png) |
 
-### 浅色与深色清单
+### 清单 · 跟随宿主主题
 
-任务卡片直接展示优先级、今天标记、标签和关联会话；完成项单独归组。
-
-| 浅色主题 | 深色主题 |
+| 浅色 | 深色 |
 | --- | --- |
-| ![浅色待办清单：新增入口、筛选器、任务卡片与已完成分组](docs/screenshots/list-light.png) | ![深色待办清单：相同的任务结构与适配深色背景的控件](docs/screenshots/list-dark.png) |
+| ![浅色清单：任务、标签与关联会话](docs/screenshots/list-light.png) | ![深色清单：主题适配后的同一套控件](docs/screenshots/list-dark.png) |
 
-### 四象限
+### 四象限 · 区分重要与紧急
 
-按重要性与紧急性分组，颜色、Q1–Q4 标识和操作提示共同区分象限；未分类任务保留在下方。
+![四象限视图：四个象限及未分类任务](docs/screenshots/matrix.png)
 
-![四象限视图：重要且紧急、重要不紧急、紧急不重要、不急不重要及未分类任务](docs/screenshots/matrix.png)
+### 窄屏 · 保留完整操作
 
-### 窄屏与减少动态
+375px 英文界面，系统「减少动态」生效后的静态场景。
 
-375px 窄屏下，计时器、任务和操作仍完整可用。下图展示英文界面及系统「减少动态」生效后的静态场景。
-
-<img src="docs/screenshots/today-mobile.png" alt="375px 英文今天模式：静态粒子轨道、计时器、今日清单与减少动态状态" width="320">
+<img src="docs/screenshots/today-mobile.png" width="320" alt="375px 英文今天页，计时器和任务保持可操作">
 
 </details>
 
----
-
-## 功能
-
-- **左侧栏入口** — 一个清单图标，点开后在主栏打开待办面板。
-- **待办管理** — 新增、重命名、完成、删除、筛选、一键清理已完成。清单由 Host 持久化在
-  `$DSH_HOME/dsh-todos/todos.json`，网页刷新、应用重启、浏览器数据清空都不会丢。
-  写入先 fsync 再原子替换，修改前会在文件锁内重读，两个 DSH 进程并发写也不会互相覆盖。
-- **单条详情**（点行尾的 chevron 展开）：
-  - **标签** — 自由分类（如 `#panel`、`#docs`），详情里用 chip 编辑，工具栏筛选器里按标签过滤。
-  - **优先级** — `P0`–`P3`，或不分级。行内以色点与等级文字展示，详情与筛选器里显示完整控件和各级计数；优先级驱动排序（最急在前）。
-  - **四象限** — 标记为 Q1 重要且紧急、Q2 重要、Q3 紧急、Q4 都不重要。「四象限 / Matrix」视图把清单分成这四个格子，外加一个「未分类」桶。
-  - **今天** — 把某条放进今天的专注清单（行内太阳按钮，或详情里的「今天」控件）。「今天」范围只显示这些条目，在该范围下新增会自动归入今天。「今天」的日期由 Host 统一下发，浏览器时区不同也不会错位；`todayDate` 记录的是规划日期，专注清单每天自动重置而记录保留。
-- **今天的心流轨道** — 独立的夜色专注空间：Three.js 绘制有纵深的粒子环、三条星轨和微光，日期、计时器与任务操作保留为可访问的 HTML。专注时粒子逐渐收拢，休息时转为暖金色，暂停时定格，完成任务时扩散一圈微光。今日清单保留详情和完成项折叠，`← 退出` 或 `Esc` 返回列表。
-- **番茄钟** — 25 分钟专注 → 5 分钟休息，支持暂停、继续、结束；`localStorage` 在面板重挂载与页面刷新后恢复计时，并捕获当天第一条未完成任务作为专注标签。计时基于截止时间计算，不依赖动画帧率。
-- **动效与降级** — 右上角可以切换动态 / 静态氛围并记住偏好；实时遵循系统 `prefers-reduced-motion`。场景最多约 30 FPS、DPR 上限 1.5；手机使用更少粒子，标签页隐藏、场景滚出视口或暂停专注时停止持续渲染。无 WebGL 时显示静态轨道；退出今天后释放动画、监听器和 GPU 资源。
-- **会话关联与跳转** — 把任意待办关联到负责它的 DSH 会话。行内显示会话标题，点击即跳转（`ctx.uiWorkspace.openSession`）；已归档或已删除的会话会被提示，而不是导航到空处。
-- **与智能体同源** — `todo_track` 工具（`list` / `add` / `update` / `remove` / `clearDone`，支持 `tags`、`priority`、`quadrant`、`today`）调用同一个 Host 存储，智能体和面板读写的是一份清单。`list` 支持分页与按范围、优先级、象限、标签、标题过滤，长清单也不会灌满模型的上下文。
-
----
-
 ## 安装
 
-这个 bundle 安装进一个 DeepSeek Harness **profile** —— 桌面端用 `desktop`，浏览器构建通常用 `web`。安装只影响该 profile；之后其中的每个会话都能看到面板。
+需要 DeepSeek Harness；Host 的 Node.js 版本要求为 20 或更高。插件安装到指定 **profile**：桌面端通常使用 `desktop`，浏览器构建通常使用 `web`。
 
-### 从源码安装（已验证）
+### 推荐：从本地源码安装
 
 ```bash
 git clone git@github.com:kaelinda/dsh-today-todo.git
 ```
 
-然后用下面任一方式安装：
+在 DSH 中打开 **插件 → 添加插件 → 从本地目录安装**，选择刚克隆的目录；也可以使用 CLI：
 
 ```bash
-# 1. 桌面端：插件 → 添加插件 → 从本地目录安装
-# 2. CLI（装完重启 Host）
 dsh plugin --profile desktop add /absolute/path/to/dsh-today-todo
-# 3. 在会话里：plugin_manager → install_bundle，传入本地绝对路径
 ```
 
-插件是纯 JavaScript；Three.js 已本地打包进随仓库提交的 `client.js`，进入今天时才初始化。安装时无需构建，也不需要访问 CDN 或额外下载浏览器资源。
+CLI 安装后重启 Host。也可在会话中调用 `plugin_manager` 的 `install_bundle`，传入本地绝对路径。
 
-### 从 git 安装
+仓库提交了构建后的 `client.js`，Three.js 已包含在其中。**安装无需运行构建，也不依赖 CDN 下载界面资源。**
 
-pnpm 支持 git spec，所以下面这条 CLI 命令通常可行：
+<details>
+<summary>可选：使用 Git 地址安装</summary>
+
+pnpm 支持 Git spec，可尝试：
 
 ```bash
 dsh plugin --profile desktop add git+ssh://git@github.com/kaelinda/dsh-today-todo.git
 ```
 
-若桌面端拒绝 git spec，就克隆仓库后按「从源码安装」处理。本包**不发布到 npm**（`private: true`），这个仓库就是分发物。
+若当前桌面端不接受 Git spec，请使用上面的本地安装方式。本包设置了 `private: true`，不发布到 npm。
 
----
+</details>
 
-## 面板布局
+## 功能一览
 
-列表与四象限跟随 DSH 浅色 / 深色主题；今天使用独立、局部作用域的夜色调色板。无额外字体或 UI 框架依赖。
-
-- **标题与今日专注**：明确的标题层级、列表 / 四象限切换，以及显示今日未完成数量的专注入口。
-- **新增待办**：带可见标签的输入框和「添加」按钮，支持回车保存；输入法选词回车不会提前提交。
-- **范围与筛选**：今天 / 全部 / 待办 / 已完成页签带计数；优先级、标签筛选收进可展开面板，启用后保留角标。
-- **任务卡片**：标题下展示优先级、今天标记、标签和关联会话；点击标签直接筛选，点击会话直接跳转。长标题自动换行。
-- **详情编辑**：点击标题或行尾箭头展开；桌面悬停 / 键盘聚焦提供快捷操作，窄窗口和触屏可在详情中重命名、删除。
-- **已完成分组**：完成项单独归组并划线，底部保留「清除已完成」。
-- **四象限**：不同颜色的顶边、Q1–Q4 标识与操作提示共同区分象限；窄面板自动改为单列。
-- **今天与番茄钟**：三维心流轨道承载专注氛围，清晰的 HTML 计时器、进度条与今日清单承载操作；可随时关闭动态。
-- **可访问性**：可见键盘焦点、明确的按钮名称、扩大触屏点击区域，并遵循 `prefers-reduced-motion`；响应式布局根据插件面板宽度调整。
-
----
-
-## 目录结构
-
-| 文件 | 职责 |
+| 能力 | 使用方式 |
 | --- | --- |
-| `index.js` | Host 半边：挂载存储、面板 API、智能体工具。 |
-| `lib/store.js` | 持久化 JSON 存储：归一化、revision 乐观锁、文件锁、fsync、坏文件备份，以及唯一的变更入口。 |
-| `lib/routes.js` | 仅本机的 `GET /plugins/dsh-todos/state` 与 `POST /plugins/dsh-todos/mutate`。 |
-| `lib/tool.js` | 分页版 `todo_track` 智能体工具。 |
-| `src/client/` | 客户端源码：入口、常量、词典、番茄钟、共享辅助、图标、CSS、面板、注册。 |
-| `src/client/focus-canvas.js` | React 场景挂载、状态同步与无 WebGL 降级。 |
-| `src/client/focus-scene.js` | Three.js 粒子、轨道、状态动效与 GPU 资源生命周期。 |
-| `src/client/focus-motion.js` | 可取消的 30 FPS 动画调度。 |
-| `scripts/build-client.mjs` | 展开 include，并用 esbuild 嵌入本地 Three.js 场景。 |
-| `client.js` | 生成的浏览器产物：`sidebar.panellist` 入口、列表面板、禅模式。**不要直接编辑**。 |
-| `locale/*.json` | 插件管理器的标题 / 描述。 |
-| `cordis.patch.yml` | 插入激活该 bundle 的那一行。 |
-| `docs/screenshots/` | README 使用的界面截图，均为演示数据。 |
+| 待办管理 | 新增、重命名、完成、删除、筛选及清除已完成；支持回车保存与中文输入法选词保护。 |
+| 优先级与标签 | `P0`–`P3` 或不分级；标签可编辑，点击行内标签即可筛选。 |
+| 四象限 | 按重要性、紧急性分组，保留未分类区域；颜色、文字与 Q1–Q4 标识共同区分。 |
+| 今日清单 | 在详情中「加入今天」，或直接进入今天新增；按优先级、同级创建时间新到旧排序。 |
+| 任务详情 | 点击标题或行尾箭头展开；键盘与触屏均可访问重命名、删除等操作。 |
+| 会话关联 | 任务关联 DSH 会话，一键回到上下文；归档或不可用会话会显示提示。 |
+| 智能体协作 | `todo_track` 提供 `list / add / update / remove / clearDone`，与面板使用同一个存储入口；列表支持分页和过滤。 |
+| 中英与主题 | 中英文文案；列表和四象限跟随宿主主题，今天使用独立夜色配色。 |
 
----
+「今天」由 **Host 的本地日期**决定。跨日后，旧任务仍在「全部」中保留；需要继续处理的任务可重新加入今天。
 
-## 开发
+## 数据与偏好
 
-开发构建需要锁定版本的 `three` 与 `esbuild`（仅 devDependencies）。发布的 `client.js` 已包含浏览器所需代码，因此要改 `src/client/*.js` 后再构建：
+| 内容 | 保存位置 | 行为 |
+| --- | --- | --- |
+| 待办、标签、优先级、会话关联 | Host 文件 | 独立于浏览器存储，支持自定义路径。 |
+| 番茄钟状态 | 浏览器 `localStorage` | 恢复有效计时；清理浏览器存储后重置。 |
+| 动态开关偏好 | 浏览器 `localStorage` | 刷新后保留，并服从系统「减少动态」设置。 |
+
+待办默认保存在 `$DSH_HOME/dsh-todos/todos.json`，可通过 `DSH_TODOS_FILE` 或 `dataFile` 配置路径。
+
+Host 使用文件锁与原子写入来协调多端修改；面板遇到 revision 冲突时采用新快照重试。损坏的文档会先备份，再降级为空清单。配置示例、字段限制与恢复机制见[开发与数据参考](docs/development.md)。
+
+## 开发与验收
 
 ```bash
-npm ci          # 安装锁定的构建依赖
+npm ci          # 安装锁定的开发依赖
 npm run build   # 从 src/client 生成 client.js
-npm test        # 先构建，再 node --test
+npm test        # 先构建，再运行 Node 测试
 ```
 
-`npm test` 还会校验仓库里的 `client.js` 与构建产物完全一致，防止产物悄悄偏离源码。
+修改 `src/client/` 后再构建，**不要直接编辑 `client.js`**。开发依赖仅包含固定版本的 Three.js 和 esbuild；测试会检查产物与源码是否一致。
 
-- **Host 半边** — `index.js` 加 `lib/`；Loader 挂载 `cordis.patch.yml` 声明的行，并把 `config` 传给 `apply(ctx, config)`。
-- **客户端半边** — `src/client/index.js` 是 factory 入口；构建展开它的 `// @include` 行，并在延迟初始化函数内嵌入 Three.js 场景，生成单个 `window.__ModuleLoader__` 产物。`client.js` 以该模块形式下发给页面，其 `id` 必须等于包名，`dsh.client.immediately` 让侧栏入口在启动时注册。
-- **样式** — 列表使用宿主主题 token（`--dsw-alias-*`），今天在局部重定义夜色 token；类名带前缀，不用全局选择器。CSS 与 WebGL 动效都响应 `prefers-reduced-motion`。
-- **开发期数据** — `$DSH_HOME/dsh-todos/todos.json`；可用 `DSH_TODOS_FILE` 或该行的 `dataFile` 指向别处。
-- **测试** — `test/smoke.test.mjs` 用 React stub 渲染客户端；`test/store.test.mjs` 覆盖 fsync、坏文件恢复、revision 冲突、锁与并发写；`test/routes.test.mjs` 锁定 HTTP 契约；`test/tool.test.mjs` 覆盖分页与过滤；`test/build.test.mjs` 守护生成产物与嵌入代码语法；`test/focus-motion.test.mjs` 验证限帧、暂停、恢复、卸载与延迟回调。
-- **热更新** — 客户端改动在页面内热更新；Host 改动需重载该 bundle 行（禁用 / 启用该 bundle，或重启 Host）。
+本次基于功能提交 `8f6f1fb` 完成：
 
----
+- **38 项自动测试通过**：覆盖生成产物、存储并发、接口、工具分页、动效调度和新增反馈边界。
+- **22 项浏览器验收通过**：覆盖今天页交互、计时全流程、刷新恢复、动态偏好、WebGL 降级与资源清理，以及窄屏英文布局。
+- **2 次 axe 检查未发现违规项**：桌面今天页及 375px 英文详情。
 
-## 配置
+[查看完整验收报告](docs/qa/2026-11-04-today-acceptance.md) · [开发与数据参考](docs/development.md) · [更新记录](CHANGELOG.md)
 
-该 bundle 行接受一个可选字段：
-
-```yaml
-- id: dsh-todos
-  name: dsh-todos
-  config:
-    dataFile: /absolute/path/to/todos.json   # 默认：$DSH_HOME/dsh-todos/todos.json
-```
-
-环境变量 `DSH_TODOS_FILE` 可覆盖默认路径。
-
----
-
-## 数据格式
-
-```json
-{
-  "version": 2,
-  "revision": 3,
-  "items": [
-    {
-      "id": "todo-…",
-      "title": "Ship the todo panel",
-      "done": false,
-      "createdAt": 1730000000000,
-      "updatedAt": 1730000000000,
-      "sessionId": "session-…",
-      "sessionTitle": "Panel work",
-      "tags": ["panel", "docs"],
-      "priority": "P0",
-      "quadrant": "q1",
-      "todayDate": "2026-11-03",
-      "todayAt": 1730000000000
-    }
-  ]
-}
-```
-
-字段约定：
-
-| 字段 | 取值 |
-| --- | --- |
-| `revision` | 单调递增的文档版本号，用于乐观锁 |
-| `tags` | 最多 8 个标签，每个不超过 24 字符，大小写不敏感去重 |
-| `priority` | `P0` \| `P1` \| `P2` \| `P3` \| `null` |
-| `quadrant` | `q1` \| `q2` \| `q3` \| `q4` \| `null` |
-| `todayDate` | 本地日期键 `YYYY-MM-DD` 或 `null` |
-| `todayAt` | 该条目加入当天专注清单的时刻，用于排序 |
-
-文档缺失或损坏时会降级为空清单，绝不会阻止插件激活。损坏的文档会先移到
-`todos.json.corrupt-<timestamp>`，方便查看或恢复。版本 1 的旧记录会被归一化到版本 2。
-
-### 并发与恢复
-
-- 面板每次变更都带上它渲染时看到的 `revision`。若这期间智能体或另一个标签页写入了，Host 返回 `409` 与 `code: todo_revision_conflict` 及其当前快照；面板采用该快照并重试一次，而不是用旧状态覆盖新清单。
-- 每次变更先取同级锁文件 `todos.json.lock`，在锁内重读文档后再应用操作。因此第二个进程会在前一个的结果上合并，而不是用陈旧内存整体替换文件；崩溃进程留下的锁 10 秒后自动回收。
-- 持久化写入临时文件、fsync、再原子 rename 覆盖文档，并尽力 fsync 目录。临时文件名带进程唯一后缀，并发写者不会共用同一文件。
-
----
+验收使用隔离演示数据与本地浏览器预览；阶段到期通过缩短测试截止时间验证。本轮未进行真实 DSH Host 安装验收，也未实际等待完整的 30 分钟。
 
 ## License
 
-MIT © 2026 kaelinda。详见 [LICENSE](LICENSE)。
+[MIT](LICENSE) © 2026 kaelinda · [第三方许可](THIRD_PARTY_NOTICES.md)
