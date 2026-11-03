@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- **Workspace visual refresh** — clearer title and composer, a Today focus entry,
+  readable task cards with clickable tags and session links, and quadrant colors
+  with action hints. Styles follow the Host theme and the panel's available width.
+- **Interaction polish** — visible keyboard focus, larger touch targets, detail
+  actions on narrow layouts, loading skeletons, reduced-motion support, and IME
+  Enter guards for adding, renaming, and tagging tasks.
+
 - **Matrix view repaired** — the 四象限 / Matrix switch now renders four quadrant
   cells plus an unclassified bucket instead of crashing on a missing
   `renderMatrix` reference. Missing `picker.*` strings were added to both

@@ -448,7 +448,7 @@
 
       const renderDetails = (item) => {
         const inToday = item.todayDate === todayKey;
-        return h('div', { className: 'dsh-todos-details', role: 'group', 'aria-label': t('details.title') },
+        return h('div', { className: 'dsh-todos-details', id: `dsh-todos-details-${item.id}`, role: 'group', 'aria-label': t('details.title') },
           h('div', { className: 'dsh-todos-detailRow' },
             h('span', { className: 'dsh-todos-detailLabel' }, t('details.priority')),
             h('div', { className: 'dsh-todos-detailBody' },
@@ -536,7 +536,7 @@
                   maxLength: 80,
                   onChange: (event) => setTagDraft(event.target.value),
                   onKeyDown: (event) => {
-                    if (event.key !== 'Enter') return;
+                    if (event.key !== 'Enter' || event.nativeEvent?.isComposing) return;
                     event.preventDefault();
                     addTags(item);
                   },
@@ -546,36 +546,38 @@
             ),
           ),
           h('p', { className: 'dsh-todos-detailHint' }, t('details.hint')),
+          h('div', { className: 'dsh-todos-detailActions' },
+            h('button', {
+              type: 'button', className: 'dsh-todos-textButton dsh-todos-focusable',
+              onClick: () => startEditing(item), disabled: busy,
+            }, h(IconPencil), t('row.edit')),
+            h('button', {
+              type: 'button', className: 'dsh-todos-textButton dsh-todos-danger dsh-todos-focusable',
+              onClick: () => void mutate({ op: 'remove', id: item.id }), disabled: busy,
+            }, h(IconTrash), t('row.delete'))),
         );
       };
 
       /**
-       * One compact line: checkbox, priority dot, title, today dot, and a single
-       * details chevron. Everything else (tags, quadrant, session, today) lives in
-       * the details drawer, so the list stays scannable at a glance.
+       * A readable title with quiet classification below. Full editing controls
+       * stay in the detail drawer, including on narrow and touch layouts.
        */
       const renderRow = (item) => {
         const isEditing = editing !== null && editing.id === item.id;
         const isExpanded = expandedId === item.id;
         const inToday = item.todayDate === todayKey;
-        return h('li', { key: item.id },
+        return h('li', { key: item.id, className: cx('dsh-todos-item', isExpanded && 'dsh-todos-itemExpanded') },
           h('div', { className: cx('dsh-todos-row', item.done && 'dsh-todos-rowDone') },
             h('button', {
               type: 'button',
               role: 'checkbox',
               'aria-checked': item.done === true,
-              'aria-label': t(item.done ? 'row.markOpen' : 'row.markDone'),
+              'aria-label': `${t(item.done ? 'row.markOpen' : 'row.markDone')}: ${item.title}`,
               className: 'dsh-todos-check dsh-todos-focusable',
               onClick: () => toggleDone(item),
               disabled: busy,
             }, item.done ? h(IconCheck) : null),
-            item.priority === null
-              ? null
-              : h('span', {
-                className: `dsh-todos-dot dsh-todos-dot${item.priority}`,
-                title: item.priority,
-                'aria-hidden': true,
-              }),
+            h('div', { className: 'dsh-todos-rowContent' },
             isEditing
               ? h('input', {
                 className: 'dsh-todos-input dsh-todos-inlineInput dsh-todos-focusable',
@@ -584,7 +586,7 @@
                 autoFocus: true,
                 onChange: (event) => setEditing({ id: item.id, text: event.target.value }),
                 onKeyDown: (event) => {
-                  if (event.key === 'Enter') {
+                  if (event.key === 'Enter' && !event.nativeEvent?.isComposing) {
                     event.preventDefault();
                     commitEditing();
                   } else if (event.key === 'Escape') {
@@ -594,17 +596,23 @@
                 },
                 onBlur: () => commitEditing(),
               })
-              : h('span', {
-                className: 'dsh-todos-rowTitle',
+              : h('button', {
+                type: 'button',
+                className: 'dsh-todos-rowTitle dsh-todos-focusable',
                 title: item.title,
+                'aria-expanded': isExpanded,
+                'aria-controls': isExpanded ? `dsh-todos-details-${item.id}` : undefined,
+                onClick: () => toggleDetails(item),
                 onDoubleClick: () => startEditing(item),
               }, item.title),
+            (item.priority !== null || inToday || item.tags.length > 0 || item.sessionId || item.todayDate)
+              ? h('div', { className: 'dsh-todos-rowMeta' },
+                item.priority === null ? null : h('span', { className: 'dsh-todos-priorityLabel' },
+                  h('span', { className: `dsh-todos-dot dsh-todos-dot${item.priority}`, 'aria-hidden': true }), item.priority),
             inToday
               ? h('span', {
-                className: 'dsh-todos-todayDot',
-                title: t('row.todayMark'),
-                'aria-hidden': true,
-              })
+                className: 'dsh-todos-todayMark',
+              }, h(IconSun, { filled: false }), t('row.todayMark'))
               : null,
             item.todayDate !== null && !inToday
               ? h('span', {
@@ -612,6 +620,17 @@
                 title: t('row.todayStale', { date: shortDay(item.todayDate) }),
               }, shortDay(item.todayDate))
               : null,
+                ...item.tags.map((tag) => h('button', {
+                  key: tag, type: 'button', className: 'dsh-todos-tagChip dsh-todos-focusable',
+                  'aria-pressed': tagFilter === tag,
+                  onClick: () => setTagFilter(tagFilter === tag ? '' : tag),
+                }, `#${tag}`)),
+                item.sessionId ? h('button', {
+                  type: 'button', className: 'dsh-todos-sessionLink dsh-todos-focusable',
+                  title: t('row.jump', { title: sessionLabel(item, sessions) }),
+                  onClick: () => jump(item), disabled: busy,
+                }, h(IconArrow), h('span', null, sessionLabel(item, sessions))) : null)
+              : null),
             h('div', { className: 'dsh-todos-rowActions' },
               h('div', { className: 'dsh-todos-rowActionsMore' },
                 h('button', {
@@ -643,6 +662,7 @@
                 type: 'button',
                 className: 'dsh-todos-rowToggle dsh-todos-focusable',
                 'aria-expanded': isExpanded,
+                'aria-controls': isExpanded ? `dsh-todos-details-${item.id}` : undefined,
                 title: isExpanded ? t('row.detailsClose') : t('row.details'),
                 'aria-label': isExpanded ? t('row.detailsClose') : t('row.details'),
                 onClick: () => toggleDetails(item),
@@ -672,13 +692,15 @@
             return h('div', {
               key: quadrantKey ?? 'unclassified',
               className: cx('dsh-todos-matrixCell', isUnclassified && 'dsh-todos-matrixCellWide'),
+              'data-quadrant': quadrantKey ?? 'none',
             },
             h('div', { className: 'dsh-todos-matrixHead' },
               isUnclassified
                 ? null
                 : h('span', { className: 'dsh-todos-matrixKey' }, quadrantKey.toUpperCase()),
-              h('span', null, shortLabel),
+              h('h2', null, shortLabel),
               h('span', { className: 'dsh-todos-matrixCount' }, String(bucketItems.length))),
+            isUnclassified ? null : h('p', { className: 'dsh-todos-matrixHint' }, t(`matrix.${quadrantKey}.hint`)),
             bucketItems.length === 0
               ? h('p', { className: 'dsh-todos-quadrantEmpty' }, t('matrix.empty'))
               : h('ul', { className: 'dsh-todos-list', 'aria-label': ariaLabel },
@@ -698,7 +720,7 @@
             type: 'button',
             role: 'checkbox',
             'aria-checked': item.done === true,
-            'aria-label': t(item.done ? 'row.markOpen' : 'row.markDone'),
+            'aria-label': `${t(item.done ? 'row.markOpen' : 'row.markDone')}: ${item.title}`,
             className: 'dsh-todos-zenCheck dsh-todos-focusable',
             onClick: () => toggleDone(item),
             disabled: busy,
@@ -719,7 +741,7 @@
                 autoFocus: true,
                 onChange: (event) => setEditing({ id: item.id, text: event.target.value }),
                 onKeyDown: (event) => {
-                  if (event.key === 'Enter') {
+                  if (event.key === 'Enter' && !event.nativeEvent?.isComposing) {
                     event.preventDefault();
                     commitEditing();
                   } else if (event.key === 'Escape') {
@@ -872,6 +894,9 @@
                 'aria-label': t('zen.placeholder'),
                 value: draft,
                 maxLength: 200,
+                onKeyDown: (event) => {
+                  if (event.key === 'Enter' && event.nativeEvent?.isComposing) event.preventDefault();
+                },
                 onChange: (event) => setDraft(event.target.value),
               }),
               h('button', {
@@ -954,7 +979,7 @@
       }, label, h('span', { className: 'dsh-todos-filterChipCount' }, String(count)));
 
       return h('section', {
-        className: 'dsh-todos-page',
+        className: cx('dsh-todos-page', view === 'matrix' && 'dsh-todos-matrixPage'),
         'aria-label': t('page.title'),
         'data-testid': 'dsh-todos-page',
       },
@@ -963,29 +988,47 @@
         h('div', { className: 'dsh-todos-scroll' },
           h('div', { className: 'dsh-todos-content' },
             h('div', { className: 'dsh-todos-heading' },
-              h('h1', null, t('page.title')),
+              h('div', { className: 'dsh-todos-headingCopy' },
+                h('p', { className: 'dsh-todos-eyebrow' }, h(TodoIcon, { size: 16 }), t('page.eyebrow')),
+                h('h1', null, t('page.title')),
+                h('p', { className: 'dsh-todos-subtitle' }, t('page.subtitle'))),
               h('div', { className: 'dsh-todos-viewSwitch', role: 'group', 'aria-label': t('view.label') },
                 h('button', {
                   type: 'button',
                   className: 'dsh-todos-viewButton dsh-todos-focusable',
                   'aria-pressed': view === 'list',
                   onClick: () => setView('list'),
-                }, t('view.list')),
+                }, h(IconList), t('view.list')),
                 h('button', {
                   type: 'button',
                   className: 'dsh-todos-viewButton dsh-todos-focusable',
                   'aria-pressed': view === 'matrix',
                   onClick: () => setView('matrix'),
-                }, t('view.matrix')))),
+                }, h(IconMatrix), t('view.matrix')))),
+            h('button', {
+              type: 'button', className: 'dsh-todos-focusCard dsh-todos-focusable',
+              onClick: () => setScope('today'),
+            },
+              h('span', { className: 'dsh-todos-focusIcon' }, h(IconSun, { filled: false })),
+              h('span', { className: 'dsh-todos-focusCopy' },
+                h('strong', null, t('page.focus')),
+                h('span', null, t('page.focusHint', { count: zenOpen.length }))),
+              h('span', { className: 'dsh-todos-focusTime' }, h(IconTimer), '25:00'),
+              h(IconChevron, { open: false })),
             h('form', { className: 'dsh-todos-addRow', onSubmit: submitDraft },
+              h('label', { className: 'dsh-todos-addLabel', htmlFor: 'dsh-todos-new-title' }, t('add.hint')),
               h('div', { className: 'dsh-todos-addField' },
                 h('input', {
+                  id: 'dsh-todos-new-title',
                   className: 'dsh-todos-addInput dsh-todos-focusable',
                   type: 'text',
                   placeholder: t('add.placeholder'),
                   'aria-label': t('add.label'),
                   value: draft,
                   maxLength: 200,
+                  onKeyDown: (event) => {
+                    if (event.key === 'Enter' && event.nativeEvent?.isComposing) event.preventDefault();
+                  },
                   onChange: (event) => setDraft(event.target.value),
                 }),
                 h('button', {
@@ -994,7 +1037,7 @@
                   title: t('add.action'),
                   'aria-label': t('add.action'),
                   disabled: busy || draft.trim() === '',
-                }, h(IconPlus)))),
+                }, h(IconPlus), h('span', null, t('add.action'))))),
             notice === null
               ? null
               : h('p', { className: 'dsh-todos-notice dsh-todos-noticeError', role: 'status' }, notice.text),
@@ -1020,11 +1063,13 @@
                   'aria-pressed': scope === value,
                   className: 'dsh-todos-scopeTab dsh-todos-focusable',
                   onClick: () => setScope(value),
-                }, label, h('span', { className: 'dsh-todos-scopeCount' }, String(count))))),
+                }, value === 'today' ? h(IconSun, { filled: false }) : null,
+                label, h('span', { className: 'dsh-todos-scopeCount' }, String(count))))),
               h('button', {
                 type: 'button',
-                className: cx('dsh-todos-filterButton dsh-todos-focusable', filtersOpen && 'dsh-todos-filterButtonOn'),
+                className: cx('dsh-todos-filterButton dsh-todos-focusable', (filtersOpen || activeFilterCount > 0) && 'dsh-todos-filterButtonOn'),
                 'aria-expanded': filtersOpen,
+                'aria-controls': filtersOpen ? 'dsh-todos-filters' : undefined,
                 'aria-label': activeFilterCount === 0
                   ? t('filter.title')
                   : t('filter.active', { count: activeFilterCount }),
@@ -1032,11 +1077,12 @@
                 onClick: () => setFiltersOpen(!filtersOpen),
               },
               h(IconFilter),
+              h('span', null, t('filter.title')),
               activeFilterCount === 0
                 ? null
                 : h('span', { className: 'dsh-todos-filterBadge' }, String(activeFilterCount)))),
             filtersOpen
-              ? h('div', { className: 'dsh-todos-filterPanel' },
+              ? h('div', { className: 'dsh-todos-filterPanel', id: 'dsh-todos-filters' },
                 h('div', { className: 'dsh-todos-filterRow' },
                   h('span', { className: 'dsh-todos-filterLabel' }, t('priority.label')),
                   h('div', { className: 'dsh-todos-filterChips', role: 'group' },
@@ -1068,9 +1114,13 @@
                   }, t('filter.reset'))))
               : null,
             state.phase === 'loading'
-              ? h('p', { className: 'dsh-todos-notice' }, t('loading'))
+              ? h('div', { className: 'dsh-todos-loading', role: 'status' },
+                h('p', null, t('loading')),
+                ...[0, 1, 2].map((key) => h('div', { key, className: 'dsh-todos-skeleton', 'aria-hidden': true })))
               : visible.length === 0
                 ? h('div', { className: 'dsh-todos-empty', role: 'status' },
+                  h('span', { className: 'dsh-todos-emptyIcon' }, h(TodoIcon, { size: 32 })),
+                  h('h2', null, t(items.length === 0 ? 'list.emptyTitle' : 'list.filteredTitle')),
                   h('p', null, emptyText),
                   activeFilterCount === 0
                     ? null
@@ -1084,21 +1134,24 @@
                   : h('div', { className: 'dsh-todos-groups' },
                     openRows.length === 0
                       ? null
-                      : h('ul', { className: 'dsh-todos-list', 'aria-label': t('list.label') },
-                        ...openRows.map(renderRow)),
+                      : h('div', null,
+                        h('div', { className: 'dsh-todos-groupHeading' },
+                          h('h2', null, t('list.openGroup'), h('span', null, String(openRows.length))),
+                          h('span', { className: 'dsh-todos-sortHint' }, t('list.sort'))),
+                        h('ul', { className: 'dsh-todos-list', 'aria-label': t('list.label') },
+                          ...openRows.map(renderRow))),
                     doneRows.length === 0
                       ? null
                       : h('div', { className: 'dsh-todos-doneGroup' },
                         scope === 'done'
                           ? null
-                          : h('p', { className: 'dsh-todos-groupLabel' },
+                          : h('h2', { className: 'dsh-todos-groupLabel' },
                             t('list.doneGroup'), ' ', String(doneRows.length)),
                         h('ul', { className: 'dsh-todos-list', 'aria-label': t('list.doneGroup') },
                           ...doneRows.map(renderRow)))),
-            counts.done === 0
-              ? null
-              : h('div', { className: 'dsh-todos-foot' },
-                h('button', {
+            h('div', { className: 'dsh-todos-foot' },
+              h('span', { className: 'dsh-todos-footHint' }, h(TodoIcon, { size: 14 }), t('footer.hint')),
+              counts.done === 0 ? null : h('button', {
                   type: 'button',
                   className: 'dsh-todos-textButton dsh-todos-focusable',
                   onClick: () => void mutate({ op: 'clearDone' }),

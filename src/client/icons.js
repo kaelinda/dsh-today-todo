@@ -16,7 +16,7 @@
 
     function IconArrow() {
       return h('svg', { width: 12, height: 12, viewBox: '0 0 16 16', fill: 'none', 'aria-hidden': true },
-        h('path', { d: 'M5 3.5L9.5 8 5 12.5', stroke: 'currentColor', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' }));
+        h('path', { d: 'M4 12l8-8M4.5 4H12v7.5', stroke: 'currentColor', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' }));
     }
 
     function IconClose() {
@@ -35,6 +35,18 @@
     function IconPlus() {
       return h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'none', 'aria-hidden': true },
         h('path', { d: 'M8 3.4v9.2M3.4 8h9.2', stroke: 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round' }));
+    }
+
+    function IconList() {
+      return h('svg', { width: 16, height: 16, viewBox: '0 0 16 16', fill: 'none', 'aria-hidden': true },
+        h('path', { d: 'M6.5 4h7M6.5 8h7M6.5 12h7M2.5 4h.5M2.5 8h.5M2.5 12h.5', stroke: 'currentColor', strokeWidth: 1.5, strokeLinecap: 'round' }));
+    }
+
+    function IconMatrix() {
+      return h('svg', { width: 16, height: 16, viewBox: '0 0 16 16', fill: 'none', 'aria-hidden': true },
+        ...[[2, 2], [9, 2], [2, 9], [9, 9]].map(([x, y]) => h('rect', {
+          key: `${x}-${y}`, x, y, width: 5, height: 5, rx: 1.2, stroke: 'currentColor', strokeWidth: 1.3,
+        })));
     }
 
     function IconFilter() {
