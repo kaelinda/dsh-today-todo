@@ -40,7 +40,7 @@ function todo(overrides = {}) {
  * produces a plain element tree; `stateOverrides` forces a specific `useState`
  * call by index so a test can land on the view it wants.
  */
-function makeReact(stateOverrides = {}) {
+function makeReact(stateOverrides = {}, trackState = false) {
   let index = 0;
   return {
     createElement(type, props, ...children) {
@@ -51,7 +51,12 @@ function makeReact(stateOverrides = {}) {
       const value = current in stateOverrides
         ? stateOverrides[current]
         : typeof initial === 'function' ? initial() : initial;
-      return [value, () => {}];
+      if (trackState) stateOverrides[current] = value;
+      return [value, (next) => {
+        if (trackState) {
+          stateOverrides[current] = typeof next === 'function' ? next(stateOverrides[current]) : next;
+        }
+      }];
     },
     useMemo(factory) {
       return factory();
@@ -146,9 +151,9 @@ async function loadFactory() {
 }
 
 /** Render the panel once, forcing the `useState` calls a test needs. */
-async function renderPanel(stateOverrides) {
+async function renderPanel(stateOverrides, { trackState = false } = {}) {
   const moduleFactory = await loadFactory();
-  const module = moduleFactory((name) => (name === 'react' ? makeReact(stateOverrides) : {}));
+  const module = moduleFactory((name) => (name === 'react' ? makeReact(stateOverrides, trackState) : {}));
   let component = null;
   const ctx = {
     locale: {
@@ -308,6 +313,166 @@ test('client replays one revision conflict on the Host snapshot', async () => {
     assert.equal(calls[0].baseRevision, 1);
     assert.equal(calls[1].baseRevision, 2, 'the retry uses the conflict snapshot revision');
     assert.equal(calls[1].done, true);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+/** Track state across explicit renders while leaving effects to browser tests. */
+function todaySubmissionHarness({ title = 'Ship it', items = [] } = {}) {
+  const state = {
+    0: { phase: 'ready', revision: 1, todayDate: localDateKey(), error: null, items },
+    2: 'today',
+    6: title,
+  };
+  const body = {};
+  let focusCalls = 0;
+  const form = {
+    isConnected: true,
+    ownerDocument: { body, activeElement: body },
+    contains: () => false,
+    querySelector: () => ({ focus: () => { focusCalls += 1; } }),
+  };
+  return {
+    form,
+    render: () => renderPanel(state, { trackState: true }),
+    input: (tree) => findElement(tree, (node) => node.type === 'input' && node.props['aria-label'] === 'zen.placeholder'),
+    submit(tree) {
+      const composer = findElement(tree, (node) => node.type === 'form' && node.props.className === 'dsh-todos-zenAdd');
+      composer.props.onSubmit({ preventDefault() {}, currentTarget: form });
+    },
+    get focusCalls() { return focusCalls; },
+  };
+}
+
+const jsonResponse = (body, status = 200) => new Response(JSON.stringify(body), {
+  status, headers: { 'content-type': 'application/json' },
+});
+const flushSubmission = () => new Promise((resolve) => setImmediate(resolve));
+const arrivals = (tree) => classNames(tree).filter((name) => name.split(' ').includes('dsh-todos-zenItemAdded'));
+
+test('Today add celebrates only the successful new item after a revision retry, even with duplicate titles', async () => {
+  const title = 'Same title';
+  const existing = todo({ id: 'existing', title, priority: 'P1', todayDate: localDateKey() });
+  const concurrent = todo({ id: 'concurrent', title, priority: 'P0', todayDate: localDateKey() });
+  const created = todo({ id: 'created', title, todayDate: localDateKey() });
+  const harness = todaySubmissionHarness({ title, items: [existing] });
+  const calls = [];
+  let finish;
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (_url, init) => {
+    calls.push(JSON.parse(init.body));
+    if (calls.length === 1) return jsonResponse({
+      code: 'todo_revision_conflict', message: 'conflict',
+      snapshot: { items: [concurrent, existing], revision: 2, todayDate: localDateKey() },
+    }, 409);
+    return new Promise((resolve) => { finish = resolve; });
+  };
+  try {
+    harness.submit(await harness.render());
+    await flushSubmission();
+    assert.equal(calls.length, 2);
+    assert.deepEqual(calls.map((request) => request.baseRevision), [1, 2]);
+    assert.equal(arrivals(await harness.render()).length, 0, 'a conflict snapshot is not an add confirmation');
+    finish(jsonResponse({ items: [created, concurrent, existing], revision: 3, todayDate: localDateKey() }));
+    await flushSubmission();
+    const tree = await harness.render();
+    assert.equal(arrivals(tree).length, 1);
+    const createdRow = findElement(tree, (node) => node.type === 'li' && node.props.key === created.id);
+    assert.equal(arrivals(createdRow).length, 1, 'the server-created ID owns the arrival, not the first sorted row');
+    const announcement = findElement(tree, (node) => node.props.role === 'status');
+    assert.match(textOf(announcement).join(' '), /zen\.added.*Same title/);
+    assert.equal(harness.input(tree).props.value, '');
+    assert.equal(harness.focusCalls, 1);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('failed Today add retains the draft and reports an error without success feedback', async () => {
+  const harness = todaySubmissionHarness({ title: 'Keep this draft' });
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => jsonResponse({ message: 'disk unavailable' }, 503);
+  try {
+    harness.submit(await harness.render());
+    await flushSubmission();
+    const tree = await harness.render();
+    assert.equal(harness.input(tree).props.value, 'Keep this draft');
+    assert.equal(arrivals(tree).length, 0);
+    assert.ok(!classNames(tree).includes('dsh-todos-zenSendFx'));
+    assert.match(textOf(tree).join(' '), /disk unavailable/);
+    assert.doesNotMatch(textOf(tree).join(' '), /zen\.added/);
+    assert.equal(harness.focusCalls, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('Today add preserves a next draft typed while the request is pending', async () => {
+  const harness = todaySubmissionHarness({ title: 'First task' });
+  const originalFetch = globalThis.fetch;
+  let finish;
+  globalThis.fetch = () => new Promise((resolve) => { finish = resolve; });
+  try {
+    const tree = await harness.render();
+    harness.submit(tree);
+    harness.input(tree).props.onChange({ target: { value: 'Next task still being typed' } });
+    finish(jsonResponse({
+      items: [todo({ id: 'first', title: 'First task', todayDate: localDateKey() })],
+      revision: 2, todayDate: localDateKey(),
+    }));
+    await flushSubmission();
+    const updated = await harness.render();
+    assert.equal(harness.input(updated).props.value, 'Next task still being typed');
+    assert.equal(arrivals(updated).length, 1);
+    assert.match(textOf(updated).join(' '), /First task/);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('rapid Today additions keep separate arrivals and restart the send cue for identical titles', async () => {
+  const title = 'Repeatable task';
+  const harness = todaySubmissionHarness({ title });
+  const items = [];
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => {
+    items.unshift(todo({ id: `new-${items.length + 1}`, title, todayDate: localDateKey() }));
+    return jsonResponse({ items, revision: items.length + 1, todayDate: localDateKey() });
+  };
+  try {
+    harness.submit(await harness.render());
+    await flushSubmission();
+    const first = await harness.render();
+    const firstCue = findElement(first, (node) => node.props.className === 'dsh-todos-zenSendFx');
+    harness.input(first).props.onChange({ target: { value: title } });
+    harness.submit(await harness.render());
+    await flushSubmission();
+    const second = await harness.render();
+    const secondCue = findElement(second, (node) => node.props.className === 'dsh-todos-zenSendFx');
+    assert.equal(arrivals(second).length, 2, 'the next addition does not cancel the first arrival');
+    assert.notEqual(firstCue.props.key, secondCue.props.key, 'each successful addition gets a fresh send cue');
+    assert.equal(harness.input(second).props.value, '');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('a Today add resolved after its form is detached does not replay feedback or steal focus', async () => {
+  const harness = todaySubmissionHarness();
+  const originalFetch = globalThis.fetch;
+  let finish;
+  globalThis.fetch = () => new Promise((resolve) => { finish = resolve; });
+  try {
+    harness.submit(await harness.render());
+    harness.form.isConnected = false;
+    finish(jsonResponse({ items: [todo({ todayDate: localDateKey() })], revision: 2, todayDate: localDateKey() }));
+    await flushSubmission();
+    const tree = await harness.render();
+    assert.equal(arrivals(tree).length, 0);
+    assert.ok(!classNames(tree).includes('dsh-todos-zenSendFx'));
+    assert.doesNotMatch(textOf(tree).join(' '), /zen\.added/);
+    assert.equal(harness.focusCalls, 0);
   } finally {
     globalThis.fetch = originalFetch;
   }

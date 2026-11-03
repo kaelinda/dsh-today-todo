@@ -60,6 +60,22 @@
       });
       const [reducedMotion, setReducedMotion] = useState(() =>
         typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+      const [addedTasks, setAddedTasks] = useState([]);
+
+      // Keep independent arrival markers for rapid additions; timers never
+      // outlive the page, and returning to Today does not replay old arrivals.
+      useEffect(() => {
+        if (addedTasks.length === 0) return undefined;
+        if (scope !== 'today') {
+          setAddedTasks([]);
+          return undefined;
+        }
+        const nextExpiry = Math.min(...addedTasks.map((item) => item.expiresAt));
+        const timer = window.setTimeout(() => {
+          setAddedTasks((current) => current.filter((item) => item.expiresAt > Date.now()));
+        }, Math.max(0, nextExpiry - Date.now()));
+        return () => window.clearTimeout(timer);
+      }, [addedTasks, scope]);
 
       useEffect(() => {
         const query = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -178,8 +194,9 @@
           let baseRevision = state.revision;
           for (let attempt = 0; attempt < 2; attempt += 1) {
             try {
-              accept(await sendMutation({ ...request, baseRevision }));
-              return true;
+              const payload = await sendMutation({ ...request, baseRevision });
+              accept(payload);
+              return payload;
             } catch (error) {
               if (attempt === 0 && error?.code === 'todo_revision_conflict' && error.snapshot) {
                 accept(error.snapshot);
@@ -287,10 +304,29 @@
 
       const submitDraft = (event) => {
         if (event) event.preventDefault();
-        const title = draft.trim();
+        const submittedDraft = draft;
+        const title = submittedDraft.trim();
         if (title === '' || busy) return;
-        void mutate({ op: 'add', title, today: scope === 'today' }).then((accepted) => {
-          if (accepted) setDraft('');
+        const form = event?.currentTarget;
+        void mutate({ op: 'add', title, today: scope === 'today' }).then((payload) => {
+          if (!payload) return;
+          // Preserve the next draft if the user kept typing during the request.
+          setDraft((current) => current === submittedDraft ? '' : current);
+          if (scope !== 'today' || !form?.isConnected) return;
+          // The Host prepends the item it created to this successful snapshot.
+          // Never infer the arrival from titles, sorted rows, or polling diffs.
+          const added = payload.items?.[0];
+          if (added?.id) {
+            const now = Date.now();
+            setAddedTasks((current) => [
+              ...current.filter((item) => item.expiresAt > now),
+              { id: added.id, title: added.title, expiresAt: now + 2200 },
+            ]);
+          }
+          const active = form.ownerDocument.activeElement;
+          if (active === form.ownerDocument.body || form.contains(active)) {
+            form.querySelector('input')?.focus({ preventScroll: true });
+          }
         });
       };
 
@@ -726,10 +762,13 @@
       const renderZenRow = (item, index) => {
         const isEditing = editing !== null && editing.id === item.id;
         const isExpanded = expandedId === item.id;
-        return h('li', { key: item.id },
+        const isAdded = addedTasks.some((added) => added.id === item.id);
+        return h('li', {
+          key: item.id,
+          style: { animationDelay: isAdded ? '0ms' : `${Math.min(index, 12) * 45}ms` },
+        },
           h('div', {
-            className: cx('dsh-todos-zenItem', item.done && 'dsh-todos-zenItemDone'),
-            style: { animationDelay: `${Math.min(index, 12) * 45}ms` },
+            className: cx('dsh-todos-zenItem', item.done && 'dsh-todos-zenItemDone', isAdded && 'dsh-todos-zenItemAdded'),
           },
           h('button', {
             type: 'button',
@@ -830,6 +869,7 @@
       };
 
       const renderZen = () => {
+        const latestAdd = addedTasks[addedTasks.length - 1];
         let when = '';
         try {
           // Render the Host's day, not the browser's: the two can differ around
@@ -897,6 +937,9 @@
                 'aria-valuemin': 0, 'aria-valuemax': Math.max(zenItems.length, 1), 'aria-valuenow': zenDone.length },
                 h('span', { style: { transform: `scaleX(${zenItems.length ? zenDone.length / zenItems.length : 0})` } })),
             h('form', { className: 'dsh-todos-zenAdd', onSubmit: submitDraft },
+              latestAdd ? h('span', {
+                key: latestAdd.id, className: 'dsh-todos-zenSendFx', 'aria-hidden': true,
+              }) : null,
               h(IconPlus),
               h('input', {
                 className: 'dsh-todos-zenInput dsh-todos-focusable',
@@ -915,6 +958,8 @@
                 className: 'dsh-todos-zenAddButton dsh-todos-focusable',
                 disabled: busy || draft.trim() === '',
               }, t('zen.add'))),
+            h('span', { className: 'dsh-todos-srOnly', role: 'status', 'aria-live': 'polite', 'aria-atomic': true },
+              latestAdd ? h('span', { key: latestAdd.id }, t('zen.added', { title: latestAdd.title })) : null),
             zenOpen.length === 0
               ? h('p', { className: 'dsh-todos-zenEmpty' },
                 zenDone.length > 0 ? t('zen.allDone') : t('zen.empty'))

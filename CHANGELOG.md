@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- **Today add feedback** — successful additions send a composer pulse and give
+  the created row a soft entrance, light sweep, and tiny sparks. Independent
+  short-lived markers handle repeated titles and rapid adds; failures, polling,
+  and conflict snapshots never celebrate. Motion preferences keep a static
+  highlight, and a live region announces success. A draft typed while an earlier
+  add is pending is preserved. README includes the new interaction GIF.
+
 - **Focus motion** — composer focus sends a soft outward pulse and two light
   trails around the rounded rim; rename/tag/search fields briefly glow on entry.
   Effects follow the theme, stop on blur, and respect both the persisted motion

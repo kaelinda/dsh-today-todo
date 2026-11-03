@@ -156,6 +156,7 @@ window.__ModuleLoader__.load({
       'zen.summary': '{open} 件要做',
       'zen.placeholder': '今天要做点什么？',
       'zen.add': '加入',
+      'zen.added': '已加入今天：{title}',
       'zen.empty': '今天还没有安排。',
       'zen.allDone': '今天的事都做完了。',
       'zen.done': '完成 {count} 项',
@@ -281,6 +282,7 @@ window.__ModuleLoader__.load({
       'zen.summary': '{open} to do',
       'zen.placeholder': 'What will you do today?',
       'zen.add': 'Add',
+      'zen.added': 'Added to Today: {title}',
       'zen.empty': 'Nothing planned for today.',
       'zen.allDone': 'Everything for today is done.',
       'zen.done': 'Completed {count}',
@@ -604,6 +606,7 @@ window.__ModuleLoader__.load({
 .dsh-todos-page button:disabled { cursor:default; opacity:.45; }
 .dsh-todos-page button:active:not(:disabled) { filter:brightness(.94); }
 .dsh-todos-page svg { flex-shrink:0; }
+.dsh-todos-srOnly { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; border:0; }
 .dsh-todos-pane { flex:1; min-width:0; min-height:0; display:flex; flex-direction:column; }
 .dsh-todos-scroll { flex:1; min-height:0; overflow:auto; scrollbar-gutter:stable; --dsh-scrollbar-width:9px; --dsh-scrollbar-thumb-border:2px; }
 .dsh-todos-content { width:100%; max-width:940px; margin:0 auto; padding:48px 40px 32px; }
@@ -899,8 +902,56 @@ window.__ModuleLoader__.load({
 .dsh-todos-page .dsh-todos-zenAddButton:disabled { opacity:1; color:var(--todo-muted); background:transparent; }
 .dsh-todos-zenAddButton:hover:not(:disabled) { background:var(--todo-hover); }
 .dsh-todos-zenList { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; width:100%; }
-.dsh-todos-zenItem { display:flex; align-items:center; gap:14px; min-height:60px; padding:12px 14px; border:1px solid #23394c; border-radius:10px; background:#102031b3; animation:dsh-todos-rise .3s ease backwards; transition:background .2s,border-color .2s; }
+.dsh-todos-zenList > li { animation:dsh-todos-rise .3s ease backwards; }
+.dsh-todos-zenItem { position:relative; isolation:isolate; display:flex; align-items:center; gap:14px; min-height:60px; padding:12px 14px; border:1px solid #23394c; border-radius:10px; background:#102031b3; transition:background .2s,border-color .2s,box-shadow .3s; }
 .dsh-todos-zenItem:hover { background:#162d41; border-color:#3b5b70; }
+.dsh-todos-zenItemAdded, .dsh-todos-zenItemAdded:hover { border-color:#73bfb5; background:#143137; box-shadow:0 0 18px #85dfd618; }
+.dsh-todos-zenSendFx { display:none; }
+.dsh-todos-page[data-motion=on] .dsh-todos-zenSendFx {
+  display:block; position:absolute; inset:-1px; border:1px solid #c3fff0;
+  border-radius:inherit; pointer-events:none; opacity:0;
+  animation:dsh-todos-send-pulse .75s ease-out;
+}
+.dsh-todos-page[data-motion=on] .dsh-todos-zenSendFx::after {
+  content:''; position:absolute; top:100%; right:26px; width:2px; height:16px;
+  border-radius:2px; background:linear-gradient(transparent,#c3fff0);
+  box-shadow:0 0 8px #85dfd6; animation:dsh-todos-send-spark .6s ease-out;
+}
+.dsh-todos-page[data-motion=on] .dsh-todos-zenItemAdded { animation:dsh-todos-task-arrive .65s cubic-bezier(.16,1,.3,1) both; }
+.dsh-todos-page[data-motion=on] .dsh-todos-zenItemAdded::before {
+  content:''; position:absolute; inset:0; z-index:-1; border-radius:inherit; pointer-events:none;
+  background:linear-gradient(105deg,transparent 38%,#b4ffe51f 48%,#d3fff23b 50%,transparent 62%);
+  background-size:250% 100%; opacity:0; animation:dsh-todos-task-sheen 1s .12s ease-out;
+}
+.dsh-todos-page[data-motion=on] .dsh-todos-zenItemAdded::after {
+  content:''; position:absolute; left:24px; top:50%; width:3px; height:3px;
+  border-radius:50%; background:#dbfff4; pointer-events:none; opacity:0;
+  box-shadow:13px -12px 0 #b4ffe5, 26px -4px 0 #85dfd6, -9px -7px 0 #b4ffe5, 17px 10px 0 #85dfd6;
+  animation:dsh-todos-task-sparks .8s .12s ease-out;
+}
+.dsh-todos-page[data-motion=off] .dsh-todos-zenList > li { animation:none; }
+@keyframes dsh-todos-send-pulse {
+  0% { opacity:.9; box-shadow:0 0 0 1px #85dfd655,0 0 24px #85dfd644; transform:scale(1); }
+  100% { opacity:0; box-shadow:0 0 0 4px #85dfd600,0 0 32px #85dfd600; transform:scale(1.008,1.16); }
+}
+@keyframes dsh-todos-send-spark {
+  from { opacity:1; transform:translateY(-8px) scaleY(.3); }
+  to { opacity:0; transform:translateY(18px) scaleY(1); }
+}
+@keyframes dsh-todos-task-arrive {
+  from { opacity:0; transform:translateY(-12px) scale(.975); }
+  to { opacity:1; transform:none; }
+}
+@keyframes dsh-todos-task-sheen {
+  0% { opacity:0; background-position:100% 0; }
+  20% { opacity:1; }
+  100% { opacity:0; background-position:0 0; }
+}
+@keyframes dsh-todos-task-sparks {
+  0% { opacity:0; transform:scale(.3); }
+  25% { opacity:.9; }
+  100% { opacity:0; transform:translateY(-9px) scale(1.4); }
+}
 .dsh-todos-zenCheck { width:21px; height:21px; border-radius:50%; border-color:#638399; background:transparent; }
 .dsh-todos-zenCheck:hover:where(:not(:disabled)) { border-color:#b4f0df; }
 .dsh-todos-zenCheck[aria-checked=true] { background:#a0e6dc; border-color:#a0e6dc; color:#0b302e; }
@@ -1086,6 +1137,22 @@ window.__ModuleLoader__.load({
       });
       const [reducedMotion, setReducedMotion] = useState(() =>
         typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+      const [addedTasks, setAddedTasks] = useState([]);
+
+      // Keep independent arrival markers for rapid additions; timers never
+      // outlive the page, and returning to Today does not replay old arrivals.
+      useEffect(() => {
+        if (addedTasks.length === 0) return undefined;
+        if (scope !== 'today') {
+          setAddedTasks([]);
+          return undefined;
+        }
+        const nextExpiry = Math.min(...addedTasks.map((item) => item.expiresAt));
+        const timer = window.setTimeout(() => {
+          setAddedTasks((current) => current.filter((item) => item.expiresAt > Date.now()));
+        }, Math.max(0, nextExpiry - Date.now()));
+        return () => window.clearTimeout(timer);
+      }, [addedTasks, scope]);
 
       useEffect(() => {
         const query = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -1204,8 +1271,9 @@ window.__ModuleLoader__.load({
           let baseRevision = state.revision;
           for (let attempt = 0; attempt < 2; attempt += 1) {
             try {
-              accept(await sendMutation({ ...request, baseRevision }));
-              return true;
+              const payload = await sendMutation({ ...request, baseRevision });
+              accept(payload);
+              return payload;
             } catch (error) {
               if (attempt === 0 && error?.code === 'todo_revision_conflict' && error.snapshot) {
                 accept(error.snapshot);
@@ -1313,10 +1381,29 @@ window.__ModuleLoader__.load({
 
       const submitDraft = (event) => {
         if (event) event.preventDefault();
-        const title = draft.trim();
+        const submittedDraft = draft;
+        const title = submittedDraft.trim();
         if (title === '' || busy) return;
-        void mutate({ op: 'add', title, today: scope === 'today' }).then((accepted) => {
-          if (accepted) setDraft('');
+        const form = event?.currentTarget;
+        void mutate({ op: 'add', title, today: scope === 'today' }).then((payload) => {
+          if (!payload) return;
+          // Preserve the next draft if the user kept typing during the request.
+          setDraft((current) => current === submittedDraft ? '' : current);
+          if (scope !== 'today' || !form?.isConnected) return;
+          // The Host prepends the item it created to this successful snapshot.
+          // Never infer the arrival from titles, sorted rows, or polling diffs.
+          const added = payload.items?.[0];
+          if (added?.id) {
+            const now = Date.now();
+            setAddedTasks((current) => [
+              ...current.filter((item) => item.expiresAt > now),
+              { id: added.id, title: added.title, expiresAt: now + 2200 },
+            ]);
+          }
+          const active = form.ownerDocument.activeElement;
+          if (active === form.ownerDocument.body || form.contains(active)) {
+            form.querySelector('input')?.focus({ preventScroll: true });
+          }
         });
       };
 
@@ -1752,10 +1839,13 @@ window.__ModuleLoader__.load({
       const renderZenRow = (item, index) => {
         const isEditing = editing !== null && editing.id === item.id;
         const isExpanded = expandedId === item.id;
-        return h('li', { key: item.id },
+        const isAdded = addedTasks.some((added) => added.id === item.id);
+        return h('li', {
+          key: item.id,
+          style: { animationDelay: isAdded ? '0ms' : `${Math.min(index, 12) * 45}ms` },
+        },
           h('div', {
-            className: cx('dsh-todos-zenItem', item.done && 'dsh-todos-zenItemDone'),
-            style: { animationDelay: `${Math.min(index, 12) * 45}ms` },
+            className: cx('dsh-todos-zenItem', item.done && 'dsh-todos-zenItemDone', isAdded && 'dsh-todos-zenItemAdded'),
           },
           h('button', {
             type: 'button',
@@ -1856,6 +1946,7 @@ window.__ModuleLoader__.load({
       };
 
       const renderZen = () => {
+        const latestAdd = addedTasks[addedTasks.length - 1];
         let when = '';
         try {
           // Render the Host's day, not the browser's: the two can differ around
@@ -1923,6 +2014,9 @@ window.__ModuleLoader__.load({
                 'aria-valuemin': 0, 'aria-valuemax': Math.max(zenItems.length, 1), 'aria-valuenow': zenDone.length },
                 h('span', { style: { transform: `scaleX(${zenItems.length ? zenDone.length / zenItems.length : 0})` } })),
             h('form', { className: 'dsh-todos-zenAdd', onSubmit: submitDraft },
+              latestAdd ? h('span', {
+                key: latestAdd.id, className: 'dsh-todos-zenSendFx', 'aria-hidden': true,
+              }) : null,
               h(IconPlus),
               h('input', {
                 className: 'dsh-todos-zenInput dsh-todos-focusable',
@@ -1941,6 +2035,8 @@ window.__ModuleLoader__.load({
                 className: 'dsh-todos-zenAddButton dsh-todos-focusable',
                 disabled: busy || draft.trim() === '',
               }, t('zen.add'))),
+            h('span', { className: 'dsh-todos-srOnly', role: 'status', 'aria-live': 'polite', 'aria-atomic': true },
+              latestAdd ? h('span', { key: latestAdd.id }, t('zen.added', { title: latestAdd.title })) : null),
             zenOpen.length === 0
               ? h('p', { className: 'dsh-todos-zenEmpty' },
                 zenDone.length > 0 ? t('zen.allDone') : t('zen.empty'))
