@@ -970,6 +970,7 @@
       if (scope === 'today') {
         return h('section', {
           className: 'dsh-todos-page dsh-todos-zenPage',
+          'data-motion': sceneMotion && !reducedMotion ? 'on' : 'off',
           'aria-label': t('zen.title'),
           'data-testid': 'dsh-todos-zen',
         },
@@ -991,6 +992,7 @@
 
       return h('section', {
         className: cx('dsh-todos-page', view === 'matrix' && 'dsh-todos-matrixPage'),
+        'data-motion': sceneMotion && !reducedMotion ? 'on' : 'off',
         'aria-label': t('page.title'),
         'data-testid': 'dsh-todos-page',
       },

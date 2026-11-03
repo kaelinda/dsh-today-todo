@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- **Focus motion** — composer focus sends a soft outward pulse and two light
+  trails around the rounded rim; rename/tag/search fields briefly glow on entry.
+  Effects follow the theme, stop on blur, and respect both the persisted motion
+  switch and live reduced-motion settings. README includes a browser GIF preview.
+
 - **Focus and control states** — a single rounded focus highlight for Today and
   list composers, consistent focus styling for rename/tag/search fields, and
   independent, unclipped keyboard focus on buttons and session choices.

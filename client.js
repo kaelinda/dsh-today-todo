@@ -764,6 +764,60 @@ window.__ModuleLoader__.load({
 /* Composers own their input's focus ring; standalone fields use their rounded
    border and halo. Buttons retain an independent keyboard focus outline. */
 .dsh-todos-focusable:focus-visible:not(input) { outline:2px solid var(--todo-focus-color); outline-offset:3px; }
+/* A focus arrival pulse and two soft comet trails, confined to the rim.
+   Keep the composer overflow visible so button keyboard outlines still fit. */
+@property --dsh-todos-focus-angle { syntax:'<angle>'; initial-value:0deg; inherits:false; }
+.dsh-todos-addField, .dsh-todos-zenAdd { position:relative; isolation:isolate; }
+.dsh-todos-page[data-motion=on] :is(.dsh-todos-addField, .dsh-todos-zenAdd):has(> input:focus) {
+  box-shadow:var(--todo-focus-shadow), 0 0 24px color-mix(in srgb,var(--todo-focus-color) 16%,transparent);
+}
+.dsh-todos-page[data-motion=on] :is(.dsh-todos-input, .dsh-todos-tagInput, .dsh-todos-zenInlineInput):focus {
+  animation:dsh-todos-field-wake .7s cubic-bezier(.16,1,.3,1);
+}
+@supports (mask-composite:exclude) {
+  .dsh-todos-page[data-motion=on] :is(.dsh-todos-addField, .dsh-todos-zenAdd):has(> input:focus) {
+    border-color:color-mix(in srgb,var(--todo-focus-color) 55%,var(--todo-border));
+  }
+  :is(.dsh-todos-addField, .dsh-todos-zenAdd)::before,
+  :is(.dsh-todos-addField, .dsh-todos-zenAdd)::after {
+    content:''; position:absolute; inset:-1px; border-radius:inherit;
+    pointer-events:none; opacity:0;
+  }
+  :is(.dsh-todos-addField, .dsh-todos-zenAdd)::before {
+    z-index:1; padding:2px;
+    background:conic-gradient(from var(--dsh-todos-focus-angle),
+      transparent 0deg,
+      color-mix(in srgb,var(--todo-focus-color) 25%,transparent) 48deg,
+      var(--todo-focus-color) 76deg,
+      color-mix(in srgb,var(--todo-focus-color) 30%,white) 89deg,
+      transparent 91deg 180deg,
+      color-mix(in srgb,var(--todo-focus-color) 25%,transparent) 228deg,
+      var(--todo-focus-color) 256deg,
+      color-mix(in srgb,var(--todo-focus-color) 30%,white) 269deg,
+      transparent 271deg);
+    mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite:exclude; transition:opacity .2s ease-out;
+  }
+  :is(.dsh-todos-addField, .dsh-todos-zenAdd)::after {
+    border:1px solid color-mix(in srgb,var(--todo-focus-color) 55%,transparent);
+    box-shadow:0 0 18px color-mix(in srgb,var(--todo-focus-color) 20%,transparent);
+  }
+  .dsh-todos-page[data-motion=on] :is(.dsh-todos-addField, .dsh-todos-zenAdd):has(> input:focus)::before {
+    opacity:1; animation:dsh-todos-focus-orbit 5.2s linear infinite;
+  }
+  .dsh-todos-page[data-motion=on] :is(.dsh-todos-addField, .dsh-todos-zenAdd):has(> input:focus)::after {
+    animation:dsh-todos-focus-arrive .85s cubic-bezier(.16,1,.3,1);
+  }
+}
+@keyframes dsh-todos-focus-orbit { to { --dsh-todos-focus-angle:360deg; } }
+@keyframes dsh-todos-focus-arrive {
+  0% { opacity:.75; transform:scale(1,1); }
+  100% { opacity:0; transform:scale(1.012,1.32); }
+}
+@keyframes dsh-todos-field-wake {
+  0%, 100% { box-shadow:var(--todo-focus-shadow); }
+  35% { box-shadow:0 0 0 4px color-mix(in srgb,var(--todo-focus-color) 16%,transparent), 0 0 18px color-mix(in srgb,var(--todo-focus-color) 18%,transparent); }
+}
 @keyframes dsh-todos-panel-in { from { opacity:0; transform:translateY(-3px); } to { opacity:1; transform:none; } }
 @keyframes dsh-todos-loading { from { opacity:.45; } to { opacity:1; } }
 
@@ -1942,6 +1996,7 @@ window.__ModuleLoader__.load({
       if (scope === 'today') {
         return h('section', {
           className: 'dsh-todos-page dsh-todos-zenPage',
+          'data-motion': sceneMotion && !reducedMotion ? 'on' : 'off',
           'aria-label': t('zen.title'),
           'data-testid': 'dsh-todos-zen',
         },
@@ -1963,6 +2018,7 @@ window.__ModuleLoader__.load({
 
       return h('section', {
         className: cx('dsh-todos-page', view === 'matrix' && 'dsh-todos-matrixPage'),
+        'data-motion': sceneMotion && !reducedMotion ? 'on' : 'off',
         'aria-label': t('page.title'),
         'data-testid': 'dsh-todos-page',
       },
