@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **Focus and control states** — a single rounded focus highlight for Today and
+  list composers, consistent focus styling for rename/tag/search fields, and
+  independent, unclipped keyboard focus on buttons and session choices.
+  Disabled controls no longer react to hover; expanded cards retain their accent
+  border and pressed buttons keep their text readable.
+
 - **Three.js Today scene** — local, lazily initialized particle orbits surround the
   HTML timer in a dedicated night palette. Focus gathers the particles, breaks
   turn warm, pausing freezes the scene, and task completion sends a soft ripple.
