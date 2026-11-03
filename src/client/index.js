@@ -3,16 +3,17 @@
  * not the emitted `client.js`.
  *
  * The browser artifact is one lazy factory because that is the shape the DSH
- * module loader serves; the build is a deterministic include pass, so the
- * shipped file stays dependency-free and reviewable while the source remains
- * split by concern.
+ * module loader serves; the build expands includes and embeds a locally bundled
+ * Three.js renderer.
+ * Installation requires no runtime dependency download; the source stays split
+ * by concern.
  */
 window.__ModuleLoader__.load({
   id: 'dsh-todos',
   factory(require) {
     const React = require('react');
     const h = React.createElement;
-    const { useCallback, useEffect, useMemo, useState } = React;
+    const { useCallback, useEffect, useMemo, useState, useRef } = React;
 
     // @include ./constants.js
 
@@ -25,6 +26,8 @@ window.__ModuleLoader__.load({
     // @include ./icons.js
 
     // @include ./style.js
+
+    // @include ./focus-canvas.js
 
     // @include ./page.js
 

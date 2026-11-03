@@ -61,6 +61,27 @@
         h('path', { d: 'M6.4 1.6h3.2', stroke: 'currentColor', strokeWidth: 1.3, strokeLinecap: 'round' }));
     }
 
+    function IconPlay() {
+      return h('svg', { width: 16, height: 16, viewBox: '0 0 16 16', fill: 'none', 'aria-hidden': true },
+        h('path', { d: 'M5 3l7 5-7 5V3z', stroke: 'currentColor', strokeWidth: 1.4, strokeLinejoin: 'round' }));
+    }
+
+    function IconPause() {
+      return h('svg', { width: 16, height: 16, viewBox: '0 0 16 16', 'aria-hidden': true },
+        h('path', { d: 'M5 3v10M11 3v10', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round' }));
+    }
+
+    function IconStop() {
+      return h('svg', { width: 16, height: 16, viewBox: '0 0 16 16', fill: 'none', 'aria-hidden': true },
+        h('rect', { x: 4, y: 4, width: 8, height: 8, rx: 1.5, stroke: 'currentColor', strokeWidth: 1.4 }));
+    }
+
+    function IconOrbit() {
+      return h('svg', { width: 16, height: 16, viewBox: '0 0 16 16', fill: 'none', 'aria-hidden': true },
+        h('ellipse', { cx: 8, cy: 8, rx: 7, ry: 3.4, transform: 'rotate(-35 8 8)', stroke: 'currentColor', strokeWidth: 1.1 }),
+        h('circle', { cx: 8, cy: 8, r: 1.5, fill: 'currentColor' }));
+    }
+
     function IconSun({ filled }) {
       return h('svg', { width: 14, height: 14, viewBox: '0 0 16 16', fill: 'none', 'aria-hidden': true },
         h('circle', { cx: 8, cy: 8, r: 3, stroke: 'currentColor', strokeWidth: 1.3, fill: filled ? 'currentColor' : 'none' }),

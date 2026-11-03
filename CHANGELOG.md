@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- **Three.js Today scene** — local, lazily initialized particle orbits surround the
+  HTML timer in a dedicated night palette. Focus gathers the particles, breaks
+  turn warm, pausing freezes the scene, and task completion sends a soft ripple.
+- **Motion lifecycle** — a persisted motion switch, live reduced-motion support,
+  30 FPS/DPR caps, container resizing, hidden/offscreen suspension, WebGL fallback,
+  and GPU/listener cleanup on exit. Three.js is bundled offline with its license;
+  `npm ci` installs the pinned development build tools.
+
 - **Workspace visual refresh** — clearer title and composer, a Today focus entry,
   readable task cards with clickable tags and session links, and quadrant colors
   with action hints. Styles follow the Host theme and the panel's available width.

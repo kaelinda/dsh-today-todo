@@ -18,8 +18,9 @@
   - **优先级** — `P0`–`P3`，或不分级。行内以色点与等级文字展示，详情与筛选器里显示完整控件和各级计数；优先级驱动排序（最急在前）。
   - **四象限** — 标记为 Q1 重要且紧急、Q2 重要、Q3 紧急、Q4 都不重要。「四象限 / Matrix」视图把清单分成这四个格子，外加一个「未分类」桶。
   - **今天** — 把某条放进今天的专注清单（行内太阳按钮，或详情里的「今天」控件）。「今天」范围只显示这些条目，在该范围下新增会自动归入今天。「今天」的日期由 Host 统一下发，浏览器时区不同也不会错位；`todayDate` 记录的是规划日期，专注清单每天自动重置而记录保留。
-- **今天的禅模式** — 切到「今天」后，整个面板换成一屏安静的专注视图：一枚圆相、一行日期、一行居中输入、只列今天未完成的事（优先级压成一个小点）。统计、筛选、视图切换、标签 chip、会话 chip 全部隐去，行详情仍一键可达。已完成收进「完成 N 项」，全部完成时出现收束语，`← 退出` 或 `Esc` 返回列表。动画遵循 `prefers-reduced-motion`。
-- **禅模式里的番茄钟** — 「今天」视图带一个安静的 `开始专注 · 25:00`。启动后圆相换成 180px 进度环：25 分钟专注（品牌色）→ 5 分钟休息（成功色），中间是 mm:ss，阶段结束时 ping / flash 一下（`prefers-reduced-motion` 下关闭）。操作只有暂停 / 结束；会话经 `localStorage` 在面板重挂载、页面刷新后自动恢复，并捕获当天第一条未完成任务作为专注标签。
+- **今天的心流轨道** — 独立的夜色专注空间：Three.js 绘制有纵深的粒子环、三条星轨和微光，日期、计时器与任务操作保留为可访问的 HTML。专注时粒子逐渐收拢，休息时转为暖金色，暂停时定格，完成任务时扩散一圈微光。今日清单保留详情和完成项折叠，`← 退出` 或 `Esc` 返回列表。
+- **番茄钟** — 25 分钟专注 → 5 分钟休息，支持暂停、继续、结束；`localStorage` 在面板重挂载与页面刷新后恢复计时，并捕获当天第一条未完成任务作为专注标签。计时基于截止时间计算，不依赖动画帧率。
+- **动效与降级** — 右上角可以切换动态 / 静态氛围并记住偏好；实时遵循系统 `prefers-reduced-motion`。场景最多约 30 FPS、DPR 上限 1.5；手机使用更少粒子，标签页隐藏、场景滚出视口或暂停专注时停止持续渲染。无 WebGL 时显示静态轨道；退出今天后释放动画、监听器和 GPU 资源。
 - **会话关联与跳转** — 把任意待办关联到负责它的 DSH 会话。行内显示会话标题，点击即跳转（`ctx.uiWorkspace.openSession`）；已归档或已删除的会话会被提示，而不是导航到空处。
 - **与智能体同源** — `todo_track` 工具（`list` / `add` / `update` / `remove` / `clearDone`，支持 `tags`、`priority`、`quadrant`、`today`）调用同一个 Host 存储，智能体和面板读写的是一份清单。`list` 支持分页与按范围、优先级、象限、标签、标题过滤，长清单也不会灌满模型的上下文。
 
@@ -44,7 +45,7 @@ dsh plugin --profile desktop add /absolute/path/to/dsh-today-todo
 # 3. 在会话里：plugin_manager → install_bundle，传入本地绝对路径
 ```
 
-插件是纯 JavaScript，无运行时依赖；浏览器侧的 `client.js` 已随仓库提交，安装时无需构建或下载。
+插件是纯 JavaScript；Three.js 已本地打包进随仓库提交的 `client.js`，进入今天时才初始化。安装时无需构建，也不需要访问 CDN 或额外下载浏览器资源。
 
 ### 从 git 安装
 
@@ -60,7 +61,7 @@ dsh plugin --profile desktop add git+ssh://git@github.com/kaelinda/dsh-today-tod
 
 ## 面板布局
 
-面板采用跟随 DSH 主题的工作台布局，浅色与深色共用宿主颜色 token，无额外字体或 UI 依赖。
+列表与四象限跟随 DSH 浅色 / 深色主题；今天使用独立、局部作用域的夜色调色板。无额外字体或 UI 框架依赖。
 
 - **标题与今日专注**：明确的标题层级、列表 / 四象限切换，以及显示今日未完成数量的专注入口。
 - **新增待办**：带可见标签的输入框和「添加」按钮，支持回车保存；输入法选词回车不会提前提交。
@@ -69,7 +70,7 @@ dsh plugin --profile desktop add git+ssh://git@github.com/kaelinda/dsh-today-tod
 - **详情编辑**：点击标题或行尾箭头展开；桌面悬停 / 键盘聚焦提供快捷操作，窄窗口和触屏可在详情中重命名、删除。
 - **已完成分组**：完成项单独归组并划线，底部保留「清除已完成」。
 - **四象限**：不同颜色的顶边、Q1–Q4 标识与操作提示共同区分象限；窄面板自动改为单列。
-- **今天与番茄钟**：保留圆相、日期、专注清单和计时器，统一控件与文字尺寸，减少持续装饰动效。
+- **今天与番茄钟**：三维心流轨道承载专注氛围，清晰的 HTML 计时器、进度条与今日清单承载操作；可随时关闭动态。
 - **可访问性**：可见键盘焦点、明确的按钮名称、扩大触屏点击区域，并遵循 `prefers-reduced-motion`；响应式布局根据插件面板宽度调整。
 
 ---
@@ -83,7 +84,10 @@ dsh plugin --profile desktop add git+ssh://git@github.com/kaelinda/dsh-today-tod
 | `lib/routes.js` | 仅本机的 `GET /plugins/dsh-todos/state` 与 `POST /plugins/dsh-todos/mutate`。 |
 | `lib/tool.js` | 分页版 `todo_track` 智能体工具。 |
 | `src/client/` | 客户端源码：入口、常量、词典、番茄钟、共享辅助、图标、CSS、面板、注册。 |
-| `scripts/build-client.mjs` | 生成浏览器产物的确定性 include 构建。 |
+| `src/client/focus-canvas.js` | React 场景挂载、状态同步与无 WebGL 降级。 |
+| `src/client/focus-scene.js` | Three.js 粒子、轨道、状态动效与 GPU 资源生命周期。 |
+| `src/client/focus-motion.js` | 可取消的 30 FPS 动画调度。 |
+| `scripts/build-client.mjs` | 展开 include，并用 esbuild 嵌入本地 Three.js 场景。 |
 | `client.js` | 生成的浏览器产物：`sidebar.panellist` 入口、列表面板、禅模式。**不要直接编辑**。 |
 | `locale/*.json` | 插件管理器的标题 / 描述。 |
 | `cordis.patch.yml` | 插入激活该 bundle 的那一行。 |
@@ -92,9 +96,10 @@ dsh plugin --profile desktop add git+ssh://git@github.com/kaelinda/dsh-today-tod
 
 ## 开发
 
-无运行时依赖。发布的 `client.js` 是生成物，因此要改 `src/client/*.js` 后再构建：
+开发构建需要锁定版本的 `three` 与 `esbuild`（仅 devDependencies）。发布的 `client.js` 已包含浏览器所需代码，因此要改 `src/client/*.js` 后再构建：
 
 ```bash
+npm ci          # 安装锁定的构建依赖
 npm run build   # 从 src/client 生成 client.js
 npm test        # 先构建，再 node --test
 ```
@@ -102,10 +107,10 @@ npm test        # 先构建，再 node --test
 `npm test` 还会校验仓库里的 `client.js` 与构建产物完全一致，防止产物悄悄偏离源码。
 
 - **Host 半边** — `index.js` 加 `lib/`；Loader 挂载 `cordis.patch.yml` 声明的行，并把 `config` 传给 `apply(ctx, config)`。
-- **客户端半边** — `src/client/index.js` 是 factory 入口；构建把它的 `// @include` 行展开成单个 `window.__ModuleLoader__` 产物。`client.js` 以该模块形式下发给页面，其 `id` 必须等于包名，`dsh.client.immediately` 让侧栏入口在启动时注册。
-- **样式** — 只用主题 token（`--dsw-alias-*`），类名带前缀，不用全局选择器；动效受 `prefers-reduced-motion` 约束。
+- **客户端半边** — `src/client/index.js` 是 factory 入口；构建展开它的 `// @include` 行，并在延迟初始化函数内嵌入 Three.js 场景，生成单个 `window.__ModuleLoader__` 产物。`client.js` 以该模块形式下发给页面，其 `id` 必须等于包名，`dsh.client.immediately` 让侧栏入口在启动时注册。
+- **样式** — 列表使用宿主主题 token（`--dsw-alias-*`），今天在局部重定义夜色 token；类名带前缀，不用全局选择器。CSS 与 WebGL 动效都响应 `prefers-reduced-motion`。
 - **开发期数据** — `$DSH_HOME/dsh-todos/todos.json`；可用 `DSH_TODOS_FILE` 或该行的 `dataFile` 指向别处。
-- **测试** — `test/smoke.test.mjs` 用 React stub 渲染客户端；`test/store.test.mjs` 覆盖 fsync、坏文件恢复、revision 冲突、锁与并发写；`test/routes.test.mjs` 锁定 HTTP 契约；`test/tool.test.mjs` 覆盖分页与过滤；`test/build.test.mjs` 守护生成产物。
+- **测试** — `test/smoke.test.mjs` 用 React stub 渲染客户端；`test/store.test.mjs` 覆盖 fsync、坏文件恢复、revision 冲突、锁与并发写；`test/routes.test.mjs` 锁定 HTTP 契约；`test/tool.test.mjs` 覆盖分页与过滤；`test/build.test.mjs` 守护生成产物与嵌入代码语法；`test/focus-motion.test.mjs` 验证限帧、暂停、恢复、卸载与延迟回调。
 - **热更新** — 客户端改动在页面内热更新；Host 改动需重载该 bundle 行（禁用 / 启用该 bundle，或重启 Host）。
 
 ---

@@ -2,13 +2,14 @@
  * Assemble `client.js` from the small sources in `src/client/`.
  *
  * The DSH browser artifact must be a single lazy factory, so the shipped file
- * stays one script; the build is a deterministic include pass rather than a
- * dependency-heavy bundler. Editing `client.js` directly is a mistake: run
- * `npm run build` so the generated artifact picks up the source change.
+ * stays one script. The build expands includes and bundles only the Three.js
+ * scene with esbuild, retaining readable application code. Edit sources rather
+ * than `client.js`, then build so the generated artifact picks up the changes.
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { buildSync } from 'esbuild';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const SOURCE_DIR = join(ROOT, 'src', 'client');
@@ -41,7 +42,23 @@ function expand(file, stack = []) {
  * @returns the exact text `client.js` should contain.
  */
 export function buildClient() {
-  return expand(ENTRY);
+  // The renderer and Three.js are embedded locally inside a lazy function. No
+  // CDN, eval, script injection, extra Host endpoint, or runtime dependency.
+  const scene = buildSync({
+    entryPoints: [join(SOURCE_DIR, 'focus-scene.js')],
+    bundle: true,
+    write: false,
+    format: 'iife',
+    globalName: 'DSHFocusScene',
+    platform: 'browser',
+    target: 'es2020',
+    // Keep vendor shader literals on escaped lines, avoiding upstream GLSL
+    // whitespace in the generated file while preserving their exact contents.
+    supported: { 'template-literal': false },
+    minify: true,
+    legalComments: 'inline',
+  }).outputFiles[0].text;
+  return expand(ENTRY).replace('// @bundle focus-scene', () => scene.trimEnd());
 }
 
 /**

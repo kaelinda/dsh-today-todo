@@ -55,6 +55,21 @@
       const [pomodoro, setPomodoro] = useState(() => loadPomodoro());
       const [now, setNow] = useState(() => Date.now());
       const [flash, setFlash] = useState(null);
+      const [sceneMotion, setSceneMotion] = useState(() => {
+        try { return localStorage.getItem('dsh-todos.motion.v1') !== 'off'; } catch { return true; }
+      });
+      const [reducedMotion, setReducedMotion] = useState(() =>
+        typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+      useEffect(() => {
+        const query = window.matchMedia('(prefers-reduced-motion: reduce)');
+        const change = () => setReducedMotion(query.matches);
+        query.addEventListener('change', change);
+        return () => query.removeEventListener('change', change);
+      }, []);
+      useEffect(() => {
+        try { localStorage.setItem('dsh-todos.motion.v1', sceneMotion ? 'on' : 'off'); } catch { /* Optional preference. */ }
+      }, [sceneMotion]);
 
       // The Host owns the calendar: its day key decides what "today" means even
       // when the browser runs in a different time zone. Until the first state
@@ -782,22 +797,15 @@
         pickerFor === item.id ? renderPicker(item) : null);
       };
 
-      /**
-       * Immersive "today" view: one enso, the date, one add line, the items, and
-       * nothing else. Filters, statistics, tags and session chips stay in the
-       * list view; here they are reachable only through a row's details.
-       */
-      /**
-       * Focus timer that takes the enso's place: one ring, the clock, the phase,
-       * and two quiet controls. The ring is the animation; nothing else moves.
-       */
+      // HTML owns the real timer and its progress. The decorative WebGL scene
+      // can stop or fail independently without interrupting the focus session.
       const renderPomodoro = () => {
-        const remaining = pomodoroRemaining(pomodoro, now);
-        const total = pomodoroTotal(pomodoro);
+        const remaining = pomodoro === null ? POMODORO_FOCUS_MS : pomodoroRemaining(pomodoro, now);
+        const total = pomodoro === null ? POMODORO_FOCUS_MS : pomodoroTotal(pomodoro);
         const ratio = total === 0 ? 0 : Math.min(1, Math.max(0, remaining / total));
         const radius = 62;
         const circumference = 2 * Math.PI * radius;
-        const isBreak = pomodoro.phase === 'break';
+        const isBreak = pomodoro?.phase === 'break';
         return h('div', {
           className: cx('dsh-todos-pomo', isBreak && 'dsh-todos-pomoBreak'),
           role: 'timer',
@@ -814,27 +822,11 @@
               transform: 'rotate(-90 74 74)',
             })),
           h('div', { className: 'dsh-todos-pomoClock' },
-            h('span', { className: 'dsh-todos-pomoTime' }, formatClock(remaining)),
             h('span', { className: 'dsh-todos-pomoPhase' },
-              t(isBreak ? 'pomodoro.breaking' : 'pomodoro.focusing')))),
-        pomodoro.label === null || isBreak
-          ? null
-          : h('p', { className: 'dsh-todos-pomoLabel' },
-            t('pomodoro.sessionLabel', { title: pomodoro.label })),
-        h('p', { className: 'dsh-todos-pomoMeta' },
-          t('pomodoro.round', { round: pomodoro.round }), ' · ',
-          t(isBreak ? 'pomodoro.breakHint' : 'pomodoro.focusHint')),
-        h('div', { className: 'dsh-todos-pomoActions' },
-          h('button', {
-            type: 'button',
-            className: 'dsh-todos-zenAddButton dsh-todos-focusable',
-            onClick: togglePomodoroPause,
-          }, pomodoro.running ? t('pomodoro.pause') : t('pomodoro.resume')),
-          h('button', {
-            type: 'button',
-            className: 'dsh-todos-zenAddButton dsh-todos-focusable',
-            onClick: stopPomodoro,
-          }, t('pomodoro.stop'))));
+              t(pomodoro === null ? 'zen.ready' : !pomodoro.running ? 'pomodoro.paused' : isBreak ? 'pomodoro.breaking' : 'pomodoro.focusing')),
+            h('span', { className: 'dsh-todos-pomoTime' }, formatClock(remaining)),
+            h('span', { className: 'dsh-todos-pomoMeta' },
+              t(isBreak ? 'pomodoro.breakHint' : 'pomodoro.focusHint')))));
       };
 
       const renderZen = () => {
@@ -851,42 +843,61 @@
         } catch {
           when = '';
         }
+        const sceneMode = pomodoro !== null
+          ? (!pomodoro.running ? 'paused' : pomodoro.phase)
+          : zenDone.length > 0 && zenOpen.length === 0 ? 'complete' : 'idle';
         return h('div', { className: 'dsh-todos-zenScroll' },
           h('div', { className: 'dsh-todos-zen' },
+            h('div', { className: 'dsh-todos-zenNav' },
             h('button', {
               type: 'button',
               className: 'dsh-todos-zenExit dsh-todos-focusable',
               title: t('zen.exitHint'),
               onClick: () => setScope('all'),
             }, '← ', t('zen.exit')),
-            pomodoro === null
-              ? h('svg', {
-                className: 'dsh-todos-zenEnso',
-                width: 78, height: 78, viewBox: '0 0 88 88', fill: 'none', 'aria-hidden': true,
-              },
-              h('circle', {
-                cx: 44, cy: 44, r: 37, stroke: 'currentColor', strokeWidth: 1.6,
-                strokeLinecap: 'round', strokeDasharray: '196 36', transform: 'rotate(-96 44 44)',
-              }))
-              : renderPomodoro(),
-            pomodoro === null
-              ? h('h1', { className: 'dsh-todos-zenHeading' }, t('zen.title'))
-              : null,
-            pomodoro === null
-              ? h('p', { className: 'dsh-todos-zenDate' }, when)
-              : null,
-            pomodoro === null && zenOpen.length > 0
-              ? h('p', { className: 'dsh-todos-zenSummary' }, t('zen.summary', { open: zenOpen.length }))
-              : null,
-            pomodoro === null
-              ? h('button', {
+            h('button', {
+              type: 'button', className: 'dsh-todos-motionToggle dsh-todos-focusable',
+              'aria-pressed': sceneMotion && !reducedMotion,
+              disabled: reducedMotion,
+              title: t(reducedMotion ? 'zen.motionReduced' : 'zen.motionHint'),
+              onClick: () => setSceneMotion(!sceneMotion),
+            }, h(IconOrbit), t(reducedMotion ? 'zen.motionReduced' : sceneMotion ? 'zen.motionOn' : 'zen.motionOff'))),
+            h('header', { className: 'dsh-todos-zenHeader' },
+              h('p', { className: 'dsh-todos-zenEyebrow' }, t('zen.orbit')),
+              h('h1', { className: 'dsh-todos-zenHeading' }, t('zen.title')),
+              h('p', { className: 'dsh-todos-zenDate' }, when)),
+            h('div', { className: 'dsh-todos-orbitStage', 'data-mode': sceneMode },
+              h(FocusCanvas, {
+                mode: sceneMode,
+                progress: pomodoro === null ? 0 : 1 - pomodoroRemaining(pomodoro, now) / pomodoroTotal(pomodoro),
+                completed: zenDone.length,
+                motion: sceneMotion && !reducedMotion,
+              }),
+              h('div', { className: 'dsh-todos-orbitHud' }, renderPomodoro())),
+            h('div', { className: 'dsh-todos-zenControls' },
+              pomodoro === null ? h('button', {
                 type: 'button',
                 className: 'dsh-todos-pomoStart dsh-todos-focusable',
                 title: t('pomodoro.startHint'),
                 onClick: startPomodoro,
-              }, h(IconTimer), t('pomodoro.start'))
-              : null,
+              }, h(IconPlay), t('pomodoro.start')) : h('div', { className: 'dsh-todos-pomoActions' },
+                h('button', {
+                  type: 'button', className: 'dsh-todos-pomoStart dsh-todos-focusable', onClick: togglePomodoroPause,
+                }, h(pomodoro.running ? IconPause : IconPlay), t(pomodoro.running ? 'pomodoro.pause' : 'pomodoro.resume')),
+                h('button', {
+                  type: 'button', className: 'dsh-todos-zenStop dsh-todos-focusable', onClick: stopPomodoro,
+                }, h(IconStop), t('pomodoro.stop'))),
+              h('p', { className: 'dsh-todos-zenMantra' },
+                pomodoro?.label && pomodoro.phase === 'focus' ? pomodoro.label : t(sceneMode === 'break' ? 'zen.rest' : sceneMode === 'complete' ? 'zen.allDone' : 'zen.mantra'))),
+            h('div', { className: 'dsh-todos-zenPlan' },
+              h('div', { className: 'dsh-todos-zenPlanHead' },
+                h('h2', null, t('zen.plan')),
+                h('span', null, t('zen.progress', { done: zenDone.length, total: zenItems.length }))),
+              h('div', { className: 'dsh-todos-zenProgress', role: 'progressbar', 'aria-label': t('zen.plan'),
+                'aria-valuemin': 0, 'aria-valuemax': Math.max(zenItems.length, 1), 'aria-valuenow': zenDone.length },
+                h('span', { style: { transform: `scaleX(${zenItems.length ? zenDone.length / zenItems.length : 0})` } })),
             h('form', { className: 'dsh-todos-zenAdd', onSubmit: submitDraft },
+              h(IconPlus),
               h('input', {
                 className: 'dsh-todos-zenInput dsh-todos-focusable',
                 type: 'text',
@@ -941,7 +952,7 @@
                 className: 'dsh-todos-zenNotice dsh-todos-zenNoticeError',
                 role: 'alert',
               }, t('error.load', { message: String(state.error ?? '') }))
-              : null));
+              : null)));
       };
 
       const priorityOptions = [

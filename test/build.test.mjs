@@ -10,6 +10,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
+import { Script } from 'node:vm';
 
 import { buildClient } from '../scripts/build-client.mjs';
 
@@ -24,6 +25,14 @@ test('client.js is exactly the artifact generated from src/client', () => {
 test('the generated artifact contains no unresolved include markers', () => {
   const committed = readFileSync(ARTIFACT, 'utf8');
   assert.doesNotMatch(committed, /\/\/ @include/);
+  assert.doesNotMatch(committed, /\/\/ @bundle/);
   assert.match(committed, /window\.__ModuleLoader__\.load\(\{/);
   assert.match(committed, /id: 'dsh-todos'/);
+});
+
+test('the bundled vendor code remains valid JavaScript inside the Host factory', () => {
+  const artifact = readFileSync(ARTIFACT, 'utf8');
+  assert.doesNotThrow(() => new Script(artifact));
+  assert.match(artifact, /getFocusSceneRuntime/);
+  assert.match(readFileSync(join(ROOT, 'THIRD_PARTY_NOTICES.md'), 'utf8'), /three\.js authors/);
 });
