@@ -1,9 +1,54 @@
 # dsh-todos
 
-在 DeepSeek Harness 左侧栏里放一个「待办」面板：一条清单，一个专注的「今天」禅模式，外加一枚内置番茄钟。
+DeepSeek Harness 的待办与专注插件：在左侧栏管理任务，用四象限理清优先级，再进入 Three.js「心流轨道」，一次专注一件事。
 
 ![License](https://img.shields.io/github/license/kaelinda/dsh-today-todo)
 ![Node](https://img.shields.io/badge/node-%3E%3D20-brightgreen)
+
+[界面预览](#界面预览) · [功能](#功能) · [安装](#安装) · [开发](#开发)
+
+## 界面预览
+
+以下为本地浏览器预览截图，使用演示数据。
+
+### 今天 · 心流轨道
+
+粒子环与三维星轨围绕番茄钟缓慢流动，任务清单保持清晰可操作。右上角可随时切换动态 / 静态氛围。
+
+![今天模式：蓝色粒子轨道环绕计时器，下方展示今日任务清单](docs/screenshots/today-orbit.png)
+
+<details>
+<summary>更多截图：专注与休息、浅深色清单、四象限、移动端</summary>
+
+### 专注与休息
+
+专注时粒子逐渐收拢，休息时转为暖金色；暂停会定格场景，完成任务会扩散一圈微光。
+
+| 25 分钟专注 | 5 分钟休息 |
+| --- | --- |
+| ![专注状态：青绿色粒子环、倒计时与暂停和结束按钮](docs/screenshots/today-focus.png) | ![休息状态：暖金色粒子环和五分钟休息倒计时](docs/screenshots/today-break.png) |
+
+### 浅色与深色清单
+
+任务卡片直接展示优先级、今天标记、标签和关联会话；完成项单独归组。
+
+| 浅色主题 | 深色主题 |
+| --- | --- |
+| ![浅色待办清单：新增入口、筛选器、任务卡片与已完成分组](docs/screenshots/list-light.png) | ![深色待办清单：相同的任务结构与适配深色背景的控件](docs/screenshots/list-dark.png) |
+
+### 四象限
+
+按重要性与紧急性分组，颜色、Q1–Q4 标识和操作提示共同区分象限；未分类任务保留在下方。
+
+![四象限视图：重要且紧急、重要不紧急、紧急不重要、不急不重要及未分类任务](docs/screenshots/matrix.png)
+
+### 窄屏与减少动态
+
+375px 窄屏下，计时器、任务和操作仍完整可用。下图展示英文界面及系统「减少动态」生效后的静态场景。
+
+<img src="docs/screenshots/today-mobile.png" alt="375px 英文今天模式：静态粒子轨道、计时器、今日清单与减少动态状态" width="320">
+
+</details>
 
 ---
 
@@ -91,6 +136,7 @@ dsh plugin --profile desktop add git+ssh://git@github.com/kaelinda/dsh-today-tod
 | `client.js` | 生成的浏览器产物：`sidebar.panellist` 入口、列表面板、禅模式。**不要直接编辑**。 |
 | `locale/*.json` | 插件管理器的标题 / 描述。 |
 | `cordis.patch.yml` | 插入激活该 bundle 的那一行。 |
+| `docs/screenshots/` | README 使用的界面截图，均为演示数据。 |
 
 ---
 
