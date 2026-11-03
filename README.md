@@ -11,7 +11,9 @@ zen "today" focus mode and a built-in pomodoro.
 - **Todo tracking** — add, rename, complete, delete, filter, and clear completed
   items. The list is stored by the Host in
   `$DSH_HOME/dsh-todos/todos.json`, so it survives Web reloads, app restarts,
-  and browser data being cleared.
+  and browser data being cleared. Writes are fsynced and renamed into place, and
+  a mutation re-reads the document under a lock so two DSH processes cannot
+  overwrite each other.
 - **Per-item details** (open with the chevron at the end of a row):
   - **Tags** — free-form module/category labels (`#panel`, `#docs`), editable as
     chips in the details drawer and filterable from the toolbar's filter popover.
@@ -24,8 +26,10 @@ zen "today" focus mode and a built-in pomodoro.
   - **Today** — put an item into the today focus list (sun button on the row, or
     the Today control in its details). The **今天 / Today** scope shows only
     those items, and anything added while that scope is active joins today
-    automatically. `todayDate` keeps the day key, so the focus list resets by
-    itself each day while the record keeps the date it was planned for.
+    automatically. The Host publishes the day key, so the panel uses one
+    calendar even when the browser runs in another time zone. `todayDate` keeps
+    the day key, so the focus list resets by itself each day while the record
+    keeps the date it was planned for.
 - **Zen mode for Today** — switching the scope to **今天 / Today** replaces the
   whole panel with a quiet, full-column focus view: one enso mark, the date,
   one centred add line, and only today's open items (priority reduced to a
@@ -47,7 +51,9 @@ zen "today" focus mode and a built-in pomodoro.
   instead of navigating nowhere.
 - **Agent parity** — the `todo_track` tool (`list` / `add` / `update` / `remove` /
   `clearDone`, with `tags`, `priority`, `quadrant`, `today`) calls the same Host
-  store, so the agent and the panel share one list.
+  store, so the agent and the panel share one list. `list` is paged and can be
+  filtered by scope, priority, quadrant, tag, or title text, so a long list does
+  not flood the model's context.
 
 ## Install
 
@@ -70,8 +76,9 @@ dsh plugin --profile desktop add /absolute/path/to/dsh-today-todo
 # 3. In an agent session: plugin_manager → install_bundle, absolute directory path
 ```
 
-The plugin is plain JavaScript with no dependencies, so nothing is built or
-downloaded.
+The plugin is plain JavaScript with no runtime dependencies. The browser
+`client.js` artifact is committed, so nothing is built or downloaded at install
+time.
 
 ### From git
 
@@ -122,26 +129,44 @@ behind the details chevron.
 | File | Role |
 | --- | --- |
 | `index.js` | Host half: mounts the store, the panel API, and the agent tool. |
-| `lib/store.js` | Atomic JSON persistence, normalization, and the single mutation path. |
+| `lib/store.js` | Durable JSON store: normalization, revision guard, file lock, fsync, corrupt-file backup, and the single mutation path. |
 | `lib/routes.js` | Loopback-only `GET /plugins/dsh-todos/state` and `POST /plugins/dsh-todos/mutate`. |
-| `lib/tool.js` | The `todo_track` agent tool. |
-| `client.js` | Web half: `sidebar.panellist` entry, the list panel, and the zen Today view. |
+| `lib/tool.js` | The paged `todo_track` agent tool. |
+| `src/client/` | Client source: entry, constants, locale, pomodoro helpers, shared helpers, icons, CSS, the panel page, and registration. |
+| `scripts/build-client.mjs` | Deterministic include build that emits the shipped browser artifact. |
+| `client.js` | Generated browser artifact: the `sidebar.panellist` entry, the list panel, and the zen Today view. Do not edit directly. |
 | `locale/*.json` | Plugin Manager title/description. |
 | `cordis.patch.yml` | Inserts the row that activates the bundle. |
 
 ## Development
 
-No build step, no dependencies.
+No runtime dependencies. The shipped `client.js` is generated, so edit
+`src/client/*.js` and run:
+
+```bash
+npm run build   # emit client.js from src/client
+npm test        # build + node --test
+```
+
+`npm test` also checks that the committed `client.js` is exactly what the build
+would produce, so the artifact cannot silently drift from its sources.
 
 - **Host half** — `index.js` plus `lib/`; the Loader mounts the row declared in
   `cordis.patch.yml` and passes `config` to `apply(ctx, config)`.
-- **Client half** — `client.js` is served to the page as a
-  `window.__ModuleLoader__` module. Its `id` must equal the package name, and
-  `dsh.client.immediately` makes the sidebar entry register at boot.
+- **Client half** — `src/client/index.js` is the factory entry; the build expands
+  its `// @include` lines into the single `window.__ModuleLoader__` artifact.
+  `client.js` is served to the page as that module, its `id` must equal the
+  package name, and `dsh.client.immediately` makes the sidebar entry register at
+  boot.
 - **Styling** — theme tokens only (`--dsw-alias-*`), prefixed classes, no global
   selectors; motion is gated on `prefers-reduced-motion`.
 - **Data during development** — `$DSH_HOME/dsh-todos/todos.json`; set
   `DSH_TODOS_FILE` or the row's `dataFile` to point elsewhere.
+- **Tests** — `test/smoke.test.mjs` renders the client through a React stub;
+  `test/store.test.mjs` covers fsync, corrupt-file recovery, revision conflicts,
+  locks, and concurrent writers; `test/routes.test.mjs` pins the HTTP contract;
+  `test/tool.test.mjs` covers paging and filters; `test/build.test.mjs` guards
+  the generated artifact.
 - **Reloading** — client changes hot-reload in the page; Host changes need the
   bundle row to reload (disable/enable the bundle, or restart the Host).
 
@@ -164,6 +189,7 @@ The `DSH_TODOS_FILE` environment variable overrides the default path.
 ```json
 {
   "version": 2,
+  "revision": 3,
   "items": [
     {
       "id": "todo-…",
@@ -187,6 +213,7 @@ Field contract:
 
 | Field | Values |
 | --- | --- |
+| `revision` | monotonically increasing document revision used for optimistic locking |
 | `tags` | up to 8 tags, each up to 24 characters, de-duplicated case-insensitively |
 | `priority` | `P0` \| `P1` \| `P2` \| `P3` \| `null` |
 | `quadrant` | `q1` \| `q2` \| `q3` \| `q4` \| `null` |
@@ -194,14 +221,32 @@ Field contract:
 | `todayAt` | when the item joined that day's focus list, for ordering |
 
 A missing or malformed document degrades to an empty list; it never prevents the
-plugin from activating. Rows written by version 1 are normalized to version 2.
+plugin from activating. A corrupt document is first moved aside to
+`todos.json.corrupt-<timestamp>` so it can be inspected or restored. Rows written
+by version 1 are normalized to version 2.
+
+### Concurrency and recovery
+
+- The panel sends the `revision` it rendered with every mutation. If the agent or
+  another tab wrote in the meantime, the Host returns `409` with
+  `code: todo_revision_conflict` and its current snapshot; the panel applies that
+  snapshot and retries once instead of overwriting the newer list.
+- Each mutation takes a sibling `todos.json.lock`, re-reads the document under
+  it, and only then applies the operation. A second process therefore merges its
+  edit on top of the first rather than replacing the whole file from stale
+  memory. A lock left by a crashed process is reclaimed after ten seconds.
+- Persistence writes a temporary file, fsyncs it, renames it over the document,
+  and fsyncs the directory best-effort. The temporary file has a process-unique
+  name, so concurrent writers never share it.
 
 ## 中文速览
 
 - 左侧栏「待办」入口：面板支持标签、P0–P3 优先级、四象限、今天、会话关联与一键跳转。
 - 点「今天」进入沉浸式禅模式：圆相呼吸、日期、一行输入、只列今天未完成的事项，`Esc` 退出。
 - 禅模式内置番茄钟：25 分钟专注 + 5 分钟休息，进度环呼吸与完成动画，可暂停/结束，刷新后自动恢复。
-- 数据保存在 `~/.dsh/dsh-todos/todos.json`；智能体通过 `todo_track` 工具读写同一份清单。
+- 数据保存在 `~/.dsh/dsh-todos/todos.json`；写入使用 fsync + 原子替换，修改前加文件锁并重读，坏文件会备份为 `todos.json.corrupt-*`；面板用 revision 乐观锁避免覆盖智能体或其他标签页的新改动。
+- 「今天」的日期由 Host 下发，浏览器时区不同也不会错位。
+- 智能体通过 `todo_track` 工具读写同一份清单；`list` 支持分页与按范围、优先级、象限、标签、标题过滤。
 - 安装：`dsh plugin --profile desktop add /绝对路径/dsh-today-todo`，重启 Host 后生效。
 
 ## License

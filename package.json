@@ -2,6 +2,11 @@
   "name": "dsh-todos",
   "version": "1.0.0",
   "private": true,
+  "scripts": {
+    "build": "node scripts/build-client.mjs",
+    "pretest": "npm run build",
+    "test": "node --test"
+  },
   "type": "module",
   "description": "DeepSeek Harness plugin: a todo tracker in the left sidebar panel, with items linked to the DSH session that owns the work and one-click navigation back to it.",
   "keywords": [
@@ -40,6 +45,8 @@
     "index.js",
     "lib",
     "client.js",
+    "src",
+    "scripts",
     "cordis.patch.yml",
     "locale/*.json",
     "icon.svg",
