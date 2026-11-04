@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+- **Reliable saves** — publish items and revision only after temporary-file
+  write, fsync, and rename succeed. Save failures return an explicit error and
+  unchanged committed state; retries re-read under the lock so another process's
+  changes survive. Unreadable files and failed corrupt backups block writes.
+  Reads no longer rename corrupt files. Panel and agent tool surface warnings.
+- **Task-bound focus** — choose a Today task explicitly before starting. Timer
+  identity survives sorting, renaming, reload, and switching views. Elapsed,
+  interrupted, or blocked sessions offer completion, continuation, rest, or a
+  new task, with optional session-local obstacle/next-step notes. Failed task
+  completion keeps the review open; stale polling and double clicks cannot
+  undo or repeat a successful completion.
+
 - **Today add feedback** — successful additions send a composer pulse and give
   the created row a soft entrance, light sweep, and tiny sparks. Independent
   short-lived markers handle repeated titles and rapid adds; failures, polling,

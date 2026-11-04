@@ -9,9 +9,12 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import {
+  fstatSync,
+  fsyncSync,
   mkdtempSync,
   readdirSync,
   readFileSync,
+  renameSync,
   rmSync,
   utimesSync,
   writeFileSync,
@@ -62,20 +65,23 @@ test('store writes atomically and fsyncs the temp file and its directory', () =>
   assert.equal(document.items[0].title, 'Durable');
 }));
 
-test('corrupt document is moved aside, not overwritten', () => withTempDir((dir) => {
+test('corrupt document is only moved aside under a mutation lock, not by reads', () => withTempDir((dir) => {
   const file = join(dir, 'todos.json');
   writeFileSync(file, '{ not json', 'utf8');
   const warnings = [];
   const store = createTodoStore({ file, warn: (message) => warnings.push(message) });
 
   assert.deepEqual(store.snapshot().items, []);
+  assert.equal(readFileSync(file, 'utf8'), '{ not json');
+  assert.equal(readdirSync(dir).some((name) => name.includes('.corrupt-')), false);
+
+  const outcome = store.apply({ op: 'add', title: 'Recovered' });
+  assert.equal(outcome.ok, true);
   assert.equal(warnings.some((message) => /corrupt todo document moved to/.test(message)), true);
   const backups = readdirSync(dir).filter((name) => name.includes('.corrupt-'));
   assert.equal(backups.length, 1);
   assert.equal(readFileSync(join(dir, backups[0]), 'utf8'), '{ not json');
 
-  const outcome = store.apply({ op: 'add', title: 'Recovered' });
-  assert.equal(outcome.ok, true);
   assert.equal(JSON.parse(readFileSync(file, 'utf8')).items[0].title, 'Recovered');
 }));
 
@@ -85,6 +91,7 @@ test('a document without an items array is treated as corrupt', () => withTempDi
   const warnings = [];
   const store = createTodoStore({ file, warn: (message) => warnings.push(message) });
   assert.deepEqual(store.snapshot().items, []);
+  assert.equal(store.apply({ op: 'add', title: 'Recovered' }).ok, true);
   assert.equal(readdirSync(dir).some((name) => name.includes('.corrupt-')), true);
   assert.equal(warnings.some((message) => /no items array/.test(message)), true);
 }));
@@ -233,3 +240,120 @@ test('an unreadable document degrades to empty with a warning', () => withTempDi
   assert.match(store.snapshot().lastError, /permission denied/);
   assert.equal(warnings.length, 1);
 }));
+
+for (const failure of ['write', 'fsync', 'rename']) {
+  test(`a ${failure} failure rejects the mutation without publishing items or revision`, () => withTempDir((dir) => {
+    const file = join(dir, 'todos.json');
+    const seed = quietStore({ file }).add({ title: 'Committed' });
+    const before = readFileSync(file, 'utf8');
+    const fail = () => { throw new Error(`${failure} failed`); };
+    const store = quietStore({
+      file,
+      ...(failure === 'write' ? { writeFile: (path, ...args) => typeof path === 'string' ? fail() : writeFileSync(path, ...args) } : {}),
+      ...(failure === 'fsync' ? { syncFile: fail } : {}),
+      ...(failure === 'rename' ? { moveFile: fail } : {}),
+    });
+    const result = store.add({ title: 'Not saved' });
+    assert.equal(result.ok, false);
+    assert.equal(result.code, 'todo_persistence_failed');
+    assert.equal(result.snapshot.revision, seed.snapshot.revision);
+    assert.deepEqual(result.snapshot.items, seed.snapshot.items);
+    assert.match(result.snapshot.lastError, /failed/);
+    assert.equal(readFileSync(file, 'utf8'), before);
+    assert.deepEqual(readdirSync(dir), ['todos.json'], 'failed writes must clean up their lock and temporary file');
+  }));
+}
+
+test('failed update, removal and clearDone retain the committed state', () => withTempDir((dir) => {
+  const file = join(dir, 'todos.json');
+  const seed = quietStore({ file }).add({ title: 'Keep this', done: true });
+  const store = quietStore({ file, syncFile: () => { throw new Error('disk unavailable'); } });
+  for (const request of [
+    { op: 'update', id: seed.snapshot.items[0].id, title: 'Changed' },
+    { op: 'remove', id: seed.snapshot.items[0].id },
+    { op: 'clearDone' },
+  ]) {
+    const result = store.apply(request);
+    assert.equal(result.ok, false);
+    assert.deepEqual(result.snapshot.items, seed.snapshot.items);
+    assert.equal(result.snapshot.revision, seed.snapshot.revision);
+  }
+}));
+
+test('retry after a failed save preserves another instance\'s committed changes', () => withTempDir((dir) => {
+  const file = join(dir, 'todos.json');
+  let unavailable = true;
+  const first = quietStore({
+    file,
+    moveFile: (...args) => {
+      if (unavailable) throw new Error('temporary outage');
+      return renameSync(...args);
+    },
+  });
+  const failed = first.add({ title: 'Retry me', baseRevision: 1 });
+  assert.equal(failed.ok, false);
+  const second = quietStore({ file });
+  const saved = second.add({ title: 'Other instance' });
+  assert.equal(saved.ok, true);
+  unavailable = false;
+  const stale = first.add({ title: 'Retry me', baseRevision: failed.snapshot.revision });
+  assert.equal(stale.code, 'todo_revision_conflict');
+  assert.deepEqual(stale.snapshot.items.map((item) => item.title), ['Other instance']);
+  const retried = first.add({ title: 'Retry me', baseRevision: stale.snapshot.revision });
+  assert.equal(retried.ok, true);
+  assert.equal(retried.snapshot.lastError, null);
+  assert.deepEqual(JSON.parse(readFileSync(file, 'utf8')).items.map((item) => item.title), ['Retry me', 'Other instance']);
+}));
+
+test('unreadable storage blocks mutations instead of overwriting data with an empty list', () => withTempDir((dir) => {
+  const file = join(dir, 'todos.json');
+  quietStore({ file }).add({ title: 'Must survive' });
+  const before = readFileSync(file, 'utf8');
+  const store = quietStore({ file, readFile: () => { throw new Error('permission denied'); } });
+  const result = store.add({ title: 'Cannot safely add' });
+  assert.equal(result.ok, false);
+  assert.equal(result.code, 'todo_storage_unavailable');
+  assert.equal(readFileSync(file, 'utf8'), before);
+}));
+
+test('failed corrupt backup blocks writes and leaves the original recoverable', () => withTempDir((dir) => {
+  const file = join(dir, 'todos.json');
+  writeFileSync(file, '{ recoverable data');
+  const store = quietStore({ file, moveFile: () => { throw new Error('backup denied'); } });
+  const result = store.add({ title: 'Cannot safely add' });
+  assert.equal(result.ok, false);
+  assert.equal(result.code, 'todo_storage_unavailable');
+  assert.equal(readFileSync(file, 'utf8'), '{ recoverable data');
+  assert.deepEqual(readdirSync(dir), ['todos.json']);
+}));
+
+test('directory sync failure after rename does not invite duplicate retries', () => withTempDir((dir) => {
+  const file = join(dir, 'todos.json');
+  const store = quietStore({ file, syncDirectory: () => { throw new Error('unsupported'); } });
+  const result = store.add({ title: 'Already saved' });
+  assert.equal(result.ok, true);
+  assert.match(result.snapshot.lastError, /directory sync failed/);
+  assert.equal(JSON.parse(readFileSync(file, 'utf8')).items[0].title, 'Already saved');
+}));
+
+test('the default directory sync helper surfaces unsupported fsync as a saved warning', () => withTempDir((dir) => {
+  const file = join(dir, 'todos.json');
+  const store = quietStore({
+    file,
+    fsync: (fd) => {
+      if (fstatSync(fd).isDirectory()) throw new Error('directory fsync unsupported');
+      fsyncSync(fd);
+    },
+  });
+  const result = store.add({ title: 'Saved with warning' });
+  assert.equal(result.ok, true);
+  assert.match(result.snapshot.lastError, /directory sync failed.*unsupported/);
+  assert.equal(JSON.parse(readFileSync(file, 'utf8')).items[0].title, 'Saved with warning');
+}));
+
+test('snapshot tag arrays cannot mutate the store without committing', () => {
+  const store = quietStore({ file: null });
+  const result = store.add({ title: 'Immutable snapshot', tags: ['original'] });
+  result.snapshot.items[0].tags.push('unsaved');
+  assert.deepEqual(store.snapshot().items[0].tags, ['original']);
+});

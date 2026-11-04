@@ -13,9 +13,9 @@ import { createTodoStore } from '../lib/store.js';
 import { registerTodoTool, TOOL_NAME } from '../lib/tool.js';
 
 /** Build a store + registered tool over one temporary file. */
-function setup() {
+function setup(options = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'dsh-todos-tool-'));
-  const store = createTodoStore({ file: join(dir, 'todos.json'), warn: () => {} });
+  const store = createTodoStore({ file: join(dir, 'todos.json'), warn: () => {}, ...options });
   let definition = null;
   const tools = {
     register(candidate) {
@@ -159,6 +159,20 @@ test('mutations still go through the store and return a bounded page', async () 
     const unknown = await context.execute({ action: 'nope' });
     assert.equal(unknown.ok, false);
     assert.equal(unknown.code, 'todo_unknown_op');
+  } finally {
+    context.cleanup();
+  }
+});
+
+test('tool never claims a failed save succeeded', async () => {
+  const context = setup({ syncFile: () => { throw new Error('disk full'); } });
+  try {
+    const result = await context.execute({ action: 'add', title: 'Unsaved' });
+    assert.equal(result.ok, false);
+    assert.equal(result.code, 'todo_persistence_failed');
+    assert.match(result.message, /not applied.*disk full/);
+    assert.equal(result.revision, 1);
+    assert.deepEqual(result.items, []);
   } finally {
     context.cleanup();
   }

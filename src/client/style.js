@@ -301,7 +301,13 @@
 .dsh-todos-zenControls { display:flex; flex-direction:column; align-items:center; gap:16px; max-width:560px; width:100%; margin-top:-2px; }
 .dsh-todos-pomoStart { display:inline-flex; align-items:center; justify-content:center; gap:9px; min-height:44px; min-width:162px; padding:10px 24px; border:1px solid #a0ede3; border-radius:24px; background:#a0e6dc; color:#0b302e; font:inherit; font-size:13px; font-weight:600; cursor:pointer; box-shadow:0 0 24px #78d4ce13; }
 .dsh-todos-pomoStart:hover:where(:not(:disabled)) { background:#baf3e9; box-shadow:0 0 28px #78d4ce26; }
-.dsh-todos-pomoActions { display:flex; justify-content:center; align-items:center; gap:12px; }
+.dsh-todos-pomoActions { flex-wrap:wrap; display:flex; justify-content:center; align-items:center; gap:12px; }
+.dsh-todos-focusPicker { display:flex; flex-direction:column; gap:8px; width:100%; color:var(--todo-muted); font-size:13px; }
+.dsh-todos-focusPicker select, .dsh-todos-focusPicker textarea { width:100%; box-sizing:border-box; padding:10px; border:1px solid var(--todo-border); border-radius:8px; background:var(--todo-surface); color:var(--todo-text); font:inherit; }
+.dsh-todos-focusPicker textarea { resize:vertical; }
+.dsh-todos-focusReview { width:100%; display:flex; flex-direction:column; gap:12px; }
+.dsh-todos-focusReview p { margin:0; line-height:1.6; }
+.dsh-todos-focusReview small { color:var(--todo-muted); }
 .dsh-todos-zenStop { display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:44px; padding:8px 16px; border:1px solid var(--todo-border); border-radius:24px; background:#112232; color:#c8d7e5; font:inherit; font-size:13px; cursor:pointer; }
 .dsh-todos-zenStop:hover:where(:not(:disabled)) { background:var(--todo-hover); }
 .dsh-todos-zenMantra { width:100%; margin:0; min-height:22px; text-align:center; color:#a7bdce; font-size:13px; line-height:1.7; overflow-wrap:anywhere; }

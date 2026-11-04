@@ -140,3 +140,50 @@ test('routes reject remote callers, wrong methods, and invalid bodies', async ()
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test('mutate route reports save failures as 503 with the unchanged committed snapshot', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'dsh-todos-routes-'));
+  try {
+    const store = createTodoStore({
+      file: join(dir, 'todos.json'),
+      warn: () => {},
+      syncFile: () => { throw new Error('disk full'); },
+    });
+    const server = makeWebServer();
+    registerTodoRoutes(server, store);
+    const response = makeResponse();
+    await server.routes.get(MUTATE_PATH).handler(makeRequest({
+      method: 'POST',
+      body: { op: 'add', title: 'Not committed', baseRevision: 1 },
+    }), response);
+    assert.equal(response.result.status, 503);
+    assert.equal(response.result.body.ok, false);
+    assert.equal(response.result.body.code, 'todo_persistence_failed');
+    assert.equal(response.result.body.snapshot.revision, 1);
+    assert.deepEqual(response.result.body.snapshot.items, []);
+    assert.match(response.result.body.message, /not applied.*disk full/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('mutate route reports unsafe storage recovery as 503', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'dsh-todos-routes-'));
+  try {
+    const store = createTodoStore({
+      file: join(dir, 'todos.json'),
+      warn: () => {},
+      readFile: () => { throw new Error('permission denied'); },
+    });
+    const server = makeWebServer();
+    registerTodoRoutes(server, store);
+    const response = makeResponse();
+    await server.routes.get(MUTATE_PATH).handler(makeRequest({
+      method: 'POST', body: { op: 'add', title: 'Not committed' },
+    }), response);
+    assert.equal(response.result.status, 503);
+    assert.equal(response.result.body.code, 'todo_storage_unavailable');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

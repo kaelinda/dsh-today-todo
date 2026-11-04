@@ -61,6 +61,9 @@
       const [reducedMotion, setReducedMotion] = useState(() =>
         typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
       const [addedTasks, setAddedTasks] = useState([]);
+      const [selectedTaskId, setSelectedTaskId] = useState('');
+      // Stable synchronous gate: React's busy state may not render before a second click.
+      const [mutationGate] = useState(() => ({ pending: false }));
 
       // Keep independent arrival markers for rapid additions; timers never
       // outlive the page, and returning to Today does not replay old arrivals.
@@ -97,7 +100,10 @@
         const todayDate = typeof payload?.todayDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(payload.todayDate)
           ? payload.todayDate
           : null;
-        setState({ phase: 'ready', items, revision: Number(payload?.revision) || 0, todayDate, error: null });
+        const revision = Number(payload?.revision) || 0;
+        setState((previous) => revision < previous.revision ? previous : {
+          phase: 'ready', items, revision, todayDate, error: null, storageError: payload?.lastError ?? null,
+        });
       }, []);
 
       const refresh = useCallback(async () => {
@@ -141,31 +147,24 @@
       // Tick only while a session runs; the clock is derived from `endsAt`, so a
       // throttled or suspended tab still shows the true remainder on wake.
       useEffect(() => {
-        if (pomodoro === null || !pomodoro.running || scope !== 'today') return undefined;
+        if (pomodoro === null || !pomodoro.running) return undefined;
         setNow(Date.now());
         const timer = window.setInterval(() => setNow(Date.now()), 500);
         return () => window.clearInterval(timer);
       }, [pomodoro === null, pomodoro?.running, scope]);
 
-      // Phase completion: focus rolls into the break, the break closes the round.
+      // Never infer task completion from time elapsed or silently switch tasks.
       useEffect(() => {
-        if (pomodoro === null || !pomodoro.running) return;
-        if (now < (pomodoro.endsAt ?? 0)) return;
-        if (pomodoro.phase === 'focus') {
-          setFlash({ kind: 'focusDone' });
-          setPomodoro({
-            phase: 'break',
-            running: true,
-            endsAt: Date.now() + POMODORO_BREAK_MS,
-            pausedMs: POMODORO_BREAK_MS,
-            round: pomodoro.round,
-            label: pomodoro.label,
-          });
-        } else {
-          setFlash({ kind: 'breakDone' });
-          setPomodoro(null);
+        setPomodoro((current) => advancePomodoro(current, now));
+      }, [now]);
+
+      useEffect(() => {
+        if (state.phase !== 'ready' || !pomodoro?.taskId || pomodoro.phase !== 'focus' || pomodoro.review) return;
+        const task = state.items.find((item) => item.id === pomodoro.taskId);
+        if (!task || task.done) {
+          setPomodoro((current) => reviewPomodoro(current, task ? 'taskDone' : 'missing', Date.now()));
         }
-      }, [now, pomodoro]);
+      }, [state, pomodoro]);
 
       // Survive a panel remount or a page reload.
       useEffect(() => {
@@ -184,6 +183,8 @@
       }, [flash]);
 
       const mutate = useCallback(async (request) => {
+        if (mutationGate.pending) return false;
+        mutationGate.pending = true;
         setBusy(true);
         setNotice(null);
         try {
@@ -208,12 +209,14 @@
           }
           return false;
         } catch (error) {
+          if (error?.snapshot) accept(error.snapshot);
           setNotice({ kind: 'error', text: t('error.mutate', { message: messageOf(error) }) });
           return false;
         } finally {
+          mutationGate.pending = false;
           setBusy(false);
         }
-      }, [accept, t, state.revision]);
+      }, [accept, t, state.revision, mutationGate]);
 
       const items = state.items;
 
@@ -339,10 +342,11 @@
         if (editing === null) return;
         const title = editing.text.trim();
         const id = editing.id;
-        setEditing(null);
         const current = items.find((item) => item.id === id);
-        if (title === '' || (current !== undefined && current.title === title)) return;
-        void mutate({ op: 'update', id, title });
+        if (title === '' || (current !== undefined && current.title === title)) { setEditing(null); return; }
+        void mutate({ op: 'update', id, title }).then((result) => {
+          if (result) setEditing((value) => value?.id === id && value.text.trim() === title ? null : value);
+        });
       };
 
       const toggleDetails = (item) => {
@@ -361,34 +365,45 @@
 
       const removeTag = (item, tag) => patch(item, { tags: item.tags.filter((candidate) => candidate !== tag) });
 
+      const focusTask = items.find((item) => item.id === pomodoro?.taskId);
+      const selectedTask = zenOpen.find((item) => item.id === selectedTaskId);
       const startPomodoro = () => {
-        setNow(Date.now());
-        setFlash(null);
-        setPomodoro({
-          phase: 'focus',
-          running: true,
-          endsAt: Date.now() + POMODORO_FOCUS_MS,
-          pausedMs: POMODORO_FOCUS_MS,
-          round: 1,
-          label: zenOpen.length > 0 ? zenOpen[0].title : null,
-        });
+        if (pomodoro || !selectedTask || busy) return;
+        const at = Date.now();
+        setNow(at);
+        setPomodoro((current) => current ?? focusPomodoro(selectedTask, at));
       };
 
       const togglePomodoroPause = () => {
-        if (pomodoro === null) return;
-        if (pomodoro.running) {
-          const at = Date.now();
-          setNow(at);
-          setPomodoro({ ...pomodoro, running: false, endsAt: null, pausedMs: pomodoroRemaining(pomodoro, at) });
-        } else {
-          setNow(Date.now());
-          setPomodoro({ ...pomodoro, running: true, endsAt: Date.now() + pomodoro.pausedMs });
-        }
+        const at = Date.now();
+        setNow(at);
+        setPomodoro((current) => {
+          if (!current || current.review) return current;
+          const advanced = advancePomodoro(current, at);
+          if (advanced.review) return advanced;
+          return current.running
+            ? { ...current, running: false, endsAt: null, pausedMs: pomodoroRemaining(current, at) }
+            : { ...current, running: true, endsAt: at + current.pausedMs };
+        });
       };
 
-      const stopPomodoro = () => {
-        setFlash(null);
-        setPomodoro(null);
+      const stopPomodoro = () => setPomodoro((current) => reviewPomodoro(current, 'interrupted', Date.now()));
+      const continueFocus = () => {
+        if (!focusTask || focusTask.done || busy) return;
+        const at = Date.now();
+        setNow(at);
+        setPomodoro((current) => current?.review ? focusPomodoro(focusTask, at, current) : current);
+      };
+      const takeBreak = () => {
+        const at = Date.now();
+        setNow(at);
+        setPomodoro((current) => current?.review ? breakPomodoro(current, at) : current);
+      };
+      const completeFocusTask = async () => {
+        if (!focusTask || focusTask.done || busy) return;
+        const taskId = focusTask.id;
+        const result = await mutate({ op: 'update', id: taskId, done: true });
+        if (result) setPomodoro((current) => current?.taskId === taskId ? breakPomodoro(current, Date.now()) : current);
       };
 
       const openPicker = (item) => {
@@ -862,7 +877,7 @@
             })),
           h('div', { className: 'dsh-todos-pomoClock' },
             h('span', { className: 'dsh-todos-pomoPhase' },
-              t(pomodoro === null ? 'zen.ready' : !pomodoro.running ? 'pomodoro.paused' : isBreak ? 'pomodoro.breaking' : 'pomodoro.focusing')),
+              t(pomodoro?.review ? 'pomodoro.review' : pomodoro === null ? 'zen.ready' : !pomodoro.running ? 'pomodoro.paused' : isBreak ? 'pomodoro.breaking' : 'pomodoro.focusing')),
             h('span', { className: 'dsh-todos-pomoTime' }, formatClock(remaining)),
             h('span', { className: 'dsh-todos-pomoMeta' },
               t(isBreak ? 'pomodoro.breakHint' : 'pomodoro.focusHint')))));
@@ -915,20 +930,59 @@
               }),
               h('div', { className: 'dsh-todos-orbitHud' }, renderPomodoro())),
             h('div', { className: 'dsh-todos-zenControls' },
+              pomodoro === null ? h('label', { className: 'dsh-todos-focusPicker' },
+                t('pomodoro.choose'),
+                h('select', {
+                  value: selectedTask?.id ?? '',
+                  onChange: (event) => setSelectedTaskId(event.target.value),
+                  disabled: busy,
+                }, h('option', { value: '' }, t('pomodoro.chooseHint')),
+                ...zenOpen.map((item) => h('option', { key: item.id, value: item.id }, item.title)))) : null,
               pomodoro === null ? h('button', {
-                type: 'button',
-                className: 'dsh-todos-pomoStart dsh-todos-focusable',
-                title: t('pomodoro.startHint'),
-                onClick: startPomodoro,
-              }, h(IconPlay), t('pomodoro.start')) : h('div', { className: 'dsh-todos-pomoActions' },
+                type: 'button', className: 'dsh-todos-pomoStart dsh-todos-focusable',
+                disabled: !selectedTask || busy, onClick: startPomodoro,
+              }, h(IconPlay), t('pomodoro.start')) : pomodoro.review ? h('div', { className: 'dsh-todos-focusReview' },
+                h('p', { role: 'status' }, t(`pomodoro.review.${pomodoro.review}`)),
+                h('label', { className: 'dsh-todos-focusPicker' }, t('pomodoro.obstacleNote'),
+                  h('textarea', {
+                    value: pomodoro.obstacle ?? '', maxLength: 500, rows: 2,
+                    placeholder: t('pomodoro.obstacleHint'),
+                    onChange: (event) => {
+                      const value = event.target.value;
+                      setPomodoro((current) => current ? { ...current, obstacle: value } : current);
+                    },
+                  })),
+                h('small', null, t('pomodoro.noteLocal')),
+                h('div', { className: 'dsh-todos-pomoActions' },
+                  focusTask && !focusTask.done ? h('button', {
+                    type: 'button', className: 'dsh-todos-pomoStart dsh-todos-focusable',
+                    disabled: busy, onClick: completeFocusTask,
+                  }, t('pomodoro.completeTask')) : null,
+                  focusTask && !focusTask.done ? h('button', {
+                    type: 'button', className: 'dsh-todos-zenStop dsh-todos-focusable',
+                    disabled: busy, onClick: continueFocus,
+                  }, t('pomodoro.continueTask')) : null,
+                  pomodoro.review !== 'breakDone' ? h('button', {
+                    type: 'button', className: 'dsh-todos-zenStop dsh-todos-focusable',
+                    disabled: busy, onClick: takeBreak,
+                  }, t('pomodoro.takeBreak')) : null,
+                  h('button', {
+                    type: 'button', className: 'dsh-todos-zenStop dsh-todos-focusable', disabled: busy,
+                    onClick: () => { setPomodoro(null); setSelectedTaskId(''); },
+                  }, t('pomodoro.finishSession')))) : h('div', { className: 'dsh-todos-pomoActions' },
                 h('button', {
                   type: 'button', className: 'dsh-todos-pomoStart dsh-todos-focusable', onClick: togglePomodoroPause,
                 }, h(pomodoro.running ? IconPause : IconPlay), t(pomodoro.running ? 'pomodoro.pause' : 'pomodoro.resume')),
+                pomodoro.phase === 'focus' ? h('button', {
+                  type: 'button', className: 'dsh-todos-zenStop dsh-todos-focusable',
+                  onClick: () => setPomodoro((current) => reviewPomodoro(current, 'blocked', Date.now())),
+                }, t('pomodoro.obstacle')) : null,
                 h('button', {
                   type: 'button', className: 'dsh-todos-zenStop dsh-todos-focusable', onClick: stopPomodoro,
                 }, h(IconStop), t('pomodoro.stop'))),
               h('p', { className: 'dsh-todos-zenMantra' },
-                pomodoro?.label && pomodoro.phase === 'focus' ? pomodoro.label : t(sceneMode === 'break' ? 'zen.rest' : sceneMode === 'complete' ? 'zen.allDone' : 'zen.mantra'))),
+                pomodoro ? t('pomodoro.sessionLabel', { title: focusTask?.title ?? pomodoro.label ?? t('pomodoro.legacy') })
+                  : t(sceneMode === 'complete' ? 'zen.allDone' : 'zen.mantra'))),
             h('div', { className: 'dsh-todos-zenPlan' },
               h('div', { className: 'dsh-todos-zenPlanHead' },
                 h('h2', null, t('zen.plan')),
@@ -986,6 +1040,8 @@
                 h('span', { className: 'dsh-todos-pomoPing' }),
                 h('span', { className: 'dsh-todos-pomoFlashText' },
                   t(flash.kind === 'focusDone' ? 'pomodoro.focusDone' : 'pomodoro.breakDone'))),
+            state.storageError ? h('p', { className: 'dsh-todos-zenNotice dsh-todos-zenNoticeError', role: 'alert' },
+              t('pomodoro.storageWarning', { message: String(state.storageError) })) : null,
             notice === null
               ? null
               : h('p', {
@@ -1096,6 +1152,8 @@
                   'aria-label': t('add.action'),
                   disabled: busy || draft.trim() === '',
                 }, h(IconPlus), h('span', null, t('add.action'))))),
+            state.storageError ? h('p', { className: 'dsh-todos-notice dsh-todos-noticeError', role: 'alert' },
+              t('pomodoro.storageWarning', { message: String(state.storageError) })) : null,
             notice === null
               ? null
               : h('p', { className: 'dsh-todos-notice dsh-todos-noticeError', role: 'status' }, notice.text),
