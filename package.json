@@ -1,14 +1,16 @@
 {
   "name": "dsh-todos",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
   "scripts": {
     "build": "node scripts/build-client.mjs",
     "pretest": "npm run build",
-    "test": "node --test"
+    "test": "node --test",
+    "preview": "npm run build && node scripts/preview.mjs",
+    "test:browser": "npm run build && node scripts/browser-smoke.mjs"
   },
   "type": "module",
-  "description": "DeepSeek Harness plugin: a todo tracker in the left sidebar panel, with items linked to the DSH session that owns the work and one-click navigation back to it.",
+  "description": "DeepSeek Harness personal workbench: projects, Eisenhower tasks, plans, factual reports and scheduled retrospectives.",
   "keywords": [
     "dsh",
     "dsh-plugin",
@@ -51,6 +53,9 @@
     "locale/*.json",
     "icon.svg",
     "README.md",
+    "docs/workbench.md",
+    "docs/development.md",
+    "docs/personal-workbench-upgrade-plan.md",
     "CHANGELOG.md",
     "LICENSE",
     "THIRD_PARTY_NOTICES.md"
@@ -71,6 +76,9 @@
   },
   "devDependencies": {
     "esbuild": "0.28.2",
+    "playwright": "1.62.1",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
     "three": "0.187.0"
   }
 }

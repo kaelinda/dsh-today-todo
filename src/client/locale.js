@@ -1,6 +1,6 @@
     const zh = {
-      panel: '待办',
-      'page.title': '待办事项',
+      panel: '工作台',
+      'page.title': '任务',
       'page.eyebrow': '我的工作台',
       'page.subtitle': '理清待办，把时间留给重要的事。',
       'page.focus': '今日专注',
@@ -83,7 +83,7 @@
       'error.load': '无法读取待办清单：{message}',
       'error.mutate': '操作失败：{message}',
       'retry': '重试',
-      'footer.clearDone': '清除已完成',
+      'footer.clearDone': '归档已完成',
       'footer.hint': '与智能体共用一份清单',
       'zen.locale': 'zh-CN',
       'zen.title': '今天',
@@ -125,8 +125,8 @@
     };
 
     const en = {
-      panel: 'Todos',
-      'page.title': 'Todos',
+      panel: 'Workbench',
+      'page.title': 'Tasks',
       'page.eyebrow': 'MY WORKSPACE',
       'page.subtitle': 'A little clarity. More room for what matters.',
       'page.focus': 'Focus today',
@@ -209,7 +209,7 @@
       'error.load': 'Could not read the todo list: {message}',
       'error.mutate': 'The change failed: {message}',
       'retry': 'Retry',
-      'footer.clearDone': 'Clear completed',
+      'footer.clearDone': 'Archive completed',
       'footer.hint': 'One shared list with your agent',
       'zen.locale': 'en-US',
       'zen.title': 'Today',

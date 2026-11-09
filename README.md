@@ -1,8 +1,8 @@
 <div align="center">
   <img src="icon.svg" width="72" height="72" alt="DSH Todos 图标">
-  <h1>DSH Todos</h1>
-  <p><strong>理清待办，把今天交给专注。</strong></p>
-  <p>DeepSeek Harness 的待办与专注插件。<br>从清单、四象限，到 Three.js 心流轨道与番茄钟，让计划自然进入行动。</p>
+  <h1>DSH 个人工作台</h1>
+  <p><strong>安排工作，记录进展，把经验带入下一次行动。</strong></p>
+  <p>DeepSeek Harness 的任务、项目与回顾插件。<br>四象限与今日专注、分项目报告、自定义周期复盘，连接计划与实际工作。</p>
   <p>
     <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-4763e4" alt="MIT License"></a>
     <img src="https://img.shields.io/badge/Node.js-%E2%89%A520-21836c" alt="Node.js 20 或更高">
@@ -16,6 +16,12 @@
     <a href="#开发与验收">开发与验收</a>
   </p>
 </div>
+
+**2.0 工作台**：新增项目标签、任务日期与状态、进展记录、日周容量计划、日报 / 周报 / 月报、复盘行动、文档修订和周期草稿。自动化在 Host 运行时工作，生成本地事实草稿供自己修改，不向外部发送。
+
+[工作台使用与数据说明](docs/workbench.md) · [升级规划](docs/personal-workbench-upgrade-plan.md)
+
+以下截图展示保留的任务与专注能力。
 
 ![今天的专注空间：心流轨道、番茄钟和今日清单](docs/screenshots/today-orbit.png)
 
@@ -129,7 +135,12 @@ dsh plugin --profile desktop add git+ssh://git@github.com/kaelinda/dsh-today-tod
 
 | 能力 | 使用方式 |
 | --- | --- |
-| 待办管理 | 新增、重命名、完成、删除、筛选及清除已完成；支持回车保存与中文输入法选词保护。 |
+| 待办管理 | 新增、重命名、完成、状态 / 日期 / 估时、筛选、归档与恢复；删除和清除已完成均保留历史。 |
+| 项目与进展 | 稳定项目标签、目标、活动记录、产出与阻塞；可把旧标签归入项目。 |
+| 规划 | 日 / 周目标、容量与缓冲、初始承诺快照、未估时提示和基于事实的规划建议。 |
+| 报告 | 日报 / 周报 / 月报；单项目、项目组或所有项目；编辑、定稿、Markdown 导出与修订恢复。 |
+| 复盘 | 事实对照与问题引导、上次行动检查、改进行动转任务；私人反思与报告分开。 |
+| 周期规则 | 每天、指定星期、每月、每 N 天 / 周；独立范围、时区与覆盖窗口，到期生成本地草稿。 |
 | 优先级与标签 | `P0`–`P3` 或不分级；标签可编辑，点击行内标签即可筛选。 |
 | 四象限 | 按重要性、紧急性分组，保留未分类区域；颜色、文字与 Q1–Q4 标识共同区分。 |
 | 今日清单 | 在详情中「加入今天」，或直接进入今天新增；按优先级、同级创建时间新到旧排序。 |
@@ -138,19 +149,23 @@ dsh plugin --profile desktop add git+ssh://git@github.com/kaelinda/dsh-today-tod
 | 智能体协作 | `todo_track` 提供 `list / add / update / remove / clearDone`，与面板使用同一个存储入口；列表支持分页和过滤。 |
 | 中英与主题 | 中英文文案；列表和四象限跟随宿主主题，今天使用独立夜色配色。 |
 
-「今天」由 **Host 的本地日期**决定。跨日后，旧任务仍在「全部」中保留；需要继续处理的任务可重新加入今天。
+「今天」由 **工作台设置的时区**决定，初始取 Host 时区。跨日后，旧任务仍保留；需要继续处理的任务可从待重排重新安排。
 
 ## 数据与偏好
 
 | 内容 | 保存位置 | 行为 |
 | --- | --- | --- |
-| 待办、标签、优先级、会话关联 | Host 文件 | 独立于浏览器存储，支持自定义路径。 |
+| 任务、项目、活动、计划、报告、复盘与周期运行 | Host v3 文件 | 独立于浏览器存储，支持自定义路径，保留历史与修订。 |
 | 番茄钟状态 | 浏览器 `localStorage` | 恢复有效计时；清理浏览器存储后重置。 |
 | 动态开关偏好 | 浏览器 `localStorage` | 刷新后保留，并服从系统「减少动态」设置。 |
 
-待办默认保存在 `$DSH_HOME/dsh-todos/todos.json`，可通过 `DSH_TODOS_FILE` 或 `dataFile` 配置路径。
+新版默认保存在 `$DSH_HOME/dsh-todos/todos.v3.json`。`DSH_TODOS_FILE` 或 `dataFile` 若指向旧 `todos.json`，会使用同目录的 `todos.v3.json` 并保留原文件；直接配置 `.v3.json` 则使用该文件。
 
-Host 使用文件锁与原子写入来协调多端修改；面板遇到 revision 冲突时采用新快照重试。损坏的文档会先备份，再降级为空清单。配置示例、字段限制与恢复机制见[开发与数据参考](docs/development.md)。
+Host 使用文件锁与原子事务协调多端修改；写入失败返回错误并保留之前已提交的状态。损坏或无法读取的文件拒绝覆盖，修复后重试。普通任务冲突可刷新重试，文档编辑另有修订检查。[迁移与恢复说明](docs/workbench.md)。
+
+## 升级规划
+
+[个人工作台升级规划](docs/personal-workbench-upgrade-plan.md)记录产品范围、数据口径和验收目标；实际使用与实现边界以[工作台说明](docs/workbench.md)为准。
 
 ## 开发与验收
 
@@ -158,11 +173,15 @@ Host 使用文件锁与原子写入来协调多端修改；面板遇到 revision
 npm ci          # 安装锁定的开发依赖
 npm run build   # 从 src/client 生成 client.js
 npm test        # 先构建，再运行 Node 测试
+npm run preview # 使用临时数据启动真实 API 与界面预览
+npm run test:browser # Playwright 浏览器流程；首次使用需 npx playwright install chromium
 ```
 
-修改 `src/client/` 后再构建，**不要直接编辑 `client.js`**。开发依赖仅包含固定版本的 Three.js 和 esbuild；测试会检查产物与源码是否一致。
+修改 `src/client/` 后再构建，**不要直接编辑 `client.js`**。Three.js 与 esbuild 用于构建，React / ReactDOM 仅用于开发预览；插件界面使用宿主 React。测试会检查产物与源码是否一致。
 
-本次基于功能提交 `8f6f1fb` 完成：
+**2.0 验证：75 项自动测试、17 项隔离浏览器流程检查通过。** 覆盖迁移、并发、报告 / 复盘事实、周期与重试，以及桌面、窄屏深色英文界面。[查看 2.0 验收证据](docs/qa/2026-11-10-workbench-acceptance.md)。尚未在当前用户的真实 DSH profile 安装验收。
+
+以下是 1.0 版本基于功能提交 `8f6f1fb` 的历史验收，不代表 2.0 的完整验证范围：
 
 - **38 项自动测试通过**：覆盖生成产物、存储并发、接口、工具分页、动效调度和新增反馈边界。
 - **22 项浏览器验收通过**：覆盖今天页交互、计时全流程、刷新恢复、动态偏好、WebGL 降级与资源清理，以及窄屏英文布局。

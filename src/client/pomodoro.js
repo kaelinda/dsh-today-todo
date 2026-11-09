@@ -25,6 +25,9 @@
           pausedMs,
           round: Number.isFinite(parsed.round) && parsed.round > 0 ? Math.floor(parsed.round) : 1,
           label: typeof parsed.label === 'string' && parsed.label.trim() !== '' ? parsed.label.slice(0, 120) : null,
+          taskId: typeof parsed.taskId === 'string' ? parsed.taskId : null,
+          clientId: typeof parsed.clientId === 'string' ? parsed.clientId : null,
+          startedAt: Number.isFinite(parsed.startedAt) ? parsed.startedAt : null,
         };
       } catch {
         return null;

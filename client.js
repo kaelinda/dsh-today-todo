@@ -54,8 +54,8 @@ window.__ModuleLoader__.load({
     const cx = (...parts) => parts.filter(Boolean).join(' ');
 
     const zh = {
-      panel: '待办',
-      'page.title': '待办事项',
+      panel: '工作台',
+      'page.title': '任务',
       'page.eyebrow': '我的工作台',
       'page.subtitle': '理清待办，把时间留给重要的事。',
       'page.focus': '今日专注',
@@ -138,7 +138,7 @@ window.__ModuleLoader__.load({
       'error.load': '无法读取待办清单：{message}',
       'error.mutate': '操作失败：{message}',
       'retry': '重试',
-      'footer.clearDone': '清除已完成',
+      'footer.clearDone': '归档已完成',
       'footer.hint': '与智能体共用一份清单',
       'zen.locale': 'zh-CN',
       'zen.title': '今天',
@@ -180,8 +180,8 @@ window.__ModuleLoader__.load({
     };
 
     const en = {
-      panel: 'Todos',
-      'page.title': 'Todos',
+      panel: 'Workbench',
+      'page.title': 'Tasks',
       'page.eyebrow': 'MY WORKSPACE',
       'page.subtitle': 'A little clarity. More room for what matters.',
       'page.focus': 'Focus today',
@@ -264,7 +264,7 @@ window.__ModuleLoader__.load({
       'error.load': 'Could not read the todo list: {message}',
       'error.mutate': 'The change failed: {message}',
       'retry': 'Retry',
-      'footer.clearDone': 'Clear completed',
+      'footer.clearDone': 'Archive completed',
       'footer.hint': 'One shared list with your agent',
       'zen.locale': 'en-US',
       'zen.title': 'Today',
@@ -305,6 +305,157 @@ window.__ModuleLoader__.load({
       'pomodoro.breakDone': 'Break over',
     };
 
+    const WORKBENCH_ZH = {
+      title: '个人工作台', subtitle: '安排工作，记录进展，把经验带入下一次行动。',
+      nav: '工作台导航', today: '今天', tasks: '任务', projects: '项目', planning: '规划', review: '回顾',
+      project: '项目标签', allProjects: '所有项目', unassigned: '未归属', projectName: '项目名称', projectGoal: '目标与完成标准',
+      newProject: '新建项目', editProject: '编辑项目', noProjects: '先建立一个项目，为任务、报告和复盘确定范围。',
+      save: '保存', saving: '保存中…', saved: '已保存', cancel: '取消', edit: '编辑', close: '关闭', create: '创建',
+      active: '进行中', archived: '已归档', archive: '归档', restore: '恢复', archiveHint: '归档与移除的任务保留历史，可以恢复。',
+      inbox: '收集箱', waiting: '等待中', reschedule: '待重排', noReschedule: '没有需要重排的旧任务。',
+      status: '状态', 'status.todo': '待处理', 'status.doing': '进行中', 'status.waiting': '等待中', 'status.done': '已完成', 'status.cancelled': '已取消',
+      dueDate: '截止日期', plannedDate: '计划日期', estimate: '预计投入（分钟）', unknown: '待估', nextAction: '下一步行动 / 说明',
+      waitingFor: '等待对象或原因', followUpDate: '下次跟进', detailsSave: '保存任务安排', due: '截止', overdue: '已逾期',
+      log: '记一条进展', logText: '实际推进了什么？', logPlaceholder: '写下进展、产出、阻塞或决策，未完成的工作也值得记录。',
+      logKind: '记录类型', 'log.progress': '进展', 'log.outcome': '产出', 'log.blocker': '阻塞', 'log.decision': '决策',
+      logTime: '发生时间（可补记）', logMinutes: '手工投入（分钟，可选）', logUrl: '产出链接（可选）', record: '保存记录',
+      records: '进展记录', noRecords: '尚无活动记录。任务完成与进展会成为报告依据。', task: '关联任务', noTask: '不关联任务',
+      logsRecent: '显示最近的活动记录', minutes: '{value} 分钟', projectTasks: '项目任务', projectReports: '为此项目设置报告 / 复盘',
+      promoteTag: '从旧标签归入项目', sourceTag: '选择现有标签', assignTag: '归入当前项目', assignTagHint: '只归入尚未设置主项目的任务；原标签保留。',
+      tagAssigned: '已归入 {count} 项任务', noTasks: '暂无任务', dailyPlan: '每日计划', weeklyPlan: '每周计划',
+      planDate: '计划日期', planGoal: '期望结果与验证标准', planGoalHint: '希望完成什么？怎样确认已经做到？',
+      capacity: '可用时间（分钟）', buffer: '缓冲比例（%）', usable: '可安排 {value} 分钟', planned: '已选 {value} 分钟',
+      unestimated: '{count} 项待估时', overloaded: '超过可用容量，请调整任务或可用时间。', chooseTasks: '选择本期重点',
+      selectHint: '建议先选 1–3 个重点，给重要不紧急的工作安排时间。', commitPlan: '确认计划', updatePlan: '调整计划',
+      confirmed: '已确认', planBaseline: '首次确认的承诺会保留，后续调整单独记录。', noPlan: '尚未确认计划',
+      planHistory: '已保存的计划', selectedTasks: '{count} 项已选', focusHistory: '专注记录', focusHint: '只统计记录到的有效专注，不代表全部工作时长。',
+      suggestions: '规划提示', noSuggestions: '先积累真实记录，再查看模式与调整建议。', settings: '个人设置', timezone: '时区', weekStartsOn: '周起始日',
+      monday: '星期一', sunday: '星期日', settingsHint: '周期和日期使用这里的时区，不随浏览器的位置改变。',
+      reports: '报告', reviews: '复盘', routines: '周期规则', documentType: '文档类型', daily: '日报', weekly: '周报', monthly: '月报',
+      dailyReview: '每日复盘', weeklyReview: '每周复盘', monthlyReview: '月度复盘', range: '覆盖区间', startDate: '开始日期', endDate: '结束日期（包含当天）',
+      scope: '项目范围', scopeHint: '不选项目表示所有项目；多个项目合并去重。', tagScope: '标签筛选（可选）',
+      tagScopeHint: '多个标签用逗号分隔，按活动发生时的标签筛选。', generate: '生成草稿', generating: '正在生成…',
+      noDocuments: '选择日期和项目，从真实工作记录生成第一份草稿。', draft: '草稿', final: '已定稿', pendingReview: '待复盘',
+      content: '正文（Markdown）', saveDraft: '保存草稿', finalize: '确认定稿', finalizeReview: '完成复盘', export: '导出 Markdown',
+      copy: '复制正文', copied: '已复制', copyFailed: '无法复制，请选中正文复制或导出。', regenerate: '重新生成一个版本',
+      history: '历史版本', version: '版本 {value}', restoreVersion: '恢复为新版本', versionHint: '重新生成或保存都会保留旧版本，不覆盖已存的人工内容。',
+      changedElsewhere: '此文档已在别处更新。你的输入已保留，保存前请查看最新版本。', unsaved: '有未保存的修改', discard: '放弃未保存修改',
+      evidence: '事实依据', evidenceHint: '生成结论来自任务事件和进展记录；缺少记录不代表没有工作。',
+      addAction: '转为改进行动', actionTitle: '下一步具体做什么？', actionCriteria: '如何验证有效？', actionCheck: '检查日期', actions: '复盘改进行动',
+      actionCreated: '已创建改进行动，可在任务和规划中跟踪。', privateReview: '复盘用于个人反思，不会自动写入工作报告。',
+      reportHint: '先生成事实草稿，再补充结果和背景。未记录的成果不会被推断。',
+      routineName: '规则名称', newRoutine: '新建周期规则', editRoutine: '编辑周期规则', frequency: '触发周期',
+      everyDay: '每天', everyWeek: '每周', everyMonth: '每月', everyInterval: '每 N 天 / 周', interval: '间隔', day: '天', week: '周',
+      unit: '单位', weekdays: '星期', monthDay: '每月日期', monthLast: '月末', time: '生成时间', anchorDate: '周期起点',
+      enabled: '启用', paused: '已暂停', pause: '暂停', resume: '启用', runNow: '立即生成', preview: '预览接下来三次',
+      previewHint: '按规则的时区计算；自然日、周、月报告默认覆盖上一完整周期。',
+      automationHint: '到点生成本地草稿，查看和修改后再定稿。Host 需要运行，关闭后会在下次启动补最近一期。',
+      nextRuns: '接下来的运行', noRoutines: '为不同项目分别设置报告或复盘周期。', runHistory: '运行记录',
+      'run.succeeded': '草稿已保存', 'run.saved': '草稿已保存', 'run.completed': '草稿已保存', 'run.failed': '失败', 'run.skipped': '已跳过',
+      'run.pending': '待处理', 'run.running': '处理中', 'run.reminder': '待处理提醒',
+      mode: '到点行为', modeDraft: '生成草稿', modeRemind: '仅提醒', noRuns: '规则尚未运行。',
+      dateInvalid: '请选择有效的起止日期。', firstSelect: '请先选择一项。', loading: '加载中…',
+      confirmLeave: '当前正文有未保存修改，请先保存或放弃修改。', selected: '已选择', recent: '最近',
+      todayCapacity: '今日容量', todayReview: '回顾今天', todayPlan: '安排今天', interrupted: '提前结束', complete: '完成',
+      unknownTask: '未关联任务', historicalTask: '历史任务', restoreHint: '恢复只改变可见性，完成历史仍保留。',
+      taskSaved: '任务安排已保存', localDraft: '未提交草稿已保存在此浏览器', focusPending: '专注记录未保存，请重试结束本轮。',
+      weeklyCapacityHint: '周计划请填写整周扣除会议后的可用时间。', noConfirmedPlan: '尚未确认今日计划',
+      baselineCount: '最初承诺 {count} 项', q2Hint: '重要不紧急的工作值得预留时间。',
+      coverage: '覆盖窗口', previousPeriod: '上一个完整周期', currentPeriod: '当前周期（截至生成时）', rollingPeriod: '过去 N 天', windowDays: '回看天数',
+      template: '补充模板', templateHint: '可添加自己的问题或章节，保留默认事实摘要。', missedPeriods: '还有更早的遗漏周期，可选择日期手动补生成：',
+      overlapWarning: '该任务当天还有专注记录，请检查与手工投入是否重叠，报告不会直接将两者相加。',
+      generatedRevision: '新版本已生成。当前正文保持不变，可在历史版本中查看并采纳。',
+      routineAdjust: '调整本次运行', snooze: '稍后 1 小时', skipPeriod: '跳过当前覆盖周期',
+      'insight.capacity': '已安排 {estimated} 分钟，超过含缓冲容量 {budget} 分钟；建议改期或拆分。',
+      'insight.estimate': '{count} 个已选任务尚未估时，当前总量并非完整负荷。',
+      'insight.q2': '{count} 个重要不紧急任务尚未安排日期。',
+      'insight.overdue': '{count} 个任务已过截止日；请核对紧急程度与下一步。',
+      'insight.replan': '{count} 个旧计划任务等待重排，不会自动挤入今天。',
+      'insight.wip': '同时进行中 {count} 项，建议先收敛到 1–3 项。',
+      'insight.postponed': '“{title}”已改期 {times} 次，建议检查范围、依赖或估时。',
+      'insight.blocker': '同一任务近四周记录 {times} 次阻塞，请核对是否存在共同原因。',
+      'insight.calibration': '{samples} 个已完成任务的记录专注 / 估时中位数为 {ratio} 倍。记录可能不完整，仅作下次估时参考。',
+    };
+    const WORKBENCH_EN = {
+      title: 'Personal workbench', subtitle: 'Plan your work, record progress, and carry learning into action.',
+      nav: 'Workbench navigation', today: 'Today', tasks: 'Tasks', projects: 'Projects', planning: 'Planning', review: 'Reflect',
+      project: 'Project', allProjects: 'All projects', unassigned: 'Unassigned', projectName: 'Project name', projectGoal: 'Goal and success criteria',
+      newProject: 'New project', editProject: 'Edit project', noProjects: 'Create a project to connect tasks, reports, and reviews.',
+      save: 'Save', saving: 'Saving…', saved: 'Saved', cancel: 'Cancel', edit: 'Edit', close: 'Close', create: 'Create',
+      active: 'Active', archived: 'Archived', archive: 'Archive', restore: 'Restore', archiveHint: 'Archived and removed tasks retain their history and can be restored.',
+      inbox: 'Inbox', waiting: 'Waiting', reschedule: 'Reschedule', noReschedule: 'No earlier tasks need rescheduling.',
+      status: 'Status', 'status.todo': 'To do', 'status.doing': 'In progress', 'status.waiting': 'Waiting', 'status.done': 'Done', 'status.cancelled': 'Cancelled',
+      dueDate: 'Due date', plannedDate: 'Planned date', estimate: 'Estimate (minutes)', unknown: 'Not estimated', nextAction: 'Next action / notes',
+      waitingFor: 'Waiting for / reason', followUpDate: 'Follow-up date', detailsSave: 'Save task plan', due: 'Due', overdue: 'Overdue',
+      log: 'Record progress', logText: 'What actually moved forward?', logPlaceholder: 'Capture progress, outcomes, blockers, or decisions, even before a task is done.',
+      logKind: 'Record type', 'log.progress': 'Progress', 'log.outcome': 'Outcome', 'log.blocker': 'Blocker', 'log.decision': 'Decision',
+      logTime: 'When it happened (optional)', logMinutes: 'Manual effort (minutes, optional)', logUrl: 'Output link (optional)', record: 'Save record',
+      records: 'Progress records', noRecords: 'No activity recorded yet. Progress and task events provide evidence for reports.', task: 'Linked task', noTask: 'No linked task',
+      logsRecent: 'Showing recent activity', minutes: '{value} min', projectTasks: 'Project tasks', projectReports: 'Set up reports / reviews for this project',
+      promoteTag: 'Assign tasks from a tag', sourceTag: 'Choose an existing tag', assignTag: 'Assign to this project', assignTagHint: 'Only tasks without a main project are assigned; their tags stay.',
+      tagAssigned: '{count} tasks assigned', noTasks: 'No tasks yet', dailyPlan: 'Daily plan', weeklyPlan: 'Weekly plan',
+      planDate: 'Plan date', planGoal: 'Expected outcome and success criteria', planGoalHint: 'What should happen, and how will you know it is done?',
+      capacity: 'Available time (minutes)', buffer: 'Buffer (%)', usable: '{value} min available', planned: '{value} min selected',
+      unestimated: '{count} tasks not estimated', overloaded: 'This exceeds available capacity. Adjust the tasks or available time.', chooseTasks: 'Choose your priorities',
+      selectHint: 'Start with 1–3 priorities and make room for important, non-urgent work.', commitPlan: 'Commit plan', updatePlan: 'Adjust plan',
+      confirmed: 'Committed', planBaseline: 'Your original commitment stays; later changes are recorded separately.', noPlan: 'No committed plan yet',
+      planHistory: 'Saved plans', selectedTasks: '{count} selected', focusHistory: 'Focus records', focusHint: 'Recorded focus time is only part of your work, not a measure of output.',
+      suggestions: 'Planning insights', noSuggestions: 'Build a record of real work before looking for patterns.', settings: 'Preferences', timezone: 'Time zone', weekStartsOn: 'Week starts on',
+      monday: 'Monday', sunday: 'Sunday', settingsHint: 'Dates and routines use this time zone, independent of your browser location.',
+      reports: 'Reports', reviews: 'Reviews', routines: 'Routines', documentType: 'Document type', daily: 'Daily report', weekly: 'Weekly report', monthly: 'Monthly report',
+      dailyReview: 'Daily review', weeklyReview: 'Weekly review', monthlyReview: 'Monthly review', range: 'Coverage period', startDate: 'Start date', endDate: 'End date (inclusive)',
+      scope: 'Project scope', scopeHint: 'Select none for all projects. Selected projects are combined without double counting.', tagScope: 'Filter by tags (optional)',
+      tagScopeHint: 'Separate tags with commas. Historical activity uses the tags it had at the time.', generate: 'Generate draft', generating: 'Generating…',
+      noDocuments: 'Choose a period and projects to draft a report from recorded work.', draft: 'Draft', final: 'Final', pendingReview: 'To reflect on',
+      content: 'Content (Markdown)', saveDraft: 'Save draft', finalize: 'Finalize', finalizeReview: 'Complete review', export: 'Export Markdown',
+      copy: 'Copy content', copied: 'Copied', copyFailed: 'Copy is unavailable. Select the content or export it instead.', regenerate: 'Generate a new revision',
+      history: 'Revision history', version: 'Revision {value}', restoreVersion: 'Restore as a new revision', versionHint: 'Saving or regenerating keeps previous versions, including your edits.',
+      changedElsewhere: 'This document changed elsewhere. Your edits are kept; check the latest version before saving.', unsaved: 'Unsaved changes', discard: 'Discard unsaved changes',
+      evidence: 'Supporting facts', evidenceHint: 'Statements come from task events and progress records. Missing records do not mean no work happened.',
+      addAction: 'Create improvement action', actionTitle: 'What is the concrete next action?', actionCriteria: 'How will you check it worked?', actionCheck: 'Check date', actions: 'Review actions',
+      actionCreated: 'Improvement action created. Track it in Tasks and Planning.', privateReview: 'Personal reflection is kept separate from work reports.',
+      reportHint: 'Draft the facts first, then add context. Unrecorded outcomes are never inferred.',
+      routineName: 'Routine name', newRoutine: 'New routine', editRoutine: 'Edit routine', frequency: 'Schedule',
+      everyDay: 'Every day', everyWeek: 'Every week', everyMonth: 'Every month', everyInterval: 'Every N days / weeks', interval: 'Interval', day: 'Days', week: 'Weeks',
+      unit: 'Unit', weekdays: 'Weekdays', monthDay: 'Day of month', monthLast: 'Last day', time: 'Draft at', anchorDate: 'Anchor date',
+      enabled: 'Enabled', paused: 'Paused', pause: 'Pause', resume: 'Enable', runNow: 'Generate now', preview: 'Preview next three runs',
+      previewHint: 'Uses the routine time zone. Calendar reports cover the previous complete day, week, or month.',
+      automationHint: 'Drafts are saved locally for you to review. The Host must be running; after downtime, the latest missed period is recovered.',
+      nextRuns: 'Upcoming runs', noRoutines: 'Give each project its own report or review schedule.', runHistory: 'Run history',
+      'run.succeeded': 'Draft saved', 'run.saved': 'Draft saved', 'run.completed': 'Draft saved', 'run.failed': 'Failed', 'run.skipped': 'Skipped',
+      'run.pending': 'Pending', 'run.running': 'Running', 'run.reminder': 'Reminder pending',
+      mode: 'When due', modeDraft: 'Generate a draft', modeRemind: 'Remind only', noRuns: 'This routine has not run yet.',
+      dateInvalid: 'Choose a valid start and end date.', firstSelect: 'Select an item first.', loading: 'Loading…',
+      confirmLeave: 'Save or discard the current edits before switching documents.', selected: 'Selected', recent: 'Recent',
+      todayCapacity: 'Today’s capacity', todayReview: 'Reflect on today', todayPlan: 'Plan today', interrupted: 'Ended early', complete: 'Complete',
+      unknownTask: 'No linked task', historicalTask: 'Historical task', restoreHint: 'Restoring makes a task visible again and preserves its completion history.',
+      taskSaved: 'Task plan saved', localDraft: 'Unsubmitted draft saved in this browser', focusPending: 'Focus record could not be saved. Retry ending this round.',
+      weeklyCapacityHint: 'For a weekly plan, enter time available across the whole week, excluding meetings.', noConfirmedPlan: 'No committed plan for today',
+      baselineCount: '{count} originally committed', q2Hint: 'Reserve time for important, non-urgent work.',
+      coverage: 'Coverage window', previousPeriod: 'Previous complete period', currentPeriod: 'Current period (as of generation)', rollingPeriod: 'Past N days', windowDays: 'Days to look back',
+      template: 'Additional template', templateHint: 'Add your own questions or sections alongside the factual summary.', missedPeriods: 'Earlier periods can be generated manually by choosing their dates:',
+      overlapWarning: 'This task also has focus records on that day. Check whether manual effort overlaps; reports keep the totals separate.',
+      generatedRevision: 'New revision generated. Your current content is unchanged; review and adopt it in revision history.',
+      routineAdjust: 'Adjust this occurrence', snooze: 'Snooze for 1 hour', skipPeriod: 'Skip the current coverage period',
+      'insight.capacity': '{estimated} minutes planned exceeds the {budget}-minute budget including buffer. Consider rescheduling or splitting tasks.',
+      'insight.estimate': '{count} selected tasks have no estimate. The total does not yet reflect your full workload.',
+      'insight.q2': '{count} important, non-urgent tasks have no planned date.',
+      'insight.overdue': '{count} tasks are past their due date. Recheck their urgency and next action.',
+      'insight.replan': '{count} earlier tasks need rescheduling. They will not automatically fill today.',
+      'insight.wip': '{count} tasks are in progress. Consider focusing on 1–3 at a time.',
+      'insight.postponed': '“{title}” has been postponed {times} times. Recheck its scope, dependencies, or estimate.',
+      'insight.blocker': 'The same task has {times} blocker records in the past four weeks. Check for a shared cause.',
+      'insight.calibration': 'Across {samples} completed tasks, recorded focus time was a median of {ratio} times the estimate. Records may be incomplete; use this only as a guide.',
+    };
+    Object.assign(zh, Object.fromEntries(Object.entries(WORKBENCH_ZH).map(([key, value]) => [`wb.${key}`, value])));
+    Object.assign(en, Object.fromEntries(Object.entries(WORKBENCH_EN).map(([key, value]) => [`wb.${key}`, value])));
+
+    function wb(t, key, values = {}) {
+      const translated = t(`wb.${key}`, values);
+      const fallback = (String(t('zen.locale')).startsWith('en') ? WORKBENCH_EN : WORKBENCH_ZH)[key] ?? key;
+      return String(translated === `wb.${key}` ? fallback : translated).replace(/\{(\w+)\}/g, (match, name) => values[name] ?? match);
+    }
+
     /**
      * Restore a pomodoro left running in this browser, so closing the panel or
      * reloading the page does not silently drop a focus session.
@@ -332,6 +483,9 @@ window.__ModuleLoader__.load({
           pausedMs,
           round: Number.isFinite(parsed.round) && parsed.round > 0 ? Math.floor(parsed.round) : 1,
           label: typeof parsed.label === 'string' && parsed.label.trim() !== '' ? parsed.label.slice(0, 120) : null,
+          taskId: typeof parsed.taskId === 'string' ? parsed.taskId : null,
+          clientId: typeof parsed.clientId === 'string' ? parsed.clientId : null,
+          startedAt: Number.isFinite(parsed.startedAt) ? parsed.startedAt : null,
         };
       } catch {
         return null;
@@ -1033,6 +1187,117 @@ window.__ModuleLoader__.load({
 }
 `;
 
+    const WORKBENCH_STYLE = `
+.dsh-wb-nav { display:flex; flex-wrap:wrap; align-items:center; gap:4px; flex:none; padding:12px 20px; border-bottom:1px solid var(--todo-border); background:var(--todo-bg); }
+.dsh-wb-navButton { display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:38px; padding:7px 14px; border:1px solid transparent; border-radius:9px; background:transparent; color:var(--todo-muted); font:inherit; font-size:13px; cursor:pointer; }
+.dsh-wb-navButton:hover { background:var(--todo-hover); color:var(--todo-text); }
+.dsh-wb-navButton[aria-current=page] { background:var(--todo-tint); border-color:var(--todo-border); color:var(--todo-accent-text); font-weight:600; }
+.dsh-wb-count { padding:0 5px; min-width:19px; border-radius:5px; background:var(--todo-surface); font-size:11px; font-variant-numeric:tabular-nums; }
+.dsh-wb-stack { display:flex; flex-direction:column; gap:20px; }
+.dsh-wb-stack h2 { margin:0; font-size:22px; line-height:1.4; font-weight:600; }
+.dsh-wb-stack h3 { margin:0 0 14px; font-size:16px; font-weight:600; line-height:1.5; }
+.dsh-wb-stack h4 { margin:0 0 10px; font-size:14px; font-weight:600; }
+.dsh-wb-card { min-width:0; padding:22px; border:1px solid var(--todo-border); border-radius:14px; background:var(--todo-surface); }
+.dsh-wb-sectionHead { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; }
+.dsh-wb-sectionHead :is(h2,h3,h4) { margin:0; }
+.dsh-wb-form { display:flex; flex-direction:column; gap:16px; }
+.dsh-wb-formGrid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px 16px; }
+.dsh-wb-field { display:flex; flex-direction:column; align-items:stretch; gap:7px; min-width:0; }
+.dsh-wb-label { color:var(--todo-text); font-size:12px; font-weight:550; }
+.dsh-wb-wide { grid-column:1 / -1; }
+.dsh-wb-hint { margin:4px 0; font-size:12px; line-height:1.7; color:var(--todo-muted); overflow-wrap:anywhere; }
+.dsh-wb-field .dsh-wb-hint { margin:0; }
+.dsh-todos-page :is(select,textarea) { font:inherit; }
+.dsh-todos-page select.dsh-todos-input { min-height:38px; padding-right:24px; }
+.dsh-todos-page textarea { resize:vertical; }
+.dsh-wb-textarea { min-height:72px; line-height:1.7; }
+.dsh-wb-actions { display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:8px; }
+.dsh-wb-button { display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:36px; padding:7px 13px; border:1px solid var(--todo-border); border-radius:8px; background:var(--todo-bg); color:var(--todo-text); font-size:12px; line-height:1.4; cursor:pointer; }
+.dsh-wb-button:hover:not(:disabled) { background:var(--todo-hover); border-color:var(--dsw-alias-border-l2); }
+.dsh-wb-primary { background:var(--todo-accent); border-color:var(--todo-accent); color:var(--dsw-alias-label-primary-inverted,#fff); font-weight:550; }
+.dsh-wb-primary:hover:not(:disabled) { background:var(--todo-accent); border-color:var(--todo-accent); filter:brightness(.94); }
+.dsh-wb-empty { margin:0; padding:24px 4px; color:var(--todo-muted); font-size:13px; line-height:1.8; }
+.dsh-wb-projectGrid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(210px,100%),1fr)); gap:12px; }
+.dsh-wb-projectCard { display:flex; flex-direction:column; align-items:flex-start; gap:8px; min-width:0; min-height:100px; padding:18px; text-align:left; border:1px solid var(--todo-border); border-radius:12px; background:var(--todo-bg); color:var(--todo-text); font:inherit; cursor:pointer; }
+.dsh-wb-projectCard strong { font-size:14px; overflow-wrap:anywhere; }
+.dsh-wb-projectCard > span { font-size:12px; color:var(--todo-muted); line-height:1.6; white-space:pre-wrap; overflow-wrap:anywhere; }
+.dsh-wb-projectCard[aria-pressed=true], .dsh-wb-documentCard[aria-pressed=true] { background:var(--todo-tint); border-color:var(--todo-accent); }
+.dsh-wb-projectCard:hover:not(:disabled), .dsh-wb-documentCard:hover:not(:disabled) { border-color:var(--todo-accent); }
+.dsh-wb-prose { margin:8px 0 12px; white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.8; }
+.dsh-wb-inline { display:flex; align-items:center; flex-wrap:wrap; gap:10px; }
+.dsh-wb-inline > select { flex:1 1 190px; }
+.dsh-wb-disclosure { margin-top:16px; border-top:1px solid var(--todo-border); padding-top:14px; }
+.dsh-wb-disclosure > summary { width:fit-content; cursor:pointer; font-size:13px; color:var(--todo-accent-text); border-radius:4px; }
+.dsh-wb-disclosure > summary:focus-visible { outline:2px solid var(--todo-focus-color); outline-offset:4px; }
+.dsh-wb-disclosure[open] > summary { margin-bottom:16px; }
+.dsh-wb-card.dsh-wb-disclosure { margin:0; padding:20px; }
+.dsh-wb-timeline { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:0; }
+.dsh-wb-timeline > li { min-width:0; padding:14px 0; border-bottom:1px solid var(--todo-border); overflow-wrap:anywhere; }
+.dsh-wb-timeline > li:last-child { border-bottom:0; padding-bottom:0; }
+.dsh-wb-timeline small, .dsh-wb-plainList small { display:block; color:var(--todo-muted); font-size:12px; line-height:1.7; margin-top:4px; }
+.dsh-wb-meta { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; color:var(--todo-muted); font-size:12px; }
+.dsh-wb-badge { display:inline-flex; align-items:center; flex:none; padding:3px 7px; border:1px solid var(--todo-border); border-radius:6px; background:var(--todo-bg); color:var(--todo-muted); font-size:11px; line-height:1.5; }
+.dsh-wb-link { display:block; width:fit-content; color:var(--todo-accent-text); overflow-wrap:anywhere; font-size:12px; }
+.dsh-wb-plainList { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; }
+.dsh-wb-plainList > li { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px 14px; min-width:0; padding:12px 0; border-bottom:1px solid var(--todo-border); }
+.dsh-wb-plainList > li:last-child { border-bottom:0; }
+.dsh-wb-plainList > li > span:first-child { flex:1 1 180px; min-width:0; overflow-wrap:anywhere; }
+.dsh-wb-taskFields { padding-bottom:16px; border-bottom:1px solid var(--todo-border); }
+.dsh-wb-scope { min-width:0; margin:0; padding:14px 16px; border:1px solid var(--todo-border); border-radius:10px; }
+.dsh-wb-scope legend { padding:0 6px; color:var(--todo-muted); font-size:12px; }
+.dsh-wb-checks { display:flex; flex-wrap:wrap; gap:8px 18px; margin-top:8px; }
+.dsh-wb-checkLabel { display:inline-flex; align-items:center; gap:8px; min-height:32px; font-size:13px; cursor:pointer; overflow-wrap:anywhere; }
+.dsh-wb-checkLabel input, .dsh-wb-taskChoice input { flex:none; width:16px; height:16px; margin:0; accent-color:var(--todo-accent); }
+.dsh-wb-checkLabel input:focus-visible, .dsh-wb-taskChoice input:focus-visible { outline:2px solid var(--todo-focus-color); outline-offset:3px; }
+.dsh-wb-capacity { display:flex; flex-wrap:wrap; align-items:baseline; gap:7px 16px; padding:14px 16px; border:1px solid var(--todo-border); border-radius:10px; background:var(--todo-tint); font-size:12px; }
+.dsh-wb-capacity strong { color:var(--todo-text); font-size:16px; font-variant-numeric:tabular-nums; }
+.dsh-wb-capacity span { color:var(--todo-muted); }
+.dsh-wb-capacity p { flex-basis:100%; margin:4px 0 0; }
+.dsh-wb-warning { padding:12px 14px; border:1px solid color-mix(in srgb,var(--dsw-alias-state-warn-primary) 45%,var(--todo-border)); border-radius:9px; color:var(--todo-text); background:color-mix(in srgb,var(--dsw-alias-state-warn-primary) 9%,var(--todo-bg)); font-size:12px; line-height:1.7; overflow-wrap:anywhere; }
+.dsh-wb-taskChoices { display:flex; flex-direction:column; max-height:330px; overflow:auto; padding:3px; gap:2px; }
+.dsh-wb-taskChoice { display:flex; align-items:center; gap:12px; min-height:52px; padding:9px 6px; border-radius:7px; cursor:pointer; }
+.dsh-wb-taskChoice:hover { background:var(--todo-hover); }
+.dsh-wb-taskChoice > span:nth-child(2) { flex:1; min-width:0; font-size:13px; overflow-wrap:anywhere; }
+.dsh-wb-taskChoice small { display:block; font-size:11px; color:var(--todo-muted); margin-top:3px; }
+.dsh-wb-taskChoice > span:last-child { flex:none; }
+.dsh-wb-subnav { align-self:flex-start; }
+.dsh-wb-documentList { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr)); gap:10px; }
+.dsh-wb-documentCard { display:flex; flex-direction:column; align-items:flex-start; gap:8px; min-width:0; padding:16px; border:1px solid var(--todo-border); border-radius:10px; background:var(--todo-bg); color:var(--todo-text); text-align:left; cursor:pointer; }
+.dsh-wb-documentCard strong { max-width:100%; font-size:14px; line-height:1.6; overflow-wrap:anywhere; }
+.dsh-wb-documentCard > span { font-size:12px; color:var(--todo-muted); }
+.dsh-wb-documentContent { min-height:360px; max-width:100%; font-family:ui-monospace,SFMono-Regular,Consolas,monospace !important; line-height:1.8; font-size:13px; tab-size:2; }
+.dsh-wb-editor > .dsh-wb-actions { margin-top:14px; }
+.dsh-wb-versionPreview { margin-top:12px; }
+.dsh-wb-versionPreview pre { max-height:300px; overflow:auto; padding:14px; border:1px solid var(--todo-border); border-radius:8px; background:var(--todo-bg); white-space:pre-wrap; overflow-wrap:anywhere; font-size:12px; line-height:1.8; }
+.dsh-wb-actionSection { margin-top:22px; padding-top:20px; border-top:1px solid var(--todo-border); }
+.dsh-wb-actionSection > .dsh-wb-form { margin-top:16px; }
+.dsh-wb-runPreview { margin:0; padding-left:22px; font-size:12px; line-height:1.8; }
+.dsh-wb-runPreview li { padding:6px 0; }
+.dsh-wb-runPreview span { display:block; color:var(--todo-muted); }
+.dsh-wb-todaySummary { padding:16px; margin:22px 0; border:1px solid var(--todo-border); border-radius:12px; background:color-mix(in srgb,var(--todo-surface) 70%,transparent); text-align:left; }
+.dsh-wb-todaySummary .dsh-wb-capacity { background:transparent; padding:0; border:0; }
+.dsh-wb-todaySummary .dsh-wb-actions { margin-top:12px; }
+.dsh-wb-archiveList { display:flex; flex-direction:column; gap:8px; margin-top:18px; }
+.dsh-wb-archiveItem { padding:16px; border:1px solid var(--todo-border); border-radius:10px; background:var(--todo-surface); }
+.dsh-wb-taskFilters { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:14px 0; }
+.dsh-wb-taskFilters > label { flex:1 1 180px; max-width:320px; }
+@container todos (max-width:600px) {
+  .dsh-wb-nav { padding:8px 10px; gap:3px; justify-content:space-between; }
+  .dsh-wb-navButton { flex:1; padding:8px 6px; gap:4px; font-size:12px; }
+  .dsh-wb-count { font-size:10px; padding:0 3px; min-width:16px; }
+  .dsh-wb-card { padding:16px; }
+  .dsh-wb-formGrid { grid-template-columns:1fr; }
+  .dsh-wb-wide { grid-column:auto; }
+  .dsh-wb-actions { gap:8px; }
+  .dsh-wb-scope { padding:12px; }
+  .dsh-wb-taskChoice { gap:8px; }
+  .dsh-wb-taskChoice > span:last-child { max-width:84px; text-align:right; }
+  .dsh-wb-documentContent { font-size:14px; }
+  .dsh-wb-todaySummary { padding:12px; }
+  .dsh-wb-stack .dsh-todos-input { font-size:16px; }
+}
+`;
+
     // Three.js is initialized only when Today mounts; ordinary lists stay cheap.
     let focusSceneRuntime = null;
     function getFocusSceneRuntime() {
@@ -1073,6 +1338,639 @@ window.__ModuleLoader__.load({
       return h('div', { ref: mount, className: 'dsh-todos-orbitCanvas', 'aria-hidden': true },
         h('div', { className: 'dsh-todos-orbitFallback' },
           h('span'), h('span'), h('span')));
+    }
+
+    /** Small, native-control workbench views. All mutations use the Host store. */
+    const WB_STATUSES = ['todo', 'doing', 'waiting', 'done', 'cancelled'];
+    const WB_LOG_KINDS = ['progress', 'outcome', 'blocker', 'decision'];
+    const wbList = (value) => Array.isArray(value) ? value : [];
+    const wbProjectName = (state, id, t) => wbList(state.projects).find((item) => item.id === id)?.name ?? wb(t, 'unassigned');
+    const wbTaskName = (state, id, t) => [...wbList(state.items), ...wbList(state.archivedItems)].find((item) => item.id === id)?.title ?? wb(t, 'historicalTask');
+    function wbInsightText(t, suggestion, state) {
+      const key = `insight.${suggestion.kind}`;
+      if (!WORKBENCH_EN[key]) return suggestion.text ?? suggestion.detail ?? suggestion.message ?? suggestion.title ?? suggestion.kind;
+      return wb(t, key, {
+        count: wbList(suggestion.taskIds).length,
+        estimated: state.insights?.estimatedMinutes ?? '—', budget: state.insights?.budgetMinutes ?? '—',
+        title: wbTaskName(state, suggestion.taskIds?.[0], t), times: wbList(suggestion.sourceIds).length,
+        samples: suggestion.sampleSize ?? wbList(suggestion.taskIds).length,
+        ratio: Number.isFinite(suggestion.ratio) ? suggestion.ratio.toFixed(1) : '—',
+      });
+    }
+    const wbDateShift = (date, days) => {
+      const value = new Date(`${date}T12:00:00Z`);
+      value.setUTCDate(value.getUTCDate() + days);
+      return Number.isFinite(value.getTime()) ? value.toISOString().slice(0, 10) : date;
+    };
+    function wbDefaultWindow(kind, today, weekStartsOn = 1) {
+      if (kind === 'daily') return { startDate: wbDateShift(today, -1), endDate: wbDateShift(today, -1) };
+      if (kind === 'monthly') {
+        const first = `${today.slice(0, 7)}-01`;
+        const previous = wbDateShift(first, -1);
+        return { startDate: `${previous.slice(0, 7)}-01`, endDate: previous };
+      }
+      const weekday = new Date(`${today}T12:00:00Z`).getUTCDay();
+      const first = wbDateShift(today, -(weekday - weekStartsOn + 7) % 7);
+      return { startDate: wbDateShift(first, -7), endDate: wbDateShift(first, -1) };
+    }
+    /** Interpret a datetime-local field in the explicitly displayed user zone. */
+    function wbWallTime(value, timezone) {
+      const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(value);
+      if (!match) return NaN;
+      const [, year, month, day, hour, minute] = match.map(Number);
+      const target = Date.UTC(year, month - 1, day, hour, minute);
+      const formatter = new Intl.DateTimeFormat('en-CA', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+      const wall = (at) => {
+        const parts = Object.fromEntries(formatter.formatToParts(new Date(at)).filter((part) => part.type !== 'literal').map((part) => [part.type, Number(part.value)]));
+        return Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute);
+      };
+      let guess = target;
+      for (let index = 0; index < 4; index += 1) guess += target - wall(guess);
+      if (wall(guess) !== target) return NaN;
+      // A repeated wall time uses the first occurrence, matching routine policy.
+      for (let offset = 180; offset >= 15; offset -= 15) if (wall(guess - offset * 60000) === target) return guess - offset * 60000;
+      return guess;
+    }
+    const wbFormatTime = (value, state, t) => {
+      if (!value) return '—';
+      try {
+        return new Intl.DateTimeFormat(t('zen.locale') === 'en-US' ? 'en-US' : 'zh-CN', {
+          timeZone: state.settings?.timezone || undefined, month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+        }).format(new Date(value));
+      } catch { return String(value); }
+    };
+    const wbStorage = {
+      get(key) { try { return localStorage.getItem(key); } catch { return null; } },
+      set(key, value) { try { localStorage.setItem(key, value); } catch { /* Optional local recovery. */ } },
+      remove(key) { try { localStorage.removeItem(key); } catch { /* Optional local recovery. */ } },
+    };
+
+    function WBButton({ children, primary = false, ...props }) {
+      return h('button', { type: 'button', className: cx('dsh-wb-button dsh-todos-focusable', primary && 'dsh-wb-primary'), ...props }, children);
+    }
+    function WBField({ label, hint, children, wide = false }) {
+      // Options and help text stay visible without becoming part of the
+      // control's accessible name. Custom controls forward this to their input.
+      const control = React.isValidElement(children) ? React.cloneElement(children, { 'aria-label': label }) : children;
+      return h('label', { className: cx('dsh-wb-field', wide && 'dsh-wb-wide') },
+        h('span', { className: 'dsh-wb-label' }, label), control,
+        hint ? h('span', { className: 'dsh-wb-hint' }, hint) : null);
+    }
+    function WBEmpty({ children }) { return h('p', { className: 'dsh-wb-empty' }, children); }
+    function WorkbenchNav({ t, active, onSelect, state }) {
+      const pending = wbList(state.documents).filter((item) => item.status !== 'final').length;
+      return h('nav', { className: 'dsh-wb-nav', 'aria-label': wb(t, 'nav') },
+        ...['today', 'tasks', 'projects', 'planning', 'review'].map((key) => h('button', {
+          key, type: 'button', className: 'dsh-wb-navButton dsh-todos-focusable',
+          'aria-current': active === key ? 'page' : undefined, onClick: () => onSelect(key),
+        }, wb(t, key), key === 'review' && pending > 0 ? h('span', { className: 'dsh-wb-count' }, pending) : null)));
+    }
+
+    function WBProjectSelect({ t, state, value, onChange, all = false, disabled = false, ...inputProps }) {
+      return h('select', { className: 'dsh-todos-input', value: value ?? '', onChange: (event) => onChange(event.target.value), disabled, ...inputProps },
+        h('option', { value: '' }, wb(t, all ? 'allProjects' : 'unassigned')),
+        ...wbList(state.projects).map((project) => h('option', { key: project.id, value: project.id },
+          `${project.name}${project.status === 'archived' ? ` · ${wb(t, 'archived')}` : ''}`)));
+    }
+    function WBProjectScope({ t, state, value, onChange, disabled = false }) {
+      return h('fieldset', { className: 'dsh-wb-scope', disabled },
+        h('legend', null, wb(t, 'scope')),
+        h('p', { className: 'dsh-wb-hint' }, wb(t, 'scopeHint')),
+        h('div', { className: 'dsh-wb-checks' },
+          h('label', { className: 'dsh-wb-checkLabel' }, h('input', { type: 'checkbox', checked: value.length === 0, onChange: () => onChange([]) }), wb(t, 'allProjects')),
+          ...wbList(state.projects).map((project) => h('label', { key: project.id, className: 'dsh-wb-checkLabel' },
+            h('input', { type: 'checkbox', checked: value.includes(project.id), onChange: (event) =>
+              onChange(event.target.checked ? [...value, project.id] : value.filter((id) => id !== project.id)) }), project.name))));
+    }
+
+    function WorkbenchLogForm({ t, state, mutate, busy, taskId = null, projectId = null, compact = false }) {
+      const [text, setText] = useState('');
+      const [kind, setKind] = useState('progress');
+      const [task, setTask] = useState(taskId ?? '');
+      const [project, setProject] = useState(projectId ?? '');
+      const [minutes, setMinutes] = useState('');
+      const [url, setUrl] = useState('');
+      const [time, setTime] = useState('');
+      const [saved, setSaved] = useState(false);
+      const [warning, setWarning] = useState(null);
+      useEffect(() => { setTask(taskId ?? ''); setProject(projectId ?? ''); }, [taskId, projectId]);
+      const submit = async (event) => {
+        event.preventDefault();
+        if (!text.trim() || busy) return;
+        const occurredAt = time ? wbWallTime(time, state.settings?.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone) : null;
+        if (time && !Number.isFinite(occurredAt)) { setWarning(wb(t, 'dateInvalid')); return; }
+        const sent = text;
+        const result = await mutate({ op: 'log.add', taskId: task || null, ...(!task ? { projectId: project || null } : {}), kind, text: sent,
+          ...(minutes !== '' ? { minutes: Number(minutes) } : {}), ...(url.trim() ? { url: url.trim() } : {}),
+          ...(time ? { time: occurredAt } : {}) });
+        if (result) { setText((current) => current === sent ? '' : current); setMinutes(''); setUrl(''); setTime(''); setSaved(true); setWarning(result.data?.warnings?.length ? wb(t, 'overlapWarning') : null); }
+      };
+      const choices = wbList(state.items).filter((item) => !project || item.projectId === project || item.id === taskId);
+      return h('form', { className: cx('dsh-wb-form', compact && 'dsh-wb-compact'), onSubmit: submit },
+        h('div', { className: 'dsh-wb-formGrid' },
+          !taskId ? h(WBField, { label: wb(t, 'project') }, h(WBProjectSelect, { t, state, value: project, onChange: (value) => { setProject(value); setTask(''); }, disabled: busy })) : null,
+          !taskId ? h(WBField, { label: wb(t, 'task') }, h('select', { className: 'dsh-todos-input', value: task, onChange: (event) => setTask(event.target.value), disabled: busy },
+            h('option', { value: '' }, wb(t, 'noTask')), ...choices.map((item) => h('option', { key: item.id, value: item.id }, item.title)))) : null,
+          h(WBField, { label: wb(t, 'logKind') }, h('select', { className: 'dsh-todos-input', value: kind, onChange: (event) => setKind(event.target.value), disabled: busy },
+            ...WB_LOG_KINDS.map((value) => h('option', { key: value, value }, wb(t, `log.${value}`))))),
+          h(WBField, { label: `${wb(t, 'logTime')} · ${state.settings?.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone}` }, h('input', { className: 'dsh-todos-input', type: 'datetime-local', value: time, onChange: (event) => setTime(event.target.value), disabled: busy })),
+          h(WBField, { label: wb(t, 'logText'), wide: true }, h('textarea', { className: 'dsh-todos-input dsh-wb-textarea', value: text,
+            placeholder: wb(t, 'logPlaceholder'), maxLength: 8000, rows: 3, required: true, onChange: (event) => { setText(event.target.value); setSaved(false); } })),
+          h(WBField, { label: wb(t, 'logUrl') }, h('input', { className: 'dsh-todos-input', type: 'url', value: url, placeholder: 'https://', onChange: (event) => setUrl(event.target.value) })),
+          h(WBField, { label: wb(t, 'logMinutes') }, h('input', { className: 'dsh-todos-input', type: 'number', min: 0, max: 1440, value: minutes, onChange: (event) => setMinutes(event.target.value) }))),
+        warning ? h('p', { className: 'dsh-wb-warning', role: 'status' }, warning) : null,
+        h('div', { className: 'dsh-wb-actions' }, saved ? h('span', { role: 'status', className: 'dsh-wb-hint' }, wb(t, 'saved')) : null,
+          h(WBButton, { type: 'submit', primary: true, disabled: busy || !text.trim() }, wb(t, busy ? 'saving' : 'record'))));
+    }
+
+    function WorkbenchTaskFields({ t, item, state, mutate, busy }) {
+      const values = (task) => ({ projectId: task.projectId ?? '', status: task.status ?? (task.done ? 'done' : 'todo'), dueDate: task.dueDate ?? '',
+        plannedDate: task.plannedDate ?? '', estimateMinutes: task.estimateMinutes ?? '', description: task.description ?? '',
+        waitingFor: task.waitingFor ?? '', followUpDate: task.followUpDate ?? '' });
+      const [fields, setFields] = useState(() => values(item));
+      const [dirty, setDirty] = useState(false);
+      const [saved, setSaved] = useState(false);
+      useEffect(() => { if (!dirty) setFields(values(item)); }, [item.updatedAt, item.id, dirty]);
+      const change = (key) => (event) => { setFields((current) => ({ ...current, [key]: event.target.value })); setDirty(true); setSaved(false); };
+      const save = async (event) => {
+        event.preventDefault();
+        const result = await mutate({ op: 'update', id: item.id, ...fields, projectId: fields.projectId || null,
+          dueDate: fields.dueDate || null, plannedDate: fields.plannedDate || null, followUpDate: fields.followUpDate || null,
+          estimateMinutes: fields.estimateMinutes === '' ? null : Number(fields.estimateMinutes) });
+        if (result) { setDirty(false); setSaved(true); }
+      };
+      return h('div', { className: 'dsh-wb-taskFields' },
+        h('form', { className: 'dsh-wb-form', onSubmit: save },
+          h('div', { className: 'dsh-wb-formGrid' },
+            h(WBField, { label: wb(t, 'project') }, h(WBProjectSelect, { t, state, value: fields.projectId,
+              onChange: (value) => { setFields((current) => ({ ...current, projectId: value })); setDirty(true); }, disabled: busy })),
+            h(WBField, { label: wb(t, 'status') }, h('select', { className: 'dsh-todos-input', value: fields.status, onChange: change('status'), disabled: busy },
+              ...WB_STATUSES.map((status) => h('option', { key: status, value: status }, wb(t, `status.${status}`))))),
+            h(WBField, { label: wb(t, 'dueDate') }, h('input', { className: 'dsh-todos-input', type: 'date', value: fields.dueDate, onChange: change('dueDate') })),
+            h(WBField, { label: wb(t, 'plannedDate') }, h('input', { className: 'dsh-todos-input', type: 'date', value: fields.plannedDate, onChange: change('plannedDate') })),
+            h(WBField, { label: wb(t, 'estimate') }, h('input', { className: 'dsh-todos-input', type: 'number', min: 0, max: 100000, value: fields.estimateMinutes, onChange: change('estimateMinutes') })),
+            fields.status === 'waiting' ? h(WBField, { label: wb(t, 'waitingFor') }, h('input', { className: 'dsh-todos-input', value: fields.waitingFor, onChange: change('waitingFor') })) : null,
+            fields.status === 'waiting' ? h(WBField, { label: wb(t, 'followUpDate') }, h('input', { className: 'dsh-todos-input', type: 'date', value: fields.followUpDate, onChange: change('followUpDate') })) : null,
+            h(WBField, { label: wb(t, 'nextAction'), wide: true }, h('textarea', { className: 'dsh-todos-input dsh-wb-textarea', rows: 2, maxLength: 8000,
+              value: fields.description, onChange: change('description') }))),
+          h('div', { className: 'dsh-wb-actions' }, saved ? h('span', { role: 'status', className: 'dsh-wb-hint' }, wb(t, 'taskSaved')) : null,
+            h(WBButton, { type: 'submit', disabled: busy || !dirty, primary: true }, wb(t, 'detailsSave')))),
+        h('details', { className: 'dsh-wb-disclosure' }, h('summary', null, wb(t, 'log')),
+          h(WorkbenchLogForm, { t, state, mutate, busy, taskId: item.id, projectId: item.projectId, compact: true })));
+    }
+
+    function WorkbenchProjects({ t, state, mutate, busy, onProjectTasks, onProjectReview }) {
+      const projects = wbList(state.projects);
+      const [selected, setSelected] = useState('');
+      const [editing, setEditing] = useState(null);
+      const [draft, setDraft] = useState({ name: '', goal: '', status: 'active' });
+      const [tag, setTag] = useState('');
+      const [assigned, setAssigned] = useState(null);
+      const selectedProject = projects.find((project) => project.id === selected);
+      const projectTasks = wbList(state.items).filter((item) => !selected || item.projectId === selected);
+      const logs = wbList(state.logs).filter((log) => !selected || log.projectId === selected);
+      const tags = [...new Set(wbList(state.items).flatMap((item) => item.tags ?? []))].sort();
+      const begin = (project) => {
+        setEditing(project?.id ?? 'new'); setDraft({ name: project?.name ?? '', goal: project?.goal ?? '', status: project?.status ?? 'active' });
+      };
+      const save = async (event) => {
+        event.preventDefault();
+        const result = await mutate({ op: 'project.save', ...(editing !== 'new' ? { id: editing } : {}), ...draft });
+        if (result) {
+          const project = result.data?.project ?? result.projects?.find((entry) => entry.id === editing) ?? result.projects?.find((entry) => entry.name === draft.name);
+          if (project?.id) setSelected(project.id);
+          setEditing(null);
+        }
+      };
+      const assign = async () => {
+        let count = 0;
+        for (const item of wbList(state.items).filter((entry) => !entry.projectId && entry.tags?.includes(tag))) {
+          const result = await mutate({ op: 'update', id: item.id, projectId: selected });
+          if (!result) break;
+          count += 1;
+        }
+        setAssigned(count);
+      };
+      return h('div', { className: 'dsh-wb-stack' },
+        h('div', { className: 'dsh-wb-sectionHead' }, h('h2', null, wb(t, 'projects')), h(WBButton, { primary: true, onClick: () => begin(null), disabled: busy }, wb(t, 'newProject'))),
+        editing ? h('form', { className: 'dsh-wb-card dsh-wb-form', onSubmit: save },
+          h('h3', null, wb(t, editing === 'new' ? 'newProject' : 'editProject')),
+          h('div', { className: 'dsh-wb-formGrid' },
+            h(WBField, { label: wb(t, 'projectName') }, h('input', { className: 'dsh-todos-input', value: draft.name, maxLength: 120, required: true,
+              onChange: (event) => setDraft({ ...draft, name: event.target.value }) })),
+            h(WBField, { label: wb(t, 'status') }, h('select', { className: 'dsh-todos-input', value: draft.status, onChange: (event) => setDraft({ ...draft, status: event.target.value }) },
+              h('option', { value: 'active' }, wb(t, 'active')), h('option', { value: 'archived' }, wb(t, 'archived')))),
+            h(WBField, { label: wb(t, 'projectGoal'), wide: true }, h('textarea', { className: 'dsh-todos-input dsh-wb-textarea', value: draft.goal, rows: 3, maxLength: 8000,
+              onChange: (event) => setDraft({ ...draft, goal: event.target.value }) }))),
+          h('div', { className: 'dsh-wb-actions' }, h(WBButton, { onClick: () => setEditing(null) }, wb(t, 'cancel')),
+            h(WBButton, { type: 'submit', primary: true, disabled: busy || !draft.name.trim() }, wb(t, 'save')))) : null,
+        projects.length === 0 ? h(WBEmpty, null, wb(t, 'noProjects')) : h('div', { className: 'dsh-wb-projectGrid' },
+          h('button', { type: 'button', className: 'dsh-wb-projectCard dsh-todos-focusable', 'aria-pressed': selected === '', onClick: () => setSelected('') },
+            h('strong', null, wb(t, 'allProjects')), h('span', null, wb(t, 'selectedTasks', { count: state.items.length }))),
+          ...projects.map((project) => h('button', { key: project.id, type: 'button', className: 'dsh-wb-projectCard dsh-todos-focusable',
+            'aria-pressed': selected === project.id, onClick: () => { setSelected(project.id); setAssigned(null); } },
+            h('strong', null, project.name), h('span', null, project.goal || wb(t, project.status === 'archived' ? 'archived' : 'active'))))),
+        selectedProject ? h('section', { className: 'dsh-wb-card' },
+          h('div', { className: 'dsh-wb-sectionHead' }, h('h3', null, selectedProject.name), h(WBButton, { onClick: () => begin(selectedProject), disabled: busy }, wb(t, 'edit'))),
+          h('p', { className: 'dsh-wb-prose' }, selectedProject.goal || wb(t, 'projectGoal')),
+          h('div', { className: 'dsh-wb-actions' }, h(WBButton, { onClick: () => onProjectTasks(selected) }, wb(t, 'projectTasks')),
+            h(WBButton, { onClick: () => onProjectReview(selected), primary: true }, wb(t, 'projectReports'))),
+          tags.length ? h('details', { className: 'dsh-wb-disclosure' }, h('summary', null, wb(t, 'promoteTag')),
+            h('p', { className: 'dsh-wb-hint' }, wb(t, 'assignTagHint')),
+            h('div', { className: 'dsh-wb-inline' }, h('select', { className: 'dsh-todos-input', value: tag, 'aria-label': wb(t, 'sourceTag'), onChange: (event) => setTag(event.target.value) },
+              h('option', { value: '' }, wb(t, 'sourceTag')), ...tags.map((entry) => h('option', { key: entry, value: entry }, entry))),
+              h(WBButton, { onClick: () => void assign(), disabled: busy || !tag }, wb(t, 'assignTag'))),
+            assigned !== null ? h('p', { role: 'status' }, wb(t, 'tagAssigned', { count: assigned })) : null) : null) : null,
+        h('section', { className: 'dsh-wb-card' }, h('h3', null, wb(t, 'log')), h(WorkbenchLogForm, { t, state, mutate, busy, projectId: selected || null })),
+        h('section', { className: 'dsh-wb-card' }, h('div', { className: 'dsh-wb-sectionHead' }, h('h3', null, wb(t, 'records')), h('span', { className: 'dsh-wb-hint' }, wb(t, 'logsRecent'))),
+          logs.length === 0 ? h(WBEmpty, null, wb(t, 'noRecords')) : h('ul', { className: 'dsh-wb-timeline' },
+            ...logs.slice(0, 40).map((log) => h('li', { key: log.id },
+              h('div', { className: 'dsh-wb-meta' }, h('span', { className: 'dsh-wb-badge' }, wb(t, `log.${log.kind}`)), wbProjectName(state, log.projectId, t), wbFormatTime(log.at ?? log.createdAt, state, t)),
+              h('p', { className: 'dsh-wb-prose' }, log.text), log.taskId ? h('span', { className: 'dsh-wb-hint' }, log.taskTitle || wbTaskName(state, log.taskId, t)) : null,
+              log.url && /^https?:\/\//i.test(log.url) ? h('a', { href: log.url, target: '_blank', rel: 'noreferrer', className: 'dsh-wb-link' }, log.url) : null,
+              log.minutes ? h('span', { className: 'dsh-wb-hint' }, wb(t, 'minutes', { value: log.minutes })) : null)))),
+        h('section', { className: 'dsh-wb-card' }, h('h3', null, wb(t, 'projectTasks')),
+          projectTasks.length === 0 ? h(WBEmpty, null, wb(t, 'noTasks')) : h('ul', { className: 'dsh-wb-plainList' },
+            ...projectTasks.slice(0, 30).map((item) => h('li', { key: item.id }, h('span', null, item.title), h('span', { className: 'dsh-wb-badge' }, wb(t, `status.${item.status ?? (item.done ? 'done' : 'todo')}`)))))));
+    }
+
+    function WorkbenchSettings({ t, state, mutate, busy }) {
+      const [values, setValues] = useState(() => ({ timezone: state.settings?.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone,
+        weekStartsOn: state.settings?.weekStartsOn ?? 1, capacityMinutes: state.settings?.capacityMinutes ?? 360, bufferPercent: state.settings?.bufferPercent ?? 30 }));
+      const [saved, setSaved] = useState(false);
+      const change = (key) => (event) => { setSaved(false); setValues({ ...values, [key]: event.target.value }); };
+      return h('details', { className: 'dsh-wb-card dsh-wb-disclosure' }, h('summary', null, wb(t, 'settings')),
+        h('p', { className: 'dsh-wb-hint' }, wb(t, 'settingsHint')),
+        h('form', { className: 'dsh-wb-form', onSubmit: async (event) => { event.preventDefault();
+          const result = await mutate({ op: 'settings.update', ...values, weekStartsOn: Number(values.weekStartsOn),
+            capacityMinutes: Number(values.capacityMinutes), bufferPercent: Number(values.bufferPercent) }); if (result) setSaved(true); } },
+          h('div', { className: 'dsh-wb-formGrid' },
+            h(WBField, { label: wb(t, 'timezone') }, h('input', { className: 'dsh-todos-input', value: values.timezone, onChange: change('timezone'), required: true, placeholder: 'Asia/Singapore' })),
+            h(WBField, { label: wb(t, 'weekStartsOn') }, h('select', { className: 'dsh-todos-input', value: values.weekStartsOn, onChange: change('weekStartsOn') },
+              h('option', { value: 1 }, wb(t, 'monday')), h('option', { value: 0 }, wb(t, 'sunday')))),
+            h(WBField, { label: wb(t, 'capacity') }, h('input', { className: 'dsh-todos-input', type: 'number', min: 0, max: 1440, required: true, value: values.capacityMinutes, onChange: change('capacityMinutes') })),
+            h(WBField, { label: wb(t, 'buffer') }, h('input', { className: 'dsh-todos-input', type: 'number', min: 0, max: 90, required: true, value: values.bufferPercent, onChange: change('bufferPercent') }))),
+          h('div', { className: 'dsh-wb-actions' }, saved ? h('span', { role: 'status' }, wb(t, 'saved')) : null,
+            h(WBButton, { type: 'submit', disabled: busy, primary: true }, wb(t, 'save')))));
+    }
+
+    function WorkbenchPlanning({ t, state, mutate, busy }) {
+      const [period, setPeriod] = useState('day');
+      const [date, setDate] = useState(state.todayDate || localDateKey());
+      const [title, setTitle] = useState('');
+      const [taskIds, setTaskIds] = useState([]);
+      const [capacity, setCapacity] = useState(state.settings?.capacityMinutes ?? 360);
+      const [buffer, setBuffer] = useState(state.settings?.bufferPercent ?? 30);
+      const [dirty, setDirty] = useState(false);
+      const [saved, setSaved] = useState(false);
+      const existing = wbList(state.plans).find((plan) => plan.period === period && plan.date === date);
+      useEffect(() => {
+        if (dirty) return;
+        setTitle(existing?.title ?? '');
+        setTaskIds(existing?.taskIds ?? (period === 'day' ? state.items.filter((item) => item.todayDate === date && !item.done).map((item) => item.id) : []));
+        setCapacity(existing?.capacityMinutes ?? (state.settings?.capacityMinutes ?? 360) * (period === 'week' ? 5 : 1));
+        setBuffer(existing?.bufferPercent ?? state.settings?.bufferPercent ?? 30);
+      }, [existing?.id, existing?.updatedAt, date, period, dirty]);
+      const available = Math.round(Number(capacity || 0) * (1 - Number(buffer || 0) / 100));
+      const selected = state.items.filter((item) => taskIds.includes(item.id));
+      const estimated = selected.reduce((sum, item) => sum + Number(item.estimateMinutes ?? 0), 0);
+      const unknown = selected.filter((item) => item.estimateMinutes === null || item.estimateMinutes === undefined).length;
+      const choices = state.items.filter((item) => (!item.done && item.status !== 'cancelled') || taskIds.includes(item.id));
+      const stale = state.items.filter((item) => !item.done && item.status !== 'cancelled' && item.todayDate && item.todayDate < state.todayDate);
+      const suggestions = Array.isArray(state.insights) ? state.insights : wbList(state.insights?.suggestions);
+      const save = async (event) => {
+        event.preventDefault();
+        const result = await mutate({ op: 'plan.save', ...(existing ? { id: existing.id } : {}), period, date, title, taskIds,
+          capacityMinutes: Number(capacity), bufferPercent: Number(buffer), commit: true });
+        if (result) { setDirty(false); setSaved(true); }
+      };
+      return h('div', { className: 'dsh-wb-stack' },
+        h('section', { className: 'dsh-wb-card' }, h('div', { className: 'dsh-wb-sectionHead' }, h('h2', null, wb(t, 'planning')),
+          h('div', { className: 'dsh-todos-viewSwitch' }, ...['day', 'week'].map((value) => h('button', { key: value, type: 'button', className: 'dsh-todos-viewButton dsh-todos-focusable',
+            'aria-pressed': period === value, onClick: () => { setPeriod(value); setDirty(false); setSaved(false); } }, wb(t, value === 'day' ? 'dailyPlan' : 'weeklyPlan'))))),
+          h('form', { className: 'dsh-wb-form', onSubmit: save },
+            h('div', { className: 'dsh-wb-formGrid' },
+              h(WBField, { label: wb(t, 'planDate') }, h('input', { className: 'dsh-todos-input', type: 'date', value: date, required: true,
+                onChange: (event) => { setDate(event.target.value); setDirty(false); setSaved(false); } })),
+              h(WBField, { label: wb(t, 'capacity'), hint: period === 'week' ? wb(t, 'weeklyCapacityHint') : null }, h('input', { className: 'dsh-todos-input', type: 'number', min: 0, max: 10080, required: true,
+                value: capacity, onChange: (event) => { setCapacity(event.target.value); setDirty(true); setSaved(false); } })),
+              h(WBField, { label: wb(t, 'buffer') }, h('input', { className: 'dsh-todos-input', type: 'number', min: 0, max: 90, required: true,
+                value: buffer, onChange: (event) => { setBuffer(event.target.value); setDirty(true); setSaved(false); } })),
+              h(WBField, { label: wb(t, 'planGoal'), wide: true }, h('textarea', { className: 'dsh-todos-input dsh-wb-textarea', rows: 3, maxLength: 8000,
+                placeholder: wb(t, 'planGoalHint'), value: title, onChange: (event) => { setTitle(event.target.value); setDirty(true); setSaved(false); } }))),
+            h('div', { className: cx('dsh-wb-capacity', estimated > available && 'dsh-wb-warning') },
+              h('strong', null, wb(t, 'planned', { value: estimated })), h('span', null, wb(t, 'usable', { value: available })),
+              unknown > 0 ? h('span', null, wb(t, 'unestimated', { count: unknown })) : null,
+              estimated > available ? h('p', { role: 'status' }, wb(t, 'overloaded')) : null),
+            h('fieldset', { className: 'dsh-wb-scope' }, h('legend', null, wb(t, 'chooseTasks')), h('p', { className: 'dsh-wb-hint' }, wb(t, 'selectHint')),
+              choices.length === 0 ? h(WBEmpty, null, wb(t, 'noTasks')) : h('div', { className: 'dsh-wb-taskChoices' },
+                ...choices.map((item) => h('label', { key: item.id, className: 'dsh-wb-taskChoice' },
+                  h('input', { type: 'checkbox', checked: taskIds.includes(item.id), onChange: (event) => {
+                    setTaskIds(event.target.checked ? [...taskIds, item.id] : taskIds.filter((id) => id !== item.id)); setDirty(true); setSaved(false);
+                  } }), h('span', null, item.title, h('small', null, wbProjectName(state, item.projectId, t), item.quadrant ? ` · ${item.quadrant.toUpperCase()}` : '')),
+                  h('span', { className: 'dsh-wb-hint' }, item.estimateMinutes == null ? wb(t, 'unknown') : wb(t, 'minutes', { value: item.estimateMinutes })))))),
+            existing?.committedAt ? h('p', { className: 'dsh-wb-hint' }, wb(t, 'confirmed'), ' · ', wbFormatTime(existing.committedAt, state, t), ' · ',
+              wb(t, 'baselineCount', { count: (existing.baselineTaskIds ?? []).length }), ' — ', wb(t, 'planBaseline')) : null,
+            h('div', { className: 'dsh-wb-actions' }, saved ? h('span', { role: 'status' }, wb(t, 'saved')) : null,
+              h(WBButton, { type: 'submit', primary: true, disabled: busy || !date }, wb(t, existing?.committedAt ? 'updatePlan' : 'commitPlan'))))),
+        h('section', { className: 'dsh-wb-card' }, h('h3', null, wb(t, 'reschedule')),
+          stale.length ? h('ul', { className: 'dsh-wb-plainList' }, ...stale.slice(0, 20).map((item) => h('li', { key: item.id }, h('span', null, item.title),
+            h(WBButton, { disabled: busy, onClick: () => void mutate({ op: 'update', id: item.id, today: true }) }, t('row.todayAdd'))))) : h(WBEmpty, null, wb(t, 'noReschedule'))),
+        h('section', { className: 'dsh-wb-card' }, h('h3', null, wb(t, 'suggestions')),
+          suggestions.length ? h('ul', { className: 'dsh-wb-timeline' }, ...suggestions.map((item, index) => h('li', { key: item.id ?? index },
+            h('p', null, wbInsightText(t, item, state)),
+            item.taskIds?.length ? h('small', null, item.taskIds.map((id) => wbTaskName(state, id, t)).join(' · ')) : null))) : h(WBEmpty, null, wb(t, 'noSuggestions'))),
+        h('section', { className: 'dsh-wb-card' }, h('h3', null, wb(t, 'planHistory')),
+          wbList(state.plans).length ? h('ul', { className: 'dsh-wb-plainList' }, ...wbList(state.plans).slice(0, 20).map((plan) => h('li', { key: plan.id },
+            h('span', null, plan.date, ' · ', wb(t, plan.period === 'week' ? 'weeklyPlan' : 'dailyPlan'), h('small', null, plan.title)),
+            h(WBButton, { onClick: () => { setPeriod(plan.period); setDate(plan.date); setDirty(false); } }, wb(t, 'edit'))))) : h(WBEmpty, null, wb(t, 'noPlan'))),
+        h('section', { className: 'dsh-wb-card' }, h('h3', null, wb(t, 'focusHistory')), h('p', { className: 'dsh-wb-hint' }, wb(t, 'focusHint')),
+          wbList(state.focusSessions).length ? h('ul', { className: 'dsh-wb-plainList' }, ...wbList(state.focusSessions).slice(0, 20).map((session) => h('li', { key: session.id },
+            h('span', null, session.taskTitle ?? wbTaskName(state, session.taskId, t), h('small', null, wbFormatTime(session.startedAt, state, t))),
+            h('span', null, wb(t, 'minutes', { value: session.minutes ?? Math.round((session.durationMs ?? 0) / 60000) }))))) : h(WBEmpty, null, wb(t, 'noRecords'))),
+        h(WorkbenchSettings, { t, state, mutate, busy }));
+    }
+
+    function WorkbenchTodaySummary({ t, state, onNavigate, mutate, busy }) {
+      const plan = wbList(state.plans).find((item) => item.period === 'day' && item.date === state.todayDate);
+      const today = state.items.filter((item) => item.todayDate === state.todayDate && !item.done && item.status !== 'cancelled');
+      const capacity = Math.round((plan?.capacityMinutes ?? state.settings?.capacityMinutes ?? 360) * (1 - (plan?.bufferPercent ?? state.settings?.bufferPercent ?? 30) / 100));
+      const estimate = today.reduce((total, item) => total + (item.estimateMinutes ?? 0), 0);
+      const unknown = today.filter((item) => item.estimateMinutes == null).length;
+      const stale = state.items.filter((item) => !item.done && item.status !== 'cancelled' && item.todayDate && item.todayDate < state.todayDate);
+      return h('section', { className: 'dsh-wb-todaySummary', 'aria-label': wb(t, 'todayCapacity') },
+        h('div', { className: cx('dsh-wb-capacity', estimate > capacity && 'dsh-wb-warning') },
+          h('strong', null, `${estimate} / ${capacity} min`), h('span', null, wb(t, 'todayCapacity')),
+          unknown ? h('span', null, wb(t, 'unestimated', { count: unknown })) : null),
+        plan?.title ? h('p', { className: 'dsh-wb-prose' }, plan.title) : h('p', { className: 'dsh-wb-hint' }, wb(t, 'noConfirmedPlan')),
+        h('div', { className: 'dsh-wb-actions' }, h(WBButton, { onClick: () => onNavigate('planning') }, wb(t, 'todayPlan')),
+          h(WBButton, { onClick: () => onNavigate('review', { type: 'review', kind: 'daily', startDate: state.todayDate, endDate: wbDateShift(state.todayDate, 1) }) }, wb(t, 'todayReview'))),
+        stale.length ? h('details', { className: 'dsh-wb-disclosure' }, h('summary', null, `${wb(t, 'reschedule')} · ${stale.length}`),
+          h('ul', { className: 'dsh-wb-plainList' }, ...stale.slice(0, 5).map((item) => h('li', { key: item.id }, h('span', null, item.title),
+            h(WBButton, { disabled: busy, onClick: () => void mutate({ op: 'update', id: item.id, today: true }) }, t('row.todayAdd')))))) : null);
+    }
+
+    function WorkbenchDocumentEditor({ t, state, document: record, mutate, busy, onUpdate, onDirty }) {
+      const localKey = `dsh-todos.document-draft.${record.id}`;
+      const [initialLocal] = useState(() => {
+        try { const raw = JSON.parse(wbStorage.get(localKey)); return raw && typeof raw.content === 'string' ? raw : null; } catch { return null; }
+      });
+      const [content, setContent] = useState(initialLocal?.content ?? record.content ?? '');
+      const [dirty, setDirty] = useState(initialLocal !== null && initialLocal.content !== record.content);
+      const [sourceRevision, setSourceRevision] = useState(initialLocal?.baseRevisionId ?? record.currentRevisionId);
+      const [message, setMessage] = useState(null);
+      const [versionId, setVersionId] = useState('');
+      const [action, setAction] = useState({ title: '', successCriteria: '', dueDate: '', projectId: record.projectIds?.length === 1 ? record.projectIds[0] : '' });
+      useEffect(() => {
+        onDirty(dirty);
+        if (dirty) wbStorage.set(localKey, JSON.stringify({ content, baseRevisionId: sourceRevision }));
+        else wbStorage.remove(localKey);
+        return () => {};
+      }, [dirty, content, sourceRevision]);
+      useEffect(() => {
+        if (!dirty) { setContent(record.content ?? ''); setSourceRevision(record.currentRevisionId); }
+      }, [record.currentRevisionId, record.content, dirty]);
+      useEffect(() => {
+        if (!dirty) return undefined;
+        const warn = (event) => { event.preventDefault(); event.returnValue = ''; };
+        window.addEventListener('beforeunload', warn);
+        return () => window.removeEventListener('beforeunload', warn);
+      }, [dirty]);
+      const save = async (status) => {
+        const result = await mutate({ op: 'document.save', id: record.id, content, status, baseRevisionId: sourceRevision });
+        if (result?.data?.document) { setDirty(false); onDirty(false); wbStorage.remove(localKey); onUpdate(result.data.document); setMessage(wb(t, 'saved')); }
+      };
+      const regenerate = async () => {
+        const result = await mutate({ op: record.type === 'review' ? 'review.generate' : 'report.generate', documentId: record.id });
+        if (result?.data?.document) { onUpdate(result.data.document); setVersionId(result.data.revision?.id ?? ''); setMessage(wb(t, 'generatedRevision')); }
+      };
+      const exportDocument = () => {
+        const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const anchor = window.document.createElement('a');
+        anchor.href = url; anchor.download = `${String(record.title || 'report').replace(/[<>:"/\\|?*\u0000-\u001f]/g, '-').slice(0, 120)}.md`;
+        window.document.body.appendChild(anchor); anchor.click(); anchor.remove();
+        window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      };
+      const copy = async () => {
+        try { await navigator.clipboard.writeText(content); setMessage(wb(t, 'copied')); }
+        catch { setMessage(wb(t, 'copyFailed')); }
+      };
+      const revisions = wbList(record.revisions);
+      const selectedVersion = revisions.find((version) => version.id === versionId);
+      const facts = selectedVersion?.facts ?? record.facts ?? revisions.find((version) => version.id === record.currentRevisionId)?.facts;
+      const saveAction = async (event) => {
+        event.preventDefault();
+        const result = await mutate({ op: 'review.action', documentId: record.id, ...action, projectId: action.projectId || null, dueDate: action.dueDate || null });
+        if (result?.data?.document) { onUpdate(result.data.document); setAction({ ...action, title: '', successCriteria: '', dueDate: '' }); setMessage(wb(t, 'actionCreated')); }
+      };
+      const recordStatus = record.status === 'final' ? 'final' : record.type === 'review' ? 'pendingReview' : 'draft';
+      return h('section', { className: 'dsh-wb-card dsh-wb-editor' },
+        h('div', { className: 'dsh-wb-sectionHead' }, h('h3', null, record.title), h('span', { className: 'dsh-wb-badge' }, wb(t, recordStatus))),
+        h('p', { className: 'dsh-wb-hint' }, `${record.startDate} — ${wbDateShift(record.endDate, -1)} · ${record.timezone ?? state.settings?.timezone ?? ''}`),
+        h('p', { className: 'dsh-wb-hint' }, wb(t, record.type === 'review' ? 'privateReview' : 'reportHint')),
+        dirty && record.currentRevisionId !== sourceRevision ? h('p', { className: 'dsh-wb-warning', role: 'alert' }, wb(t, 'changedElsewhere')) : null,
+        h(WBField, { label: wb(t, 'content') }, h('textarea', { className: 'dsh-todos-input dsh-wb-documentContent', value: content, rows: 20, maxLength: 60000,
+          onChange: (event) => { setContent(event.target.value); setDirty(true); setMessage(null); } })),
+        dirty ? h('p', { className: 'dsh-wb-hint', role: 'status' }, wb(t, 'unsaved'), ' · ', wb(t, 'localDraft')) : null,
+        message ? h('p', { className: 'dsh-wb-hint', role: 'status' }, message) : null,
+        h('div', { className: 'dsh-wb-actions' },
+          dirty ? h(WBButton, { onClick: () => { setContent(record.content); setSourceRevision(record.currentRevisionId); setDirty(false); onDirty(false); wbStorage.remove(localKey); } }, wb(t, 'discard')) : null,
+          h(WBButton, { onClick: exportDocument, disabled: !content }, wb(t, 'export')),
+          h(WBButton, { onClick: () => void copy(), disabled: !content }, wb(t, 'copy')),
+          h(WBButton, { onClick: () => void save(record.type === 'review' ? 'pending' : 'draft'), disabled: busy || !content.trim() }, wb(t, 'saveDraft')),
+          h(WBButton, { onClick: () => void save('final'), primary: true, disabled: busy || !content.trim() }, wb(t, record.type === 'review' ? 'finalizeReview' : 'finalize'))),
+        h('details', { className: 'dsh-wb-disclosure', open: Boolean(versionId) }, h('summary', null, wb(t, 'history'), ` · ${revisions.length}`),
+          h('p', { className: 'dsh-wb-hint' }, wb(t, 'versionHint')),
+          h('div', { className: 'dsh-wb-inline' }, h('select', { className: 'dsh-todos-input', value: versionId, 'aria-label': wb(t, 'history'), onChange: (event) => setVersionId(event.target.value) },
+            h('option', { value: '' }, wb(t, 'firstSelect')), ...revisions.map((revision, index) => h('option', { key: revision.id, value: revision.id },
+              `${wb(t, 'version', { value: index + 1 })} · ${wbFormatTime(revision.at, state, t)}${revision.id === record.currentRevisionId ? ` · ${wb(t, 'selected')}` : ''}`))),
+            h(WBButton, { disabled: busy || dirty, onClick: () => void regenerate() }, wb(t, 'regenerate'))),
+          selectedVersion ? h('div', { className: 'dsh-wb-versionPreview' }, h('pre', null, selectedVersion.content ?? ''),
+            h(WBButton, { disabled: busy || dirty, onClick: async () => {
+              const result = await mutate({ op: 'document.restore', id: record.id, revisionId: selectedVersion.id, baseRevisionId: record.currentRevisionId });
+              if (result?.data?.document) { onUpdate(result.data.document); setVersionId(''); setMessage(wb(t, 'saved')); }
+            } }, wb(t, 'restoreVersion'))) : null),
+        h('details', { className: 'dsh-wb-disclosure' }, h('summary', null, wb(t, 'evidence')),
+          h('p', { className: 'dsh-wb-hint' }, wb(t, 'evidenceHint')),
+          facts ? h('ul', { className: 'dsh-wb-timeline' },
+            ...wbList(facts.completed).map((item) => h('li', { key: item.sourceId ?? item.id ?? item.taskId }, h('span', { className: 'dsh-wb-badge' }, wb(t, 'complete')), ' ', item.title,
+              h('small', null, facts.projectNames?.[item.projectId || 'unassigned'] ?? wbProjectName(state, item.projectId, t), ' · ', wbFormatTime(item.completedAt, state, t)))),
+            ...wbList(facts.logs).map((log) => h('li', { key: log.id }, h('span', { className: 'dsh-wb-badge' }, wb(t, `log.${log.kind}`)), ' ', log.text,
+              h('small', null, wbFormatTime(log.at, state, t)))),
+            !facts.activityCount ? h('li', null, wb(t, 'noRecords')) : null) : h(WBEmpty, null, wb(t, 'noRecords'))),
+        record.type === 'review' ? h('div', { className: 'dsh-wb-actionSection' }, h('h4', null, wb(t, 'actions')),
+          wbList(record.actions).length ? h('ul', { className: 'dsh-wb-plainList' }, ...record.actions.map((item) => h('li', { key: item.taskId },
+            h('span', null, item.title, h('small', null, item.successCriteria || '', item.checkDate ? ` · ${item.checkDate}` : '')),
+            h('span', { className: 'dsh-wb-badge' }, wb(t, `status.${state.items.find((task) => task.id === item.taskId)?.status ?? 'todo'}`))))) : null,
+          h('form', { className: 'dsh-wb-form', onSubmit: saveAction }, h('div', { className: 'dsh-wb-formGrid' },
+            h(WBField, { label: wb(t, 'actionTitle'), wide: true }, h('input', { className: 'dsh-todos-input', value: action.title, required: true, maxLength: 200, onChange: (event) => setAction({ ...action, title: event.target.value }) })),
+            h(WBField, { label: wb(t, 'project') }, h(WBProjectSelect, { t, state, value: action.projectId, onChange: (value) => setAction({ ...action, projectId: value }) })),
+            h(WBField, { label: wb(t, 'actionCheck') }, h('input', { className: 'dsh-todos-input', type: 'date', value: action.dueDate, onChange: (event) => setAction({ ...action, dueDate: event.target.value }) })),
+            h(WBField, { label: wb(t, 'actionCriteria'), wide: true }, h('input', { className: 'dsh-todos-input', value: action.successCriteria, maxLength: 2000, onChange: (event) => setAction({ ...action, successCriteria: event.target.value }) }))),
+            h('div', { className: 'dsh-wb-actions' }, h(WBButton, { type: 'submit', primary: true, disabled: busy || !action.title.trim() }, wb(t, 'addAction'))))) : null);
+    }
+
+    function WorkbenchRoutineForm({ t, state, mutate, busy, routine, defaultProjects, onClose }) {
+      const [fields, setFields] = useState(() => ({ name: routine?.name ?? '', kind: routine?.kind ?? 'report', reportKind: routine?.reportKind ?? 'weekly',
+        projectIds: routine?.projectIds ?? defaultProjects ?? [], tags: (routine?.tags ?? []).join(', '), frequency: routine?.frequency ?? 'weekly',
+        interval: routine?.interval ?? 1, unit: routine?.unit ?? 'day', weekdays: routine?.weekdays ?? [1], monthDay: routine?.monthDay ?? 1,
+        time: routine?.time ?? '09:00', anchorDate: routine?.anchorDate ?? state.todayDate, timezone: routine?.timezone ?? state.settings?.timezone ?? 'UTC',
+        coverage: routine?.coverage ?? 'previous', windowDays: routine?.windowDays ?? 7, template: routine?.template ?? '',
+        enabled: routine?.enabled ?? true, mode: routine?.mode ?? 'draft' }));
+      const [preview, setPreview] = useState(routine?.nextRuns ?? []);
+      const change = (key) => (event) => { setFields((current) => ({ ...current, [key]: event.target.value })); setPreview([]); };
+      const request = () => ({ ...(routine ? { id: routine.id } : {}), ...fields, tags: parseTags(fields.tags), interval: Number(fields.interval),
+        monthDay: fields.monthDay === 'last' ? 'last' : Number(fields.monthDay), windowDays: Number(fields.windowDays) });
+      const save = async (event) => { event.preventDefault(); const result = await mutate({ op: 'routine.save', ...request() }); if (result) onClose(); };
+      const doPreview = async () => { const result = await mutate({ op: 'routine.preview', ...request() }); if (result) setPreview(result.data?.nextRuns ?? []); };
+      const locale = String(t('zen.locale')).startsWith('en') ? 'en-US' : 'zh-CN';
+      const weekdayNames = Array.from({ length: 7 }, (_, index) => new Intl.DateTimeFormat(locale, { weekday: 'short', timeZone: 'UTC' }).format(new Date(Date.UTC(2026, 10, 8 + index))));
+      return h('form', { className: 'dsh-wb-card dsh-wb-form', onSubmit: save },
+        h('h3', null, wb(t, routine ? 'editRoutine' : 'newRoutine')),
+        h('div', { className: 'dsh-wb-formGrid' },
+          h(WBField, { label: wb(t, 'routineName'), wide: true }, h('input', { className: 'dsh-todos-input', value: fields.name, maxLength: 200, required: true, onChange: change('name') })),
+          h(WBField, { label: wb(t, 'documentType') }, h('select', { className: 'dsh-todos-input', value: fields.kind, onChange: change('kind') },
+            h('option', { value: 'report' }, wb(t, 'reports')), h('option', { value: 'review' }, wb(t, 'reviews')))),
+          h(WBField, { label: wb(t, 'range') }, h('select', { className: 'dsh-todos-input', value: fields.reportKind, onChange: change('reportKind') },
+            ...['daily', 'weekly', 'monthly'].map((value) => h('option', { key: value, value }, wb(t, fields.kind === 'review' ? `${value}Review` : value))))),
+          h(WBField, { label: wb(t, 'frequency') }, h('select', { className: 'dsh-todos-input', value: fields.frequency,
+            onChange: (event) => { const value = event.target.value; setFields({ ...fields, frequency: value, coverage: value === 'interval' ? 'rolling' : 'previous' }); setPreview([]); } },
+            ...[['daily', 'everyDay'], ['weekly', 'everyWeek'], ['monthly', 'everyMonth'], ['interval', 'everyInterval']].map(([value, label]) => h('option', { key: value, value }, wb(t, label))))),
+          h(WBField, { label: wb(t, 'time') }, h('input', { className: 'dsh-todos-input', type: 'time', value: fields.time, required: true, onChange: change('time') })),
+          h(WBField, { label: wb(t, 'timezone') }, h('input', { className: 'dsh-todos-input', value: fields.timezone, required: true, onChange: change('timezone') })),
+          h(WBField, { label: wb(t, 'mode') }, h('select', { className: 'dsh-todos-input', value: fields.mode, onChange: change('mode') },
+            h('option', { value: 'draft' }, wb(t, 'modeDraft')), h('option', { value: 'remind' }, wb(t, 'modeRemind')))),
+          fields.frequency === 'monthly' ? h(WBField, { label: wb(t, 'monthDay') }, h('select', { className: 'dsh-todos-input', value: fields.monthDay, onChange: change('monthDay') },
+            ...Array.from({ length: 31 }, (_, index) => h('option', { key: index + 1, value: index + 1 }, index + 1)), h('option', { value: 'last' }, wb(t, 'monthLast')))) : null,
+          fields.frequency === 'interval' ? h(WBField, { label: wb(t, 'interval') }, h('input', { className: 'dsh-todos-input', type: 'number', value: fields.interval, min: 1, max: 365, required: true, onChange: change('interval') })) : null,
+          fields.frequency === 'interval' ? h(WBField, { label: wb(t, 'unit') }, h('select', { className: 'dsh-todos-input', value: fields.unit, onChange: change('unit') }, h('option', { value: 'day' }, wb(t, 'day')), h('option', { value: 'week' }, wb(t, 'week')))) : null,
+          fields.frequency === 'interval' ? h(WBField, { label: wb(t, 'anchorDate') }, h('input', { className: 'dsh-todos-input', type: 'date', value: fields.anchorDate, required: true, onChange: change('anchorDate') })) : null,
+          h(WBField, { label: wb(t, 'coverage') }, h('select', { className: 'dsh-todos-input', value: fields.coverage, onChange: change('coverage') },
+            h('option', { value: 'previous' }, wb(t, 'previousPeriod')), h('option', { value: 'current' }, wb(t, 'currentPeriod')), h('option', { value: 'rolling' }, wb(t, 'rollingPeriod')))),
+          fields.coverage === 'rolling' ? h(WBField, { label: wb(t, 'windowDays') }, h('input', { className: 'dsh-todos-input', type: 'number', min: 1, max: 1095, value: fields.windowDays, required: true, onChange: change('windowDays') })) : null,
+          h(WBField, { label: wb(t, 'tagScope'), hint: wb(t, 'tagScopeHint'), wide: true }, h('input', { className: 'dsh-todos-input', value: fields.tags, onChange: change('tags') }))),
+        fields.frequency === 'weekly' ? h('fieldset', { className: 'dsh-wb-scope' }, h('legend', null, wb(t, 'weekdays')),
+          h('div', { className: 'dsh-wb-checks' }, ...weekdayNames.map((name, day) => h('label', { key: day, className: 'dsh-wb-checkLabel' },
+            h('input', { type: 'checkbox', checked: fields.weekdays.includes(day), onChange: (event) => { setFields({ ...fields, weekdays: event.target.checked ? [...fields.weekdays, day] : fields.weekdays.filter((value) => value !== day) }); setPreview([]); } }), name)))) : null,
+        h(WBProjectScope, { t, state, value: fields.projectIds, onChange: (value) => { setFields({ ...fields, projectIds: value }); setPreview([]); }, disabled: busy }),
+        h('details', { className: 'dsh-wb-disclosure' }, h('summary', null, wb(t, 'template')),
+          h(WBField, { label: wb(t, 'templateHint') }, h('textarea', { className: 'dsh-todos-input dsh-wb-textarea', value: fields.template, rows: 4, maxLength: 5000, onChange: change('template') }))),
+        h('label', { className: 'dsh-wb-checkLabel' }, h('input', { type: 'checkbox', checked: fields.enabled, onChange: (event) => setFields({ ...fields, enabled: event.target.checked }) }), wb(t, 'enabled')),
+        h('p', { className: 'dsh-wb-hint' }, wb(t, 'previewHint')),
+        preview.length ? h('ol', { className: 'dsh-wb-runPreview' }, ...preview.map((run, index) => h('li', { key: run.scheduledAt ?? index },
+          h('strong', null, wbFormatTime(run.scheduledAt, { settings: { timezone: fields.timezone } }, t)), h('span', null, ` ${run.startDate} — ${run.endDate} · ${fields.timezone}`)))) : null,
+        h('div', { className: 'dsh-wb-actions' }, h(WBButton, { onClick: onClose }, wb(t, 'cancel')),
+          h(WBButton, { onClick: () => void doPreview(), disabled: busy }, wb(t, 'preview')),
+          h(WBButton, { type: 'submit', primary: true, disabled: busy || !fields.name.trim() || (fields.frequency === 'weekly' && !fields.weekdays.length) }, wb(t, 'save'))));
+    }
+
+    function WorkbenchRoutines({ t, state, mutate, busy, defaultProjects = [], onDocument }) {
+      const [editing, setEditing] = useState(null);
+      const [runFilter, setRunFilter] = useState('');
+      const routines = wbList(state.routines);
+      const runs = wbList(state.runs).filter((run) => !runFilter || run.routineId === runFilter);
+      return h('div', { className: 'dsh-wb-stack' },
+        h('div', { className: 'dsh-wb-sectionHead' }, h('h3', null, wb(t, 'routines')), h(WBButton, { primary: true, onClick: () => setEditing({}), disabled: busy }, wb(t, 'newRoutine'))),
+        h('p', { className: 'dsh-wb-hint' }, wb(t, 'automationHint')),
+        state.automation?.errors?.length ? h('div', { className: 'dsh-wb-warning', role: 'status' },
+          ...state.automation.errors.map((error, index) => h('p', { key: error.routineId ?? index }, routines.find((rule) => rule.id === error.routineId)?.name ?? '', ' · ', error.message))) : null,
+        state.automation?.olderMissed?.length ? h('p', { className: 'dsh-wb-hint' }, wb(t, 'missedPeriods'), ' ', state.automation.olderMissed.reduce((sum, entry) => sum + Number(entry.count || 0), 0)) : null,
+        editing ? h(WorkbenchRoutineForm, { key: editing.id ?? 'new', t, state, mutate, busy, routine: editing.id ? editing : null, defaultProjects, onClose: () => setEditing(null) }) : null,
+        !routines.length ? h(WBEmpty, null, wb(t, 'noRoutines')) : routines.map((routine) => h('section', { key: routine.id, className: 'dsh-wb-card' },
+          h('div', { className: 'dsh-wb-sectionHead' }, h('h4', null, routine.name), h('span', { className: 'dsh-wb-badge' }, wb(t, routine.enabled ? 'enabled' : 'paused'))),
+          h('p', { className: 'dsh-wb-meta' }, wb(t, routine.kind === 'review' ? `${routine.reportKind}Review` : routine.reportKind), ' · ',
+            routine.projectIds?.length ? routine.projectIds.map((id) => wbProjectName(state, id, t)).join(' / ') : wb(t, 'allProjects'), ' · ', routine.time, ' ', routine.timezone),
+          wbList(routine.nextRuns).length ? h('p', { className: 'dsh-wb-hint' }, wb(t, 'nextRuns'), ' · ', wbList(routine.nextRuns).map((run) => wbFormatTime(run.scheduledAt, { settings: { timezone: routine.timezone } }, t)).join(' / ')) : null,
+          h('div', { className: 'dsh-wb-actions' },
+            h(WBButton, { disabled: busy, onClick: () => setEditing(routine) }, wb(t, 'edit')),
+            h(WBButton, { disabled: busy, onClick: () => void mutate({ op: 'routine.save', id: routine.id, enabled: !routine.enabled }) }, wb(t, routine.enabled ? 'pause' : 'resume')),
+            h(WBButton, { disabled: busy, onClick: () => setRunFilter(runFilter === routine.id ? '' : routine.id) }, wb(t, 'runHistory')),
+            h(WBButton, { disabled: busy, primary: true, onClick: async () => { const result = await mutate({ op: 'routine.run', id: routine.id });
+              if (result?.data?.document) onDocument(result.data.document); } }, wb(t, 'runNow'))),
+          h('details', { className: 'dsh-wb-disclosure' }, h('summary', null, wb(t, 'routineAdjust')),
+            h('div', { className: 'dsh-wb-actions' },
+              h(WBButton, { disabled: busy || !routine.enabled, onClick: () => void mutate({ op: 'routine.snooze', id: routine.id, minutes: 60 }) }, wb(t, 'snooze')),
+              h(WBButton, { disabled: busy, onClick: () => void mutate({ op: 'routine.skip', id: routine.id }) }, wb(t, 'skipPeriod')))))),
+        h('section', { className: 'dsh-wb-card' }, h('h3', null, wb(t, 'runHistory')),
+          !runs.length ? h(WBEmpty, null, wb(t, 'noRuns')) : h('ul', { className: 'dsh-wb-timeline' }, ...runs.slice(0, 40).map((run) => h('li', { key: run.id },
+            h('div', { className: 'dsh-wb-sectionHead' }, h('strong', null, routines.find((routine) => routine.id === run.routineId)?.name ?? run.name ?? wb(t, 'routines')),
+              h('span', { className: 'dsh-wb-badge' }, wb(t, `run.${run.status}`))),
+            h('p', { className: 'dsh-wb-hint' }, run.startDate ?? '', ' — ', run.endDate ?? '', ' · ', wbFormatTime(run.completedAt ?? run.createdAt ?? run.scheduledAt, state, t)),
+            run.error ? h('p', { className: 'dsh-wb-warning' }, String(run.error?.message ?? run.error)) : null,
+            run.status === 'reminder' ? h(WBButton, { disabled: busy, primary: true, onClick: async () => {
+              const result = await mutate({ op: 'routine.generate', runId: run.id }); if (result?.data?.document) onDocument(result.data.document);
+            } }, wb(t, 'generate')) : null,
+            run.documentId ? h(WBButton, { disabled: busy, onClick: async () => { const result = await mutate({ op: 'document.get', id: run.documentId });
+              if (result?.data?.document) onDocument(result.data.document); } }, wb(t, 'edit')) : null)))));
+    }
+
+    function WorkbenchReview({ t, state, mutate, busy, seed, onDirty }) {
+      const [tab, setTab] = useState(seed?.routines ? 'routines' : seed?.type === 'review' ? 'reviews' : 'reports');
+      const [kind, setKind] = useState(seed?.kind ?? 'weekly');
+      const defaultWindow = wbDefaultWindow(seed?.kind ?? 'weekly', state.todayDate || localDateKey(), state.settings?.weekStartsOn ?? 1);
+      const [startDate, setStartDate] = useState(seed?.startDate ?? defaultWindow.startDate);
+      const [endDate, setEndDate] = useState(seed?.endDate ? wbDateShift(seed.endDate, -1) : defaultWindow.endDate);
+      const [projectIds, setProjectIds] = useState(seed?.projectIds ?? []);
+      const [tags, setTags] = useState('');
+      const [selectedDocument, setSelectedDocument] = useState(null);
+      const [editorDirty, setEditorDirty] = useState(false);
+      const [message, setMessage] = useState(null);
+      useEffect(() => { onDirty(editorDirty); return () => onDirty(false); }, [editorDirty]);
+      const setDirty = (value) => { setEditorDirty(value); onDirty(value); };
+      const selectDocument = async (record) => {
+        if (editorDirty && record.id !== selectedDocument?.id) { setMessage(wb(t, 'confirmLeave')); return; }
+        const result = await mutate({ op: 'document.get', id: record.id });
+        if (result?.data?.document) { setSelectedDocument(result.data.document); setTab(result.data.document.type === 'review' ? 'reviews' : 'reports'); setMessage(null); }
+      };
+      const updateDocument = (record) => setSelectedDocument(record);
+      const changeTab = (value) => {
+        if (editorDirty) { setMessage(wb(t, 'confirmLeave')); return; }
+        setTab(value); setSelectedDocument(null); setMessage(null);
+      };
+      const generate = async (event) => {
+        event.preventDefault();
+        if (editorDirty) { setMessage(wb(t, 'confirmLeave')); return; }
+        if (!startDate || !endDate || endDate < startDate) { setMessage(wb(t, 'dateInvalid')); return; }
+        const result = await mutate({ op: tab === 'reviews' ? 'review.generate' : 'report.generate', kind, startDate, endDate: wbDateShift(endDate, 1), projectIds, tags: parseTags(tags) });
+        if (result?.data?.document) { setSelectedDocument(result.data.document); setMessage(null); }
+      };
+      useEffect(() => {
+        if (!selectedDocument) return;
+        const remote = wbList(state.documents).find((record) => record.id === selectedDocument.id);
+        if (remote && remote.currentRevisionId !== selectedDocument.currentRevisionId) {
+          // Keep full revision data loaded in this editor; a poll never replaces local input.
+          setSelectedDocument((current) => ({ ...current, content: remote.content, currentRevisionId: remote.currentRevisionId, status: remote.status }));
+        }
+      }, [state.revision]);
+      const documents = wbList(state.documents).filter((record) => record.type === (tab === 'reviews' ? 'review' : 'report')
+        && (!projectIds.length || record.projectIds?.some((id) => projectIds.includes(id))));
+      return h('div', { className: 'dsh-wb-stack' },
+        h('div', { className: 'dsh-todos-viewSwitch dsh-wb-subnav', role: 'group', 'aria-label': wb(t, 'review') },
+          ...['reports', 'reviews', 'routines'].map((key) => h('button', { key, type: 'button', className: 'dsh-todos-viewButton dsh-todos-focusable',
+            'aria-pressed': tab === key, onClick: () => changeTab(key) }, wb(t, key)))),
+        message ? h('p', { className: 'dsh-wb-warning', role: 'status' }, message) : null,
+        tab === 'routines' ? h(WorkbenchRoutines, { t, state, mutate, busy, defaultProjects: projectIds, onDocument: (record) => { setSelectedDocument(record); setTab(record.type === 'review' ? 'reviews' : 'reports'); } }) : h(React.Fragment, null,
+          h('form', { className: 'dsh-wb-card dsh-wb-form', onSubmit: generate },
+            h('h3', null, wb(t, 'generate')),
+            h('div', { className: 'dsh-wb-formGrid' },
+              h(WBField, { label: wb(t, 'documentType') }, h('select', { className: 'dsh-todos-input', value: kind, onChange: (event) => {
+                const value = event.target.value; const range = wbDefaultWindow(value, state.todayDate || localDateKey(), state.settings?.weekStartsOn ?? 1);
+                setKind(value); setStartDate(range.startDate); setEndDate(range.endDate);
+              } },
+                ...['daily', 'weekly', 'monthly'].map((value) => h('option', { key: value, value }, wb(t, tab === 'reviews' ? `${value}Review` : value))))),
+              h(WBField, { label: wb(t, 'startDate') }, h('input', { className: 'dsh-todos-input', type: 'date', value: startDate, required: true, onChange: (event) => setStartDate(event.target.value) })),
+              h(WBField, { label: wb(t, 'endDate') }, h('input', { className: 'dsh-todos-input', type: 'date', value: endDate, min: startDate, required: true, onChange: (event) => setEndDate(event.target.value) })),
+              h(WBField, { label: wb(t, 'tagScope'), hint: wb(t, 'tagScopeHint') }, h('input', { className: 'dsh-todos-input', value: tags, onChange: (event) => setTags(event.target.value) }))),
+            h(WBProjectScope, { t, state, value: projectIds, onChange: setProjectIds, disabled: busy }),
+            h('p', { className: 'dsh-wb-hint' }, wb(t, tab === 'reviews' ? 'privateReview' : 'reportHint')),
+            h('div', { className: 'dsh-wb-actions' }, h(WBButton, { type: 'submit', primary: true, disabled: busy || editorDirty }, wb(t, busy ? 'generating' : 'generate')))),
+          documents.length ? h('div', { className: 'dsh-wb-documentList' }, ...documents.map((record) => h('button', {
+            key: record.id, type: 'button', className: 'dsh-wb-documentCard dsh-todos-focusable', 'aria-pressed': selectedDocument?.id === record.id,
+            onClick: () => void selectDocument(record), disabled: busy,
+          }, h('strong', null, record.title), h('span', null, `${record.startDate} — ${wbDateShift(record.endDate, -1)}`),
+          h('span', { className: 'dsh-wb-badge' }, wb(t, record.status === 'final' ? 'final' : record.type === 'review' ? 'pendingReview' : 'draft'))))) : h(WBEmpty, null, wb(t, 'noDocuments')),
+          selectedDocument ? h(WorkbenchDocumentEditor, { key: selectedDocument.id, t, state, document: selectedDocument, mutate, busy, onUpdate: updateDocument, onDirty: setDirty }) : null));
     }
 
     /**
@@ -1138,6 +2036,11 @@ window.__ModuleLoader__.load({
       const [reducedMotion, setReducedMotion] = useState(() =>
         typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
       const [addedTasks, setAddedTasks] = useState([]);
+      const [section, setSection] = useState('tasks');
+      const [projectFilter, setProjectFilter] = useState('');
+      const [reviewSeed, setReviewSeed] = useState(null);
+      const [reviewDirty, setReviewDirty] = useState(false);
+      const finishingFocus = useRef(false);
 
       // Keep independent arrival markers for rapid additions; timers never
       // outlive the page, and returning to Today does not replay old arrivals.
@@ -1170,11 +2073,13 @@ window.__ModuleLoader__.load({
       const todayKey = state.todayDate ?? localDateKey();
 
       const accept = useCallback((payload) => {
+        if (!Array.isArray(payload?.items)) return;
         const items = Array.isArray(payload?.items) ? payload.items : [];
         const todayDate = typeof payload?.todayDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(payload.todayDate)
           ? payload.todayDate
           : null;
-        setState({ phase: 'ready', items, revision: Number(payload?.revision) || 0, todayDate, error: null });
+        setState({ ...payload, phase: 'ready', items, revision: Number(payload?.revision) || 0, todayDate, error: payload.lastError ?? null });
+        if (payload.lastError) setNotice({ kind: 'error', text: String(payload.lastError) });
       }, []);
 
       const refresh = useCallback(async () => {
@@ -1218,26 +2123,29 @@ window.__ModuleLoader__.load({
       // Tick only while a session runs; the clock is derived from `endsAt`, so a
       // throttled or suspended tab still shows the true remainder on wake.
       useEffect(() => {
-        if (pomodoro === null || !pomodoro.running || scope !== 'today') return undefined;
+        if (pomodoro === null || !pomodoro.running) return undefined;
         setNow(Date.now());
         const timer = window.setInterval(() => setNow(Date.now()), 500);
         return () => window.clearInterval(timer);
       }, [pomodoro === null, pomodoro?.running, scope]);
 
-      // Phase completion: focus rolls into the break, the break closes the round.
+      // Save a completed focus interval before moving to the break. A failed
+      // write leaves the timer recoverable, and clientId makes retries safe.
       useEffect(() => {
         if (pomodoro === null || !pomodoro.running) return;
         if (now < (pomodoro.endsAt ?? 0)) return;
         if (pomodoro.phase === 'focus') {
-          setFlash({ kind: 'focusDone' });
-          setPomodoro({
-            phase: 'break',
-            running: true,
-            endsAt: Date.now() + POMODORO_BREAK_MS,
-            pausedMs: POMODORO_BREAK_MS,
-            round: pomodoro.round,
-            label: pomodoro.label,
-          });
+          if (finishingFocus.current) return;
+          finishingFocus.current = true;
+          const finished = pomodoro;
+          void saveFocusRecord(finished, false).then((saved) => {
+            if (saved) {
+              setFlash({ kind: 'focusDone' });
+              setPomodoro({ ...finished, phase: 'break', running: true, endsAt: Date.now() + POMODORO_BREAK_MS, pausedMs: POMODORO_BREAK_MS });
+            } else {
+              setPomodoro({ ...finished, running: false, endsAt: null, pausedMs: 0 });
+            }
+          }).finally(() => { finishingFocus.current = false; });
         } else {
           setFlash({ kind: 'breakDone' });
           setPomodoro(null);
@@ -1294,6 +2202,16 @@ window.__ModuleLoader__.load({
 
       const items = state.items;
 
+      const navigate = (target, seed = null) => {
+        if (target === section && scope !== 'today' && !seed) return;
+        if (reviewDirty && target !== 'review') { setNotice({ kind: 'error', text: wb(t, 'confirmLeave') }); return; }
+        setNotice(null);
+        if (target === 'today') { setSection('tasks'); setScope('today'); }
+        else { setSection(target); setScope('all'); }
+        if (target === 'review') setReviewSeed(seed ? { ...seed, key: Date.now() } : null);
+      };
+      const navigation = h(WorkbenchNav, { t, state, active: scope === 'today' ? 'today' : section, onSelect: navigate });
+
       const counts = useMemo(() => {
         let open = 0;
         let today = 0;
@@ -1308,8 +2226,11 @@ window.__ModuleLoader__.load({
         if (scope === 'today') return items.filter((item) => item.todayDate === todayKey);
         if (scope === 'open') return items.filter((item) => !item.done);
         if (scope === 'done') return items.filter((item) => item.done);
+        if (scope === 'inbox') return items.filter((item) => !item.done && item.status !== 'cancelled' && !item.quadrant);
+        if (scope === 'waiting') return items.filter((item) => item.status === 'waiting');
+        if (scope === 'archive') return wbList(state.archivedItems);
         return items;
-      }, [items, scope, todayKey]);
+      }, [items, scope, todayKey, state.archivedItems]);
 
       const priorityCounts = useMemo(() => {
         const result = { all: scopeItems.length, P0: 0, P1: 0, P2: 0, P3: 0, none: 0 };
@@ -1346,8 +2267,9 @@ window.__ModuleLoader__.load({
           const key = tagFilter.toLowerCase();
           list = list.filter((item) => item.tags.some((tag) => tag.toLowerCase() === key));
         }
+        if (projectFilter) list = list.filter((item) => item.projectId === projectFilter);
         return sortItems(list);
-      }, [scopeItems, priorityFilter, tagFilter]);
+      }, [scopeItems, priorityFilter, tagFilter, projectFilter]);
 
       /** Today's focus list; zen mode ignores the list-mode filters on purpose. */
       const zenItems = useMemo(() => items.filter((item) => item.todayDate === todayKey), [items, todayKey]);
@@ -1375,6 +2297,7 @@ window.__ModuleLoader__.load({
       const resetFilters = () => {
         setPriorityFilter('all');
         setTagFilter('');
+        setProjectFilter('');
       };
 
       const toggleDone = (item) => patch(item, { done: !item.done });
@@ -1385,7 +2308,7 @@ window.__ModuleLoader__.load({
         const title = submittedDraft.trim();
         if (title === '' || busy) return;
         const form = event?.currentTarget;
-        void mutate({ op: 'add', title, today: scope === 'today' }).then((payload) => {
+        void mutate({ op: 'add', title, today: scope === 'today', ...(projectFilter ? { projectId: projectFilter } : {}) }).then((payload) => {
           if (!payload) return;
           // Preserve the next draft if the user kept typing during the request.
           setDraft((current) => current === submittedDraft ? '' : current);
@@ -1448,6 +2371,9 @@ window.__ModuleLoader__.load({
           pausedMs: POMODORO_FOCUS_MS,
           round: 1,
           label: zenOpen.length > 0 ? zenOpen[0].title : null,
+          taskId: zenOpen.length > 0 ? zenOpen[0].id : null,
+          startedAt: Date.now(),
+          clientId: `focus-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`,
         });
       };
 
@@ -1463,9 +2389,25 @@ window.__ModuleLoader__.load({
         }
       };
 
-      const stopPomodoro = () => {
-        setFlash(null);
-        setPomodoro(null);
+      const saveFocusRecord = async (session, interrupted) => {
+        if (session.phase !== 'focus' || !session.taskId || !session.startedAt) return true;
+        const endedAt = session.running && !interrupted ? Math.min(Date.now(), session.endsAt) : Date.now();
+        const effectiveMs = Math.min(Math.max(0, endedAt - session.startedAt), POMODORO_FOCUS_MS - pomodoroRemaining(session, endedAt));
+        if (effectiveMs <= 0 || endedAt <= session.startedAt) return true;
+        return Boolean(await mutate({ op: 'focus.record', clientId: session.clientId, taskId: session.taskId,
+          startedAt: session.startedAt, endedAt, pauseMinutes: Math.max(0, (endedAt - session.startedAt - effectiveMs) / 60000), interrupted }));
+      };
+
+      const stopPomodoro = async () => {
+        if (finishingFocus.current || !pomodoro) return;
+        finishingFocus.current = true;
+        const current = pomodoro;
+        const stoppedAt = Date.now();
+        const paused = { ...current, running: false, endsAt: null, pausedMs: pomodoroRemaining(current, stoppedAt) };
+        setPomodoro(paused);
+        const saved = await saveFocusRecord(paused, true);
+        if (saved) { setFlash(null); setPomodoro(null); }
+        finishingFocus.current = false;
       };
 
       const openPicker = (item) => {
@@ -1577,6 +2519,7 @@ window.__ModuleLoader__.load({
       const renderDetails = (item) => {
         const inToday = item.todayDate === todayKey;
         return h('div', { className: 'dsh-todos-details', id: `dsh-todos-details-${item.id}`, role: 'group', 'aria-label': t('details.title') },
+          h(WorkbenchTaskFields, { key: item.id, t, item, state, mutate, busy }),
           h('div', { className: 'dsh-todos-detailRow' },
             h('span', { className: 'dsh-todos-detailLabel' }, t('details.priority')),
             h('div', { className: 'dsh-todos-detailBody' },
@@ -1677,6 +2620,10 @@ window.__ModuleLoader__.load({
           h('div', { className: 'dsh-todos-detailActions' },
             h('button', {
               type: 'button', className: 'dsh-todos-textButton dsh-todos-focusable',
+              onClick: () => void mutate({ op: 'archive', id: item.id }), disabled: busy,
+            }, wb(t, 'archive')),
+            h('button', {
+              type: 'button', className: 'dsh-todos-textButton dsh-todos-focusable',
               onClick: () => startEditing(item), disabled: busy,
             }, h(IconPencil), t('row.edit')),
             h('button', {
@@ -1733,8 +2680,11 @@ window.__ModuleLoader__.load({
                 onClick: () => toggleDetails(item),
                 onDoubleClick: () => startEditing(item),
               }, item.title),
-            (item.priority !== null || inToday || item.tags.length > 0 || item.sessionId || item.todayDate)
+            (item.priority !== null || inToday || item.tags.length > 0 || item.sessionId || item.todayDate || item.projectId || item.dueDate || item.status)
               ? h('div', { className: 'dsh-todos-rowMeta' },
+                item.projectId ? h('button', { type: 'button', className: 'dsh-todos-tagChip dsh-todos-focusable', onClick: () => setProjectFilter(item.projectId) }, wbProjectName(state, item.projectId, t)) : null,
+                item.status && item.status !== 'todo' ? h('span', { className: 'dsh-wb-badge' }, wb(t, `status.${item.status}`)) : null,
+                item.dueDate ? h('span', { className: !item.done && item.dueDate < todayKey ? 'dsh-todos-danger' : '' }, wb(t, item.dueDate < todayKey && !item.done ? 'overdue' : 'due'), ' ', shortDay(item.dueDate)) : null,
                 item.priority === null ? null : h('span', { className: 'dsh-todos-priorityLabel' },
                   h('span', { className: `dsh-todos-dot dsh-todos-dot${item.priority}`, 'aria-hidden': true }), item.priority),
             inToday
@@ -2002,11 +2952,12 @@ window.__ModuleLoader__.load({
                   type: 'button', className: 'dsh-todos-pomoStart dsh-todos-focusable', onClick: togglePomodoroPause,
                 }, h(pomodoro.running ? IconPause : IconPlay), t(pomodoro.running ? 'pomodoro.pause' : 'pomodoro.resume')),
                 h('button', {
-                  type: 'button', className: 'dsh-todos-zenStop dsh-todos-focusable', onClick: stopPomodoro,
+                type: 'button', className: 'dsh-todos-zenStop dsh-todos-focusable', onClick: () => void stopPomodoro(),
                 }, h(IconStop), t('pomodoro.stop'))),
               h('p', { className: 'dsh-todos-zenMantra' },
                 pomodoro?.label && pomodoro.phase === 'focus' ? pomodoro.label : t(sceneMode === 'break' ? 'zen.rest' : sceneMode === 'complete' ? 'zen.allDone' : 'zen.mantra'))),
             h('div', { className: 'dsh-todos-zenPlan' },
+              h(WorkbenchTodaySummary, { t, state, onNavigate: navigate, mutate, busy }),
               h('div', { className: 'dsh-todos-zenPlanHead' },
                 h('h2', null, t('zen.plan')),
                 h('span', null, t('zen.progress', { done: zenDone.length, total: zenItems.length }))),
@@ -2089,6 +3040,22 @@ window.__ModuleLoader__.load({
           ? t('focus.empty')
           : t('list.emptyFiltered');
 
+      if (section !== 'tasks') {
+        return h('section', { className: 'dsh-todos-page dsh-wb-page', 'aria-label': wb(t, section), 'data-testid': `dsh-workbench-${section}` },
+          h('style', null, STYLE + WORKBENCH_STYLE),
+          h('div', { className: 'dsh-todos-pane' }, navigation, h('div', { className: 'dsh-todos-scroll' }, h('div', { className: 'dsh-todos-content' },
+            h('div', { className: 'dsh-todos-heading' }, h('div', { className: 'dsh-todos-headingCopy' },
+              h('p', { className: 'dsh-todos-eyebrow' }, h(TodoIcon, { size: 16 }), wb(t, 'title')),
+              h('h1', null, wb(t, section)), h('p', { className: 'dsh-todos-subtitle' }, wb(t, 'subtitle')))),
+            notice ? h('p', { className: 'dsh-todos-notice dsh-todos-noticeError', role: 'alert' }, notice.text) : null,
+            state.phase === 'error' ? h('p', { className: 'dsh-todos-notice dsh-todos-noticeError', role: 'alert' }, t('error.load', { message: state.error })) : null,
+            section === 'projects' ? h(WorkbenchProjects, { t, state, mutate, busy,
+              onProjectTasks: (id) => { setProjectFilter(id); navigate('tasks'); },
+              onProjectReview: (id) => navigate('review', { projectIds: [id], routines: true }) }) : null,
+            section === 'planning' ? h(WorkbenchPlanning, { t, state, mutate, busy }) : null,
+            section === 'review' ? h(WorkbenchReview, { key: reviewSeed?.key ?? 'review', t, state, mutate, busy, seed: reviewSeed, onDirty: setReviewDirty }) : null))));
+      }
+
       if (scope === 'today') {
         return h('section', {
           className: 'dsh-todos-page dsh-todos-zenPage',
@@ -2096,11 +3063,11 @@ window.__ModuleLoader__.load({
           'aria-label': t('zen.title'),
           'data-testid': 'dsh-todos-zen',
         },
-        h('style', null, STYLE),
-        h('div', { className: 'dsh-todos-pane' }, renderZen()));
+        h('style', null, STYLE + WORKBENCH_STYLE),
+        h('div', { className: 'dsh-todos-pane' }, navigation, renderZen()));
       }
 
-      const activeFilterCount = (priorityFilter === 'all' ? 0 : 1) + (tagFilter === '' ? 0 : 1);
+      const activeFilterCount = (priorityFilter === 'all' ? 0 : 1) + (tagFilter === '' ? 0 : 1) + (projectFilter ? 1 : 0);
       const openRows = visible.filter((item) => !item.done);
       const doneRows = visible.filter((item) => item.done);
 
@@ -2118,8 +3085,9 @@ window.__ModuleLoader__.load({
         'aria-label': t('page.title'),
         'data-testid': 'dsh-todos-page',
       },
-      h('style', null, STYLE),
+      h('style', null, STYLE + WORKBENCH_STYLE),
       h('div', { className: 'dsh-todos-pane' },
+        navigation,
         h('div', { className: 'dsh-todos-scroll' },
           h('div', { className: 'dsh-todos-content' },
             h('div', { className: 'dsh-todos-heading' },
@@ -2185,6 +3153,11 @@ window.__ModuleLoader__.load({
                   onClick: () => void refresh(),
                 }, t('retry')))
               : null,
+            h('div', { className: 'dsh-wb-taskFilters' },
+              h(WBField, { label: wb(t, 'project') }, h(WBProjectSelect, { t, state, all: true, value: projectFilter, onChange: setProjectFilter })),
+              ...[['inbox', 'inbox'], ['waiting', 'waiting'], ['archive', 'archived']].map(([value, label]) => h(WBButton, {
+                key: value, 'aria-pressed': scope === value, onClick: () => setScope(scope === value ? 'all' : value),
+              }, wb(t, label)))),
             h('div', { className: 'dsh-todos-toolbar' },
               h('div', { className: 'dsh-todos-scopeTabs', role: 'group', 'aria-label': t('scope.label') },
                 ...[
@@ -2252,6 +3225,12 @@ window.__ModuleLoader__.load({
               ? h('div', { className: 'dsh-todos-loading', role: 'status' },
                 h('p', null, t('loading')),
                 ...[0, 1, 2].map((key) => h('div', { key, className: 'dsh-todos-skeleton', 'aria-hidden': true })))
+              : scope === 'archive'
+                ? h('div', { className: 'dsh-wb-archiveList' }, h('p', { className: 'dsh-wb-hint' }, wb(t, 'archiveHint')),
+                  visible.length ? visible.map((item) => h('div', { key: item.id, className: 'dsh-wb-archiveItem' },
+                    h('div', { className: 'dsh-wb-sectionHead' }, h('strong', null, item.title),
+                      h(WBButton, { disabled: busy, onClick: () => void mutate({ op: 'restore', id: item.id }) }, wb(t, 'restore'))),
+                    h('span', { className: 'dsh-wb-hint' }, wbProjectName(state, item.projectId, t), ' · ', wb(t, 'restoreHint')))) : h(WBEmpty, null, wb(t, 'noTasks')))
               : visible.length === 0
                 ? h('div', { className: 'dsh-todos-empty', role: 'status' },
                   h('span', { className: 'dsh-todos-emptyIcon' }, h(TodoIcon, { size: 32 })),

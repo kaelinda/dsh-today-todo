@@ -64,6 +64,7 @@ function makeReact(stateOverrides = {}, trackState = false) {
     useCallback(fn) {
       return fn;
     },
+    useRef(value) { return { current: value }; },
     useEffect() {},
   };
 }

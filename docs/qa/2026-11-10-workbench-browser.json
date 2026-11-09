@@ -1,0 +1,24 @@
+{
+  "checks": [
+    "create project persists",
+    "unfinished progress persists with project",
+    "task project and estimate persist",
+    "task-linked progress persists",
+    "confirmed daily plan keeps baseline",
+    "confirmed plan appears in Today",
+    "pause/resume/end saves one task-linked focus record",
+    "project report contains recorded progress",
+    "final report retains manual text",
+    "Markdown export matches edited document",
+    "review action becomes a task",
+    "custom cadence previews three occurrences",
+    "routine scope and cadence persist",
+    "routine generates a saved draft",
+    "repeated routine generation is idempotent",
+    "reload reads saved project",
+    "375px English dark/reduced-motion views fit and accept keyboard focus"
+  ],
+  "count": 17,
+  "errors": [],
+  "realHostInstalled": false
+}

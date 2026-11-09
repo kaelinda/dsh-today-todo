@@ -19,6 +19,8 @@ window.__ModuleLoader__.load({
 
     // @include ./locale.js
 
+    // @include ./workbench-locale.js
+
     // @include ./pomodoro.js
 
     // @include ./helpers.js
@@ -27,7 +29,13 @@ window.__ModuleLoader__.load({
 
     // @include ./style.js
 
+    // @include ./workbench-style.js
+
     // @include ./focus-canvas.js
+
+    // @include ./workbench.js
+
+    // @include ./workbench-review.js
 
     // @include ./page.js
 

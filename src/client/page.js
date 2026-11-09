@@ -61,6 +61,11 @@
       const [reducedMotion, setReducedMotion] = useState(() =>
         typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
       const [addedTasks, setAddedTasks] = useState([]);
+      const [section, setSection] = useState('tasks');
+      const [projectFilter, setProjectFilter] = useState('');
+      const [reviewSeed, setReviewSeed] = useState(null);
+      const [reviewDirty, setReviewDirty] = useState(false);
+      const finishingFocus = useRef(false);
 
       // Keep independent arrival markers for rapid additions; timers never
       // outlive the page, and returning to Today does not replay old arrivals.
@@ -93,11 +98,13 @@
       const todayKey = state.todayDate ?? localDateKey();
 
       const accept = useCallback((payload) => {
+        if (!Array.isArray(payload?.items)) return;
         const items = Array.isArray(payload?.items) ? payload.items : [];
         const todayDate = typeof payload?.todayDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(payload.todayDate)
           ? payload.todayDate
           : null;
-        setState({ phase: 'ready', items, revision: Number(payload?.revision) || 0, todayDate, error: null });
+        setState({ ...payload, phase: 'ready', items, revision: Number(payload?.revision) || 0, todayDate, error: payload.lastError ?? null });
+        if (payload.lastError) setNotice({ kind: 'error', text: String(payload.lastError) });
       }, []);
 
       const refresh = useCallback(async () => {
@@ -141,26 +148,29 @@
       // Tick only while a session runs; the clock is derived from `endsAt`, so a
       // throttled or suspended tab still shows the true remainder on wake.
       useEffect(() => {
-        if (pomodoro === null || !pomodoro.running || scope !== 'today') return undefined;
+        if (pomodoro === null || !pomodoro.running) return undefined;
         setNow(Date.now());
         const timer = window.setInterval(() => setNow(Date.now()), 500);
         return () => window.clearInterval(timer);
       }, [pomodoro === null, pomodoro?.running, scope]);
 
-      // Phase completion: focus rolls into the break, the break closes the round.
+      // Save a completed focus interval before moving to the break. A failed
+      // write leaves the timer recoverable, and clientId makes retries safe.
       useEffect(() => {
         if (pomodoro === null || !pomodoro.running) return;
         if (now < (pomodoro.endsAt ?? 0)) return;
         if (pomodoro.phase === 'focus') {
-          setFlash({ kind: 'focusDone' });
-          setPomodoro({
-            phase: 'break',
-            running: true,
-            endsAt: Date.now() + POMODORO_BREAK_MS,
-            pausedMs: POMODORO_BREAK_MS,
-            round: pomodoro.round,
-            label: pomodoro.label,
-          });
+          if (finishingFocus.current) return;
+          finishingFocus.current = true;
+          const finished = pomodoro;
+          void saveFocusRecord(finished, false).then((saved) => {
+            if (saved) {
+              setFlash({ kind: 'focusDone' });
+              setPomodoro({ ...finished, phase: 'break', running: true, endsAt: Date.now() + POMODORO_BREAK_MS, pausedMs: POMODORO_BREAK_MS });
+            } else {
+              setPomodoro({ ...finished, running: false, endsAt: null, pausedMs: 0 });
+            }
+          }).finally(() => { finishingFocus.current = false; });
         } else {
           setFlash({ kind: 'breakDone' });
           setPomodoro(null);
@@ -217,6 +227,16 @@
 
       const items = state.items;
 
+      const navigate = (target, seed = null) => {
+        if (target === section && scope !== 'today' && !seed) return;
+        if (reviewDirty && target !== 'review') { setNotice({ kind: 'error', text: wb(t, 'confirmLeave') }); return; }
+        setNotice(null);
+        if (target === 'today') { setSection('tasks'); setScope('today'); }
+        else { setSection(target); setScope('all'); }
+        if (target === 'review') setReviewSeed(seed ? { ...seed, key: Date.now() } : null);
+      };
+      const navigation = h(WorkbenchNav, { t, state, active: scope === 'today' ? 'today' : section, onSelect: navigate });
+
       const counts = useMemo(() => {
         let open = 0;
         let today = 0;
@@ -231,8 +251,11 @@
         if (scope === 'today') return items.filter((item) => item.todayDate === todayKey);
         if (scope === 'open') return items.filter((item) => !item.done);
         if (scope === 'done') return items.filter((item) => item.done);
+        if (scope === 'inbox') return items.filter((item) => !item.done && item.status !== 'cancelled' && !item.quadrant);
+        if (scope === 'waiting') return items.filter((item) => item.status === 'waiting');
+        if (scope === 'archive') return wbList(state.archivedItems);
         return items;
-      }, [items, scope, todayKey]);
+      }, [items, scope, todayKey, state.archivedItems]);
 
       const priorityCounts = useMemo(() => {
         const result = { all: scopeItems.length, P0: 0, P1: 0, P2: 0, P3: 0, none: 0 };
@@ -269,8 +292,9 @@
           const key = tagFilter.toLowerCase();
           list = list.filter((item) => item.tags.some((tag) => tag.toLowerCase() === key));
         }
+        if (projectFilter) list = list.filter((item) => item.projectId === projectFilter);
         return sortItems(list);
-      }, [scopeItems, priorityFilter, tagFilter]);
+      }, [scopeItems, priorityFilter, tagFilter, projectFilter]);
 
       /** Today's focus list; zen mode ignores the list-mode filters on purpose. */
       const zenItems = useMemo(() => items.filter((item) => item.todayDate === todayKey), [items, todayKey]);
@@ -298,6 +322,7 @@
       const resetFilters = () => {
         setPriorityFilter('all');
         setTagFilter('');
+        setProjectFilter('');
       };
 
       const toggleDone = (item) => patch(item, { done: !item.done });
@@ -308,7 +333,7 @@
         const title = submittedDraft.trim();
         if (title === '' || busy) return;
         const form = event?.currentTarget;
-        void mutate({ op: 'add', title, today: scope === 'today' }).then((payload) => {
+        void mutate({ op: 'add', title, today: scope === 'today', ...(projectFilter ? { projectId: projectFilter } : {}) }).then((payload) => {
           if (!payload) return;
           // Preserve the next draft if the user kept typing during the request.
           setDraft((current) => current === submittedDraft ? '' : current);
@@ -371,6 +396,9 @@
           pausedMs: POMODORO_FOCUS_MS,
           round: 1,
           label: zenOpen.length > 0 ? zenOpen[0].title : null,
+          taskId: zenOpen.length > 0 ? zenOpen[0].id : null,
+          startedAt: Date.now(),
+          clientId: `focus-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`,
         });
       };
 
@@ -386,9 +414,25 @@
         }
       };
 
-      const stopPomodoro = () => {
-        setFlash(null);
-        setPomodoro(null);
+      const saveFocusRecord = async (session, interrupted) => {
+        if (session.phase !== 'focus' || !session.taskId || !session.startedAt) return true;
+        const endedAt = session.running && !interrupted ? Math.min(Date.now(), session.endsAt) : Date.now();
+        const effectiveMs = Math.min(Math.max(0, endedAt - session.startedAt), POMODORO_FOCUS_MS - pomodoroRemaining(session, endedAt));
+        if (effectiveMs <= 0 || endedAt <= session.startedAt) return true;
+        return Boolean(await mutate({ op: 'focus.record', clientId: session.clientId, taskId: session.taskId,
+          startedAt: session.startedAt, endedAt, pauseMinutes: Math.max(0, (endedAt - session.startedAt - effectiveMs) / 60000), interrupted }));
+      };
+
+      const stopPomodoro = async () => {
+        if (finishingFocus.current || !pomodoro) return;
+        finishingFocus.current = true;
+        const current = pomodoro;
+        const stoppedAt = Date.now();
+        const paused = { ...current, running: false, endsAt: null, pausedMs: pomodoroRemaining(current, stoppedAt) };
+        setPomodoro(paused);
+        const saved = await saveFocusRecord(paused, true);
+        if (saved) { setFlash(null); setPomodoro(null); }
+        finishingFocus.current = false;
       };
 
       const openPicker = (item) => {
@@ -500,6 +544,7 @@
       const renderDetails = (item) => {
         const inToday = item.todayDate === todayKey;
         return h('div', { className: 'dsh-todos-details', id: `dsh-todos-details-${item.id}`, role: 'group', 'aria-label': t('details.title') },
+          h(WorkbenchTaskFields, { key: item.id, t, item, state, mutate, busy }),
           h('div', { className: 'dsh-todos-detailRow' },
             h('span', { className: 'dsh-todos-detailLabel' }, t('details.priority')),
             h('div', { className: 'dsh-todos-detailBody' },
@@ -600,6 +645,10 @@
           h('div', { className: 'dsh-todos-detailActions' },
             h('button', {
               type: 'button', className: 'dsh-todos-textButton dsh-todos-focusable',
+              onClick: () => void mutate({ op: 'archive', id: item.id }), disabled: busy,
+            }, wb(t, 'archive')),
+            h('button', {
+              type: 'button', className: 'dsh-todos-textButton dsh-todos-focusable',
               onClick: () => startEditing(item), disabled: busy,
             }, h(IconPencil), t('row.edit')),
             h('button', {
@@ -656,8 +705,11 @@
                 onClick: () => toggleDetails(item),
                 onDoubleClick: () => startEditing(item),
               }, item.title),
-            (item.priority !== null || inToday || item.tags.length > 0 || item.sessionId || item.todayDate)
+            (item.priority !== null || inToday || item.tags.length > 0 || item.sessionId || item.todayDate || item.projectId || item.dueDate || item.status)
               ? h('div', { className: 'dsh-todos-rowMeta' },
+                item.projectId ? h('button', { type: 'button', className: 'dsh-todos-tagChip dsh-todos-focusable', onClick: () => setProjectFilter(item.projectId) }, wbProjectName(state, item.projectId, t)) : null,
+                item.status && item.status !== 'todo' ? h('span', { className: 'dsh-wb-badge' }, wb(t, `status.${item.status}`)) : null,
+                item.dueDate ? h('span', { className: !item.done && item.dueDate < todayKey ? 'dsh-todos-danger' : '' }, wb(t, item.dueDate < todayKey && !item.done ? 'overdue' : 'due'), ' ', shortDay(item.dueDate)) : null,
                 item.priority === null ? null : h('span', { className: 'dsh-todos-priorityLabel' },
                   h('span', { className: `dsh-todos-dot dsh-todos-dot${item.priority}`, 'aria-hidden': true }), item.priority),
             inToday
@@ -925,11 +977,12 @@
                   type: 'button', className: 'dsh-todos-pomoStart dsh-todos-focusable', onClick: togglePomodoroPause,
                 }, h(pomodoro.running ? IconPause : IconPlay), t(pomodoro.running ? 'pomodoro.pause' : 'pomodoro.resume')),
                 h('button', {
-                  type: 'button', className: 'dsh-todos-zenStop dsh-todos-focusable', onClick: stopPomodoro,
+                type: 'button', className: 'dsh-todos-zenStop dsh-todos-focusable', onClick: () => void stopPomodoro(),
                 }, h(IconStop), t('pomodoro.stop'))),
               h('p', { className: 'dsh-todos-zenMantra' },
                 pomodoro?.label && pomodoro.phase === 'focus' ? pomodoro.label : t(sceneMode === 'break' ? 'zen.rest' : sceneMode === 'complete' ? 'zen.allDone' : 'zen.mantra'))),
             h('div', { className: 'dsh-todos-zenPlan' },
+              h(WorkbenchTodaySummary, { t, state, onNavigate: navigate, mutate, busy }),
               h('div', { className: 'dsh-todos-zenPlanHead' },
                 h('h2', null, t('zen.plan')),
                 h('span', null, t('zen.progress', { done: zenDone.length, total: zenItems.length }))),
@@ -1012,6 +1065,22 @@
           ? t('focus.empty')
           : t('list.emptyFiltered');
 
+      if (section !== 'tasks') {
+        return h('section', { className: 'dsh-todos-page dsh-wb-page', 'aria-label': wb(t, section), 'data-testid': `dsh-workbench-${section}` },
+          h('style', null, STYLE + WORKBENCH_STYLE),
+          h('div', { className: 'dsh-todos-pane' }, navigation, h('div', { className: 'dsh-todos-scroll' }, h('div', { className: 'dsh-todos-content' },
+            h('div', { className: 'dsh-todos-heading' }, h('div', { className: 'dsh-todos-headingCopy' },
+              h('p', { className: 'dsh-todos-eyebrow' }, h(TodoIcon, { size: 16 }), wb(t, 'title')),
+              h('h1', null, wb(t, section)), h('p', { className: 'dsh-todos-subtitle' }, wb(t, 'subtitle')))),
+            notice ? h('p', { className: 'dsh-todos-notice dsh-todos-noticeError', role: 'alert' }, notice.text) : null,
+            state.phase === 'error' ? h('p', { className: 'dsh-todos-notice dsh-todos-noticeError', role: 'alert' }, t('error.load', { message: state.error })) : null,
+            section === 'projects' ? h(WorkbenchProjects, { t, state, mutate, busy,
+              onProjectTasks: (id) => { setProjectFilter(id); navigate('tasks'); },
+              onProjectReview: (id) => navigate('review', { projectIds: [id], routines: true }) }) : null,
+            section === 'planning' ? h(WorkbenchPlanning, { t, state, mutate, busy }) : null,
+            section === 'review' ? h(WorkbenchReview, { key: reviewSeed?.key ?? 'review', t, state, mutate, busy, seed: reviewSeed, onDirty: setReviewDirty }) : null))));
+      }
+
       if (scope === 'today') {
         return h('section', {
           className: 'dsh-todos-page dsh-todos-zenPage',
@@ -1019,11 +1088,11 @@
           'aria-label': t('zen.title'),
           'data-testid': 'dsh-todos-zen',
         },
-        h('style', null, STYLE),
-        h('div', { className: 'dsh-todos-pane' }, renderZen()));
+        h('style', null, STYLE + WORKBENCH_STYLE),
+        h('div', { className: 'dsh-todos-pane' }, navigation, renderZen()));
       }
 
-      const activeFilterCount = (priorityFilter === 'all' ? 0 : 1) + (tagFilter === '' ? 0 : 1);
+      const activeFilterCount = (priorityFilter === 'all' ? 0 : 1) + (tagFilter === '' ? 0 : 1) + (projectFilter ? 1 : 0);
       const openRows = visible.filter((item) => !item.done);
       const doneRows = visible.filter((item) => item.done);
 
@@ -1041,8 +1110,9 @@
         'aria-label': t('page.title'),
         'data-testid': 'dsh-todos-page',
       },
-      h('style', null, STYLE),
+      h('style', null, STYLE + WORKBENCH_STYLE),
       h('div', { className: 'dsh-todos-pane' },
+        navigation,
         h('div', { className: 'dsh-todos-scroll' },
           h('div', { className: 'dsh-todos-content' },
             h('div', { className: 'dsh-todos-heading' },
@@ -1108,6 +1178,11 @@
                   onClick: () => void refresh(),
                 }, t('retry')))
               : null,
+            h('div', { className: 'dsh-wb-taskFilters' },
+              h(WBField, { label: wb(t, 'project') }, h(WBProjectSelect, { t, state, all: true, value: projectFilter, onChange: setProjectFilter })),
+              ...[['inbox', 'inbox'], ['waiting', 'waiting'], ['archive', 'archived']].map(([value, label]) => h(WBButton, {
+                key: value, 'aria-pressed': scope === value, onClick: () => setScope(scope === value ? 'all' : value),
+              }, wb(t, label)))),
             h('div', { className: 'dsh-todos-toolbar' },
               h('div', { className: 'dsh-todos-scopeTabs', role: 'group', 'aria-label': t('scope.label') },
                 ...[
@@ -1175,6 +1250,12 @@
               ? h('div', { className: 'dsh-todos-loading', role: 'status' },
                 h('p', null, t('loading')),
                 ...[0, 1, 2].map((key) => h('div', { key, className: 'dsh-todos-skeleton', 'aria-hidden': true })))
+              : scope === 'archive'
+                ? h('div', { className: 'dsh-wb-archiveList' }, h('p', { className: 'dsh-wb-hint' }, wb(t, 'archiveHint')),
+                  visible.length ? visible.map((item) => h('div', { key: item.id, className: 'dsh-wb-archiveItem' },
+                    h('div', { className: 'dsh-wb-sectionHead' }, h('strong', null, item.title),
+                      h(WBButton, { disabled: busy, onClick: () => void mutate({ op: 'restore', id: item.id }) }, wb(t, 'restore'))),
+                    h('span', { className: 'dsh-wb-hint' }, wbProjectName(state, item.projectId, t), ' · ', wb(t, 'restoreHint')))) : h(WBEmpty, null, wb(t, 'noTasks')))
               : visible.length === 0
                 ? h('div', { className: 'dsh-todos-empty', role: 'status' },
                   h('span', { className: 'dsh-todos-emptyIcon' }, h(TodoIcon, { size: 32 })),

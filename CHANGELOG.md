@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.0.0 — 2026-11-10
+
+- Added projects, factual progress records, task dates/status/estimates, recoverable archives, and daily/weekly plans with immutable initial commitments.
+- Added scoped daily/weekly/monthly reports, private reviews, improvement tasks, editable Markdown, export, fact snapshots, and revision-safe restoration.
+- Added independent recurring drafts with explicit timezones, custom day/week intervals, monthly boundaries, preview, pause/snooze/skip, idempotency, bounded retries, and latest-period restart recovery. A Host-owned 30-second check generates local drafts without requiring a model or an open panel.
+- Added evidence-based capacity, Q2, overdue, postponement, blocker, and estimate-calibration guidance; focus sessions now persist task attribution and exclude pauses.
+- Migrated writes to a separate JSON v3 file while preserving the legacy file. Failed writes roll back; unreadable/future-schema data is not overwritten; history is never silently truncated at 500 tasks.
+- Preserved the original Today scene and task matrix, added five workbench sections, bilingual forms, narrow-screen support, and recoverable local document drafts.
+- Validation: 75 automated tests and 17 isolated browser workflow checks passed. See [acceptance evidence](docs/qa/2026-11-10-workbench-acceptance.md). Actual installation into the user's DSH profile was not performed.
+
 ## Unreleased
 
 - **Today add feedback** — successful additions send a composer pulse and give

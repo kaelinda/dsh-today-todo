@@ -8,6 +8,8 @@
 import { createTodoStore } from './lib/store.js';
 import { registerTodoRoutes } from './lib/routes.js';
 import { registerTodoTool } from './lib/tool.js';
+import { registerWorkbenchTools } from './lib/workbench-tools.js';
+import { createAutomation, projectWorkbench } from './lib/automation.js';
 
 export const name = 'dsh-todos';
 
@@ -23,6 +25,12 @@ export function apply(ctx, config = {}) {
   // A degradation in one half must stay visible instead of failing activation
   // silently: the panel API reports both states through GET .../state.
   const diagnostics = { api: 'pending', tool: 'pending' };
+  let automation;
+  ctx.effect(() => {
+    const runner = createAutomation(store);
+    automation = runner;
+    return () => runner.dispose();
+  }, 'dsh-todos: local draft automation');
 
   /**
    * Run one registration, recording its outcome instead of throwing.
@@ -49,14 +57,21 @@ export function apply(ctx, config = {}) {
   // without a Web server or without tools keeps the other half working.
   ctx.inject(['webServer'], (httpCtx) => {
     httpCtx.effect(
-      effectBody('api', () => registerTodoRoutes(httpCtx.webServer, store, diagnostics)),
+      effectBody('api', () => registerTodoRoutes(httpCtx.webServer, store, diagnostics,
+        (snapshot) => projectWorkbench(store, snapshot, automation))),
       'dsh-todos: panel api',
     );
   });
 
   ctx.inject(['tools'], (toolCtx) => {
     toolCtx.effect(
-      effectBody('tool', () => registerTodoTool(toolCtx.tools, store)),
+      effectBody('tool', () => {
+        const disposeTodo = registerTodoTool(toolCtx.tools, store);
+        try {
+          const disposeWorkbench = registerWorkbenchTools(toolCtx.tools, store);
+          return () => { disposeWorkbench(); disposeTodo(); };
+        } catch (error) { disposeTodo(); throw error; }
+      }),
       'dsh-todos: agent tool',
     );
   });

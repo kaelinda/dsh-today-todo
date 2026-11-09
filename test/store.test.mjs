@@ -1,235 +1,159 @@
-/**
- * Store unit tests.
- *
- * The store keeps the whole list in memory, so the interesting failures are
- * persistence, concurrency, and recovery. The filesystem seams on
- * `createTodoStore` exist exactly so those paths can be asserted without
- * mocking Node's fs module globally.
- */
+/** Storage durability, migration, lock ownership, and concurrent writers. */
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import {
-  mkdtempSync,
-  readdirSync,
-  readFileSync,
-  rmSync,
-  utimesSync,
-  writeFileSync,
-} from 'node:fs';
+import { mkdtempSync, readFileSync, readdirSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
-
-import { createTodoStore, localDateKey } from '../lib/store.js';
-
+import { createTodoStore, localDateKey, versionedDataFile } from '../lib/store.js';
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
-
-/** One temporary directory per test, removed even when an assertion fails. */
 async function withTempDir(run) {
   const dir = mkdtempSync(join(tmpdir(), 'dsh-todos-store-'));
-  try {
-    return await run(dir);
-  } finally {
-    rmSync(dir, { recursive: true, force: true });
-  }
+  try { return await run(dir); } finally { rmSync(dir, { recursive: true, force: true }); }
 }
+const quietStore = (options) => createTodoStore({ warn() {}, ...options });
 
-/** A store that does not write warnings to the test output. */
-function quietStore(options) {
-  return createTodoStore({ warn: () => {}, ...options });
-}
-
-test('store writes atomically and fsyncs the temp file and its directory', () => withTempDir((dir) => {
-  const file = join(dir, 'todos.json');
-  const synced = [];
-  const directories = [];
-  const store = quietStore({
-    file,
-    syncFile: (path) => synced.push(path),
-    syncDirectory: (path) => directories.push(path),
-  });
-
-  const outcome = store.apply({ op: 'add', title: 'Durable' });
-  assert.equal(outcome.ok, true);
+test('store atomically writes v3 and fsyncs the file and directory', () => withTempDir((dir) => {
+  const source = join(dir, 'todos.json');
+  const synced = [], directories = [];
+  const store = quietStore({ file: source, syncFile: (path) => synced.push(path), syncDirectory: (path) => directories.push(path) });
+  const result = store.apply({ op: 'add', title: 'Durable' });
+  assert.equal(result.ok, true);
   assert.equal(synced.length, 1);
   assert.match(synced[0], /\.tmp$/);
-  assert.deepEqual(directories, [dirname(file)]);
-
-  const document = JSON.parse(readFileSync(file, 'utf8'));
-  assert.equal(document.version, 2);
+  assert.deepEqual(directories, [dirname(source)]);
+  assert.equal(result.snapshot.file, versionedDataFile(source));
+  const document = JSON.parse(readFileSync(result.snapshot.file, 'utf8'));
+  assert.equal(document.version, 3);
   assert.equal(document.revision, 2);
   assert.equal(document.items[0].title, 'Durable');
+  assert.equal(document.events[0].taskId, document.items[0].id);
 }));
 
-test('corrupt document is moved aside, not overwritten', () => withTempDir((dir) => {
-  const file = join(dir, 'todos.json');
-  writeFileSync(file, '{ not json', 'utf8');
-  const warnings = [];
-  const store = createTodoStore({ file, warn: (message) => warnings.push(message) });
-
-  assert.deepEqual(store.snapshot().items, []);
-  assert.equal(warnings.some((message) => /corrupt todo document moved to/.test(message)), true);
-  const backups = readdirSync(dir).filter((name) => name.includes('.corrupt-'));
-  assert.equal(backups.length, 1);
-  assert.equal(readFileSync(join(dir, backups[0]), 'utf8'), '{ not json');
-
-  const outcome = store.apply({ op: 'add', title: 'Recovered' });
-  assert.equal(outcome.ok, true);
-  assert.equal(JSON.parse(readFileSync(file, 'utf8')).items[0].title, 'Recovered');
+test('legacy file stays byte-for-byte unchanged while migration is durable and repeatable', () => withTempDir((dir) => {
+  const source = join(dir, 'todos.json');
+  const raw = JSON.stringify({ version: 2, revision: 8, items: [{ id: 'legacy-1', title: 'Earlier work', done: true, createdAt: 100, updatedAt: 200, tags: ['work'], priority: 'P1', quadrant: 'q2' }] });
+  writeFileSync(source, raw);
+  const store = quietStore({ file: source });
+  assert.equal(store.snapshot().migration.itemCount, 1);
+  assert.equal(store.snapshot().items[0].completedAt, null);
+  assert.equal(store.snapshot().persisted, false);
+  const result = store.apply({ op: 'add', title: 'New work' });
+  assert.equal(result.ok, true);
+  assert.equal(readFileSync(source, 'utf8'), raw);
+  assert.equal(result.snapshot.revision, 9);
+  const reopened = quietStore({ file: source });
+  assert.equal(reopened.snapshot().items.length, 2);
+  assert.equal(reopened.document().events.filter((event) => event.type === 'imported').length, 1);
+  assert.equal(reopened.document().events.some((event) => event.taskId === 'legacy-1' && event.type === 'completed'), false);
 }));
 
-test('a document without an items array is treated as corrupt', () => withTempDir((dir) => {
-  const file = join(dir, 'todos.json');
-  writeFileSync(file, '{"version":2,"notes":"hand edited"}', 'utf8');
-  const warnings = [];
-  const store = createTodoStore({ file, warn: (message) => warnings.push(message) });
-  assert.deepEqual(store.snapshot().items, []);
-  assert.equal(readdirSync(dir).some((name) => name.includes('.corrupt-')), true);
-  assert.equal(warnings.some((message) => /no items array/.test(message)), true);
+test('corrupt, invalid, and future-schema documents remain untouched and block writes', () => withTempDir((dir) => {
+  for (const [index, raw] of ['{ not json', '{"version":2,"notes":"hand edited"}', '{"version":99,"items":[]}'].entries()) {
+    const source = join(dir, `todos-${index}.json`);
+    writeFileSync(source, raw);
+    const store = quietStore({ file: source });
+    assert.deepEqual(store.snapshot().items, []);
+    assert.equal(store.snapshot().writeBlocked, true);
+    assert.equal(store.apply({ op: 'add', title: 'Must not overwrite' }).ok, false);
+    assert.equal(readFileSync(source, 'utf8'), raw);
+    assert.equal(readdirSync(dir).includes(`todos-${index}.v3.json`), false);
+  }
 }));
 
-test('revision conflict returns the current snapshot and does not mutate', () => withTempDir((dir) => {
-  const file = join(dir, 'todos.json');
-  const store = quietStore({ file });
-  const added = store.apply({ op: 'add', title: 'first' });
+test('revision conflict returns the committed snapshot and does not touch disk', () => withTempDir((dir) => {
+  const store = quietStore({ file: join(dir, 'todos.json') });
+  store.apply({ op: 'add', title: 'first' });
+  const file = store.snapshot().file;
   const before = readFileSync(file, 'utf8');
-
   const stale = store.apply({ op: 'add', title: 'stale', baseRevision: 1 });
-  assert.equal(stale.ok, false);
   assert.equal(stale.code, 'todo_revision_conflict');
   assert.equal(stale.snapshot.revision, 2);
   assert.deepEqual(stale.snapshot.items.map((item) => item.title), ['first']);
-  assert.equal(readFileSync(file, 'utf8'), before, 'the stale write touched the file');
-
-  const fresh = store.apply({ op: 'add', title: 'fresh', baseRevision: 2 });
-  assert.equal(fresh.ok, true);
-  assert.equal(fresh.snapshot.revision, 3);
+  assert.equal(readFileSync(file, 'utf8'), before);
+  assert.equal(store.apply({ op: 'add', title: 'fresh', baseRevision: 2 }).snapshot.revision, 3);
 }));
 
-test('an external writer is preserved because a mutation re-reads under the lock', () => withTempDir((dir) => {
-  const file = join(dir, 'todos.json');
-  const first = quietStore({ file });
-  const added = first.apply({ op: 'add', title: 'from first' });
-  assert.equal(added.ok, true);
-
-  // Simulate a second process that wrote a new item and a newer revision
-  // without going through this store instance.
-  const document = JSON.parse(readFileSync(file, 'utf8'));
-  document.revision += 1;
-  document.items.unshift({
-    ...document.items[0],
-    id: 'todo-external',
-    title: 'from second process',
-    createdAt: Date.now() + 1,
-  });
-  writeFileSync(file, `${JSON.stringify(document, null, 2)}\n`, 'utf8');
-
-  const outcome = first.apply({
-    op: 'add',
-    title: 'from first again',
-    baseRevision: first.snapshot().revision,
-  });
-  assert.equal(outcome.ok, true);
-  assert.deepEqual(
-    outcome.snapshot.items.map((item) => item.title).sort(),
-    ['from first', 'from first again', 'from second process'],
-  );
+test('mutations reload under lock and snapshots see another writer', () => withTempDir((dir) => {
+  const source = join(dir, 'todos.json');
+  const first = quietStore({ file: source });
+  const second = quietStore({ file: source });
+  first.apply({ op: 'add', title: 'first' });
+  second.apply({ op: 'add', title: 'second' });
+  assert.deepEqual(first.snapshot().items.map((item) => item.title).sort(), ['first', 'second']);
+  first.apply({ op: 'add', title: 'third' });
+  assert.deepEqual(second.snapshot().items.map((item) => item.title).sort(), ['first', 'second', 'third']);
+  assert.equal(second.document().events.length, 3);
 }));
 
-test('snapshot picks up an external write made after the store loaded', () => withTempDir((dir) => {
-  const file = join(dir, 'todos.json');
-  const store = quietStore({ file });
-  store.apply({ op: 'add', title: 'initial' });
-
-  const document = JSON.parse(readFileSync(file, 'utf8'));
-  document.revision += 1;
-  document.items.unshift({ ...document.items[0], id: 'todo-other', title: 'written elsewhere' });
-  writeFileSync(file, `${JSON.stringify(document, null, 2)}\n`, 'utf8');
-
-  const snapshot = store.snapshot();
-  assert.equal(snapshot.revision, 3);
-  assert.deepEqual(snapshot.items.map((item) => item.title), ['written elsewhere', 'initial']);
+test('held locks report busy, stale dead locks recover, and live PID locks never expire', () => withTempDir((dir) => {
+  const source = join(dir, 'todos.json');
+  const lock = `${versionedDataFile(source)}.lock`;
+  writeFileSync(lock, 'unknown writer');
+  const busy = quietStore({ file: source, lockTimeoutMs: 30, lockStaleMs: 60000 });
+  assert.equal(busy.apply({ op: 'add', title: 'blocked' }).code, 'todo_busy');
+  const past = new Date(Date.now() - 60000);
+  utimesSync(lock, past, past);
+  const recovered = quietStore({ file: source, lockTimeoutMs: 100, lockStaleMs: 1000 });
+  assert.equal(recovered.apply({ op: 'add', title: 'recovered' }).ok, true);
+  writeFileSync(lock, `${process.pid} active-owner`);
+  utimesSync(lock, past, past);
+  const live = quietStore({ file: source, lockTimeoutMs: 30, lockStaleMs: 1000 });
+  assert.equal(live.apply({ op: 'add', title: 'cannot steal' }).code, 'todo_busy');
+  assert.match(readFileSync(lock, 'utf8'), /active-owner/);
 }));
 
-test('a held lock reports busy, and a stale lock is reclaimed', () => withTempDir((dir) => {
-  const file = join(dir, 'todos.json');
-  const lock = `${file}.lock`;
-  writeFileSync(lock, 'held by another process', 'utf8');
-
-  const busy = quietStore({ file, lockTimeoutMs: 30, lockStaleMs: 60_000 });
-  const outcome = busy.apply({ op: 'add', title: 'blocked' });
-  assert.equal(outcome.ok, false);
-  assert.equal(outcome.code, 'todo_busy');
-
-  // Age the lock past the stale threshold: a crashed writer must not wedge the
-  // store forever.
-  const longAgo = new Date(Date.now() - 60_000);
-  utimesSync(lock, longAgo, longAgo);
-  const recovered = quietStore({ file, lockTimeoutMs: 100, lockStaleMs: 1000 });
-  const added = recovered.apply({ op: 'add', title: 'after stale lock' });
-  assert.equal(added.ok, true);
-  assert.equal(added.snapshot.items[0].title, 'after stale lock');
-}));
-
-test('multiple processes adding concurrently keep every item', async () => withTempDir(async (dir) => {
-  const file = join(dir, 'todos.json');
-  const workers = 4;
-  const perWorker = 15;
-  const script = `
-    import { createTodoStore } from './lib/store.js';
-    const [file, worker, count] = process.argv.slice(1);
-    const store = createTodoStore({ file, warn() {} });
-    for (let i = 0; i < Number(count); i += 1) {
-      const outcome = store.apply({ op: 'add', title: worker + '-' + i });
-      if (!outcome.ok) {
-        console.error(outcome.code, outcome.message);
-        process.exit(1);
-      }
-    }
-  `;
+test('multiple processes preserve all concurrent tasks and corresponding events', async () => withTempDir(async (dir) => {
+  const source = join(dir, 'todos.json');
+  const workers = 4, count = 15;
+  const script = `import {createTodoStore} from './lib/store.js';
+    const [file,worker,count]=process.argv.slice(1); const store=createTodoStore({file,warn(){}});
+    for(let i=0;i<Number(count);i++){const result=store.apply({op:'add',title:worker+'-'+i});if(!result.ok){console.error(result);process.exit(1);}}`;
   await Promise.all(Array.from({ length: workers }, (_, index) => new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, ['--input-type=module', '-e', script, file, `w${index}`, String(perWorker)], {
-      cwd: ROOT,
-      stdio: ['ignore', 'ignore', 'pipe'],
-    });
+    const child = spawn(process.execPath, ['--input-type=module', '-e', script, source, `w${index}`, String(count)], { cwd: ROOT, stdio: ['ignore', 'ignore', 'pipe'] });
     let stderr = '';
-    child.stderr.setEncoding('utf8');
     child.stderr.on('data', (chunk) => { stderr += chunk; });
     child.on('error', reject);
-    child.on('exit', (code) => {
-      if (code === 0) resolve();
-      else reject(new Error(`worker ${index} exited ${code}: ${stderr}`));
-    });
+    child.on('exit', (code) => code === 0 ? resolve() : reject(new Error(stderr)));
   })));
-
-  const document = JSON.parse(readFileSync(file, 'utf8'));
-  assert.equal(document.items.length, workers * perWorker);
-  assert.equal(new Set(document.items.map((item) => item.title)).size, workers * perWorker);
-  assert.ok(document.revision >= workers * perWorker + 1);
+  const document = JSON.parse(readFileSync(versionedDataFile(source), 'utf8'));
+  assert.equal(document.items.length, workers * count);
+  assert.equal(document.events.length, workers * count);
+  assert.equal(new Set(document.items.map((item) => item.title)).size, workers * count);
 }));
 
-test('store without a file still works in memory', () => {
+test('memory-only store preserves Host today and does not touch a file', () => {
   const store = quietStore({ file: null });
-  const outcome = store.apply({ op: 'add', title: 'memory only', today: true });
-  assert.equal(outcome.ok, true);
-  assert.equal(outcome.snapshot.items[0].todayDate, localDateKey());
-  assert.equal(outcome.snapshot.file, null);
+  const result = store.apply({ op: 'add', title: 'memory', today: true });
+  assert.equal(result.ok, true);
+  assert.equal(result.snapshot.items[0].todayDate, localDateKey());
+  assert.equal(result.snapshot.file, null);
 });
 
-test('an unreadable document degrades to empty with a warning', () => withTempDir((dir) => {
-  const file = join(dir, 'todos.json');
-  const warnings = [];
-  const store = createTodoStore({
-    file,
-    readFile: () => {
-      const error = new Error('permission denied');
-      error.code = 'EACCES';
-      throw error;
-    },
-    warn: (message) => warnings.push(message),
-  });
-  assert.deepEqual(store.snapshot().items, []);
+test('write or fsync failure does not publish tasks, events, or a new revision', () => withTempDir((dir) => {
+  const source = join(dir, 'todos.json');
+  const baseline = quietStore({ file: source });
+  baseline.apply({ op: 'add', title: 'committed' });
+  const before = readFileSync(baseline.snapshot().file, 'utf8');
+  for (const failure of [
+    { writeFile: (path, ...args) => { if (typeof path === 'string' && path.endsWith('.tmp')) throw new Error('disk full'); return writeFileSync(path, ...args); } },
+    { syncFile: () => { throw new Error('fsync failed'); } },
+    { moveFile: () => { throw new Error('rename failed'); } },
+  ]) {
+    const store = quietStore({ file: source, ...failure });
+    const result = store.apply({ op: 'add', title: 'uncommitted' });
+    assert.equal(result.code, 'todo_persist_failed');
+    assert.equal(result.snapshot.revision, 2);
+    assert.deepEqual(result.snapshot.items.map((item) => item.title), ['committed']);
+    assert.equal(store.document().events.length, 1);
+    assert.equal(readFileSync(store.snapshot().file, 'utf8'), before);
+  }
+}));
+
+test('unreadable files report an error and do not permit mutations', () => withTempDir((dir) => {
+  const store = quietStore({ file: join(dir, 'todos.json'), readFile: () => { const error = new Error('permission denied'); error.code = 'EACCES'; throw error; } });
+  assert.equal(store.snapshot().writeBlocked, true);
   assert.match(store.snapshot().lastError, /permission denied/);
-  assert.equal(warnings.length, 1);
+  assert.equal(store.apply({ op: 'add', title: 'must fail' }).ok, false);
 }));
