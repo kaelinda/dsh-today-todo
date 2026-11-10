@@ -193,7 +193,40 @@
               if (result?.data?.document) onDocument(result.data.document); } }, wb(t, 'edit')) : null)))));
     }
 
-    function WorkbenchReview({ t, state, mutate, busy, seed, onDirty }) {
+    function WorkbenchActivity({ t, state, motion, onPickDay }) {
+      const grid = useMemo(() => sceneData('activityGrid', { logs: state.logs, focusSessions: state.focusSessions, items: state.items,
+        archivedItems: state.archivedItems, endDate: state.todayDate || localDateKey(), timezone: state.settings?.timezone }, null),
+      [state.revision, state.todayDate, state.settings?.timezone]);
+      const [cell, setCell] = useState(null);
+      const [day, setDay] = useState(null);
+      if (!grid) return null;
+      const locale = t('zen.locale') === 'en-US' ? 'en-US' : 'zh-CN';
+      const format = (date, options) => new Intl.DateTimeFormat(locale, { ...options, timeZone: 'UTC' }).format(new Date(`${date}T12:00:00Z`));
+      const weekday = (date) => format(date, { weekday: 'short' });
+      const summary = (entry) => wb(t, 'activitySummary', { focus: entry.focus, logs: entry.logs, done: entry.done });
+      const range = (entry, key) => wb(t, key, { day: weekday(entry.date), from: entry.fromHour, to: entry.fromHour + grid.hoursPerBucket });
+      const busiest = Math.max(1, ...grid.perDay.map((entry) => entry.value));
+      const readout = cell ? `${range(cell, 'activityCell')} · ${summary(cell)}`
+        : day !== null ? `${format(grid.perDay[day].date, { month: 'numeric', day: 'numeric', weekday: 'short' })} · ${summary(grid.perDay[day])}`
+          : grid.max === 0 ? wb(t, 'activityEmpty') : `${summary(grid.totals)} · ${range(grid.peak, 'activityPeak')}`;
+      return h('section', { className: 'dsh-wb-card dsh-wb-activityCard' },
+        h('h2', null, wb(t, 'activityTitle')),
+        h('p', { className: 'dsh-wb-hint' }, wb(t, 'activityHint')),
+        h(DataScene, { kind: 'createActivityTerrain', className: 'dsh-wb-terrain',
+          props: { grid, motion, highlightDay: day ?? cell?.day ?? null, onHover: setCell, onPickDay } }),
+        h('p', { className: 'dsh-wb-sceneReadout' }, readout),
+        h('div', { className: 'dsh-wb-dayRow' }, ...grid.perDay.map((entry) => h('button', {
+          key: entry.date, type: 'button',
+          className: cx('dsh-wb-dayButton dsh-todos-focusable', (day === entry.day || cell?.day === entry.day) && 'is-linked'),
+          'data-today': entry.date === state.todayDate ? '' : undefined,
+          onMouseEnter: () => setDay(entry.day), onMouseLeave: () => setDay(null), onFocus: () => setDay(entry.day), onBlur: () => setDay(null),
+          onClick: () => onPickDay(entry.date),
+        }, h('span', null, weekday(entry.date)), h('strong', null, String(Number(entry.date.slice(8)))),
+        h('span', { className: 'dsh-wb-dayLevel', style: { '--level': entry.value / busiest }, 'aria-hidden': true }),
+        h('span', { className: 'dsh-todos-srOnly' }, wb(t, 'dayPick', { day: format(entry.date, { month: 'long', day: 'numeric' }), summary: summary(entry) }))))));
+    }
+
+    function WorkbenchReview({ t, state, mutate, busy, motion, seed, onDirty }) {
       const [tab, setTab] = useState(seed?.routines ? 'routines' : seed?.type === 'review' ? 'reviews' : 'reports');
       const [kind, setKind] = useState(seed?.kind ?? 'weekly');
       const defaultWindow = wbDefaultWindow(seed?.kind ?? 'weekly', state.todayDate || localDateKey(), state.settings?.weekStartsOn ?? 1);
@@ -206,6 +239,18 @@
       const [message, setMessage] = useState(null);
       useEffect(() => { onDirty(editorDirty); return () => onDirty(false); }, [editorDirty]);
       const setDirty = (value) => { setEditorDirty(value); onDirty(value); };
+      const formRef = useRef(null);
+      const [flash, setFlash] = useState(0);
+      useEffect(() => {
+        if (!flash) return undefined;
+        const timer = setTimeout(() => setFlash(0), 900);
+        return () => clearTimeout(timer);
+      }, [flash]);
+      // Picking a day in the activity view drafts that single day.
+      const pickDay = (date) => {
+        setKind('daily'); setStartDate(date); setEndDate(date); setFlash((value) => value + 1);
+        formRef.current?.scrollIntoView({ block: 'nearest', behavior: motion ? 'smooth' : 'auto' });
+      };
       const selectDocument = async (record) => {
         if (editorDirty && record.id !== selectedDocument?.id) { setMessage(wb(t, 'confirmLeave')); return; }
         const result = await mutate({ op: 'document.get', id: record.id });
@@ -239,7 +284,8 @@
             'aria-pressed': tab === key, onClick: () => changeTab(key) }, wb(t, key)))),
         message ? h('p', { className: 'dsh-wb-warning', role: 'status' }, message) : null,
         tab === 'routines' ? h(WorkbenchRoutines, { t, state, mutate, busy, defaultProjects: projectIds, onDocument: (record) => { setSelectedDocument(record); setTab(record.type === 'review' ? 'reviews' : 'reports'); } }) : h(React.Fragment, null,
-          h('form', { className: 'dsh-wb-card dsh-wb-form', onSubmit: generate },
+          h(WorkbenchActivity, { t, state, motion, onPickDay: pickDay }),
+          h('form', { ref: formRef, key: `form-${flash > 0}`, className: cx('dsh-wb-card dsh-wb-form', flash > 0 && 'dsh-wb-flash'), onSubmit: generate },
             h('h2', null, wb(t, 'generate')),
             h('div', { className: 'dsh-wb-formGrid' },
               h(WBField, { label: wb(t, 'documentType') }, h('select', { className: 'dsh-todos-input', value: kind, onChange: (event) => {

@@ -25,7 +25,7 @@
 }
 .dsh-todos-page *, .dsh-todos-page *::before, .dsh-todos-page *::after { box-sizing:border-box; }
 .dsh-todos-page button, .dsh-todos-page input { font-family:inherit; }
-.dsh-todos-page button { touch-action:manipulation; transition:background .18s, color .18s, border-color .18s, opacity .18s, filter .18s; }
+.dsh-todos-page button { touch-action:manipulation; transition:background .18s, color .18s, border-color .18s, opacity .18s, filter .18s, transform .14s; }
 .dsh-todos-page button:disabled { cursor:default; opacity:.45; }
 .dsh-todos-page button:active:not(:disabled) { filter:brightness(.94); }
 .dsh-todos-page svg { flex-shrink:0; }

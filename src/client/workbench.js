@@ -57,6 +57,12 @@
         }).format(new Date(value));
       } catch { return String(value); }
     };
+    function wbRelative(at, t) {
+      if (!Number.isFinite(at)) return null;
+      const formatter = new Intl.RelativeTimeFormat(t('zen.locale') === 'en-US' ? 'en' : 'zh-CN', { numeric: 'auto' });
+      const days = Math.max(0, Math.floor((Date.now() - at) / 86_400_000));
+      return days < 30 ? formatter.format(-days, 'day') : formatter.format(-Math.floor(days / 30), 'month');
+    }
     const wbStorage = {
       get(key) { try { return localStorage.getItem(key); } catch { return null; } },
       set(key, value) { try { localStorage.setItem(key, value); } catch { /* Optional local recovery. */ } },
@@ -75,9 +81,39 @@
         hint ? h('span', { className: 'dsh-wb-hint' }, hint) : null);
     }
     function WBEmpty({ children }) { return h('p', { className: 'dsh-wb-empty' }, children); }
+    // The nav remounts between Today, Tasks and the workbench; remember where the
+    // pill last sat so it can still travel to the new view.
+    let wbNavLast = null;
     function WorkbenchNav({ t, active, onSelect, state }) {
       const pending = wbList(state.documents).filter((item) => item.status !== 'final').length;
-      return h('nav', { className: 'dsh-wb-nav', 'aria-label': wb(t, 'nav') },
+      const ref = useRef(null);
+      React.useLayoutEffect(() => {
+        const nav = ref.current;
+        const measure = () => {
+          const button = nav?.querySelector('[aria-current="page"]');
+          return button ? { x: button.offsetLeft, y: button.offsetTop, w: button.offsetWidth, h: button.offsetHeight } : null;
+        };
+        const place = (box, instant) => {
+          if (instant) nav.dataset.navInstant = ''; else delete nav.dataset.navInstant;
+          for (const [key, value] of Object.entries(box)) nav.style.setProperty(`--nav-${key}`, `${value}px`);
+        };
+        const next = measure();
+        if (!next) return undefined;
+        const fresh = !('navReady' in nav.dataset);
+        if (fresh && wbNavLast) { place(wbNavLast, true); void nav.offsetWidth; }
+        place(next, fresh && !wbNavLast);
+        nav.dataset.navReady = '';
+        wbNavLast = next;
+        const same = (a, b) => a && b && a.x === b.x && a.y === b.y && a.w === b.w && a.h === b.h;
+        const observer = new ResizeObserver(() => {
+          const box = measure();
+          if (box && !same(box, wbNavLast)) { place(box, true); wbNavLast = box; }
+        });
+        observer.observe(nav);
+        return () => observer.disconnect();
+      }, [active]);
+      return h('nav', { ref, className: 'dsh-wb-nav', 'aria-label': wb(t, 'nav') },
+        h('span', { className: 'dsh-wb-navIndicator', 'aria-hidden': true }),
         ...['today', 'tasks', 'projects', 'planning', 'review'].map((key) => h('button', {
           key, type: 'button', className: 'dsh-wb-navButton dsh-todos-focusable',
           'aria-current': active === key ? 'page' : undefined, onClick: () => onSelect(key),
@@ -177,7 +213,7 @@
           h(WorkbenchLogForm, { t, state, mutate, busy, taskId: item.id, projectId: item.projectId, compact: true })));
     }
 
-    function WorkbenchProjects({ t, state, mutate, busy, onProjectTasks, onProjectReview }) {
+    function WorkbenchProjects({ t, state, mutate, busy, motion, onProjectTasks, onProjectReview }) {
       const projects = wbList(state.projects);
       const [selected, setSelected] = useState('');
       const [editing, setEditing] = useState(null);
@@ -188,6 +224,19 @@
       const projectTasks = wbList(state.items).filter((item) => !selected || item.projectId === selected);
       const logs = wbList(state.logs).filter((log) => !selected || log.projectId === selected);
       const tags = [...new Set(wbList(state.items).flatMap((item) => item.tags ?? []))].sort();
+      const [linked, setLinked] = useState(null);
+      const orbit = useMemo(() => sceneData('projectOrbitLayout', { projects, items: state.items, logs: state.logs }, { nodes: [], totalOpen: 0 }),
+        [state.projects, state.items, state.logs]);
+      const nodes = new Map(orbit.nodes.map((node) => [node.id, node]));
+      const openBy = new Map();
+      for (const item of wbList(state.items)) if (item.projectId && !item.done && item.status !== 'cancelled') openBy.set(item.projectId, (openBy.get(item.projectId) ?? 0) + 1);
+      const projectMeta = (id) => {
+        const when = wbRelative(nodes.get(id)?.lastAt ?? NaN, t);
+        return wb(t, 'projectMeta', { open: openBy.get(id) ?? 0, when: when ? wb(t, 'activeWhen', { when }) : wb(t, 'noActivity') });
+      };
+      const pick = (id) => { setSelected(id); setAssigned(null); };
+      const linkProps = (id) => ({ onMouseEnter: () => setLinked(id), onMouseLeave: () => setLinked(null), onFocus: () => setLinked(id), onBlur: () => setLinked(null) });
+      const linkedNode = linked ? nodes.get(linked) : null;
       const begin = (project) => {
         setEditing(project?.id ?? 'new'); setDraft({ name: project?.name ?? '', goal: project?.goal ?? '', status: project?.status ?? 'active' });
       };
@@ -222,12 +271,20 @@
               onChange: (event) => setDraft({ ...draft, goal: event.target.value }) }))),
           h('div', { className: 'dsh-wb-actions' }, h(WBButton, { onClick: () => setEditing(null) }, wb(t, 'cancel')),
             h(WBButton, { type: 'submit', primary: true, disabled: busy || !draft.name.trim() }, wb(t, 'save')))) : null,
+        orbit.nodes.length ? h('section', { className: 'dsh-wb-card dsh-wb-orbitCard', 'aria-label': wb(t, 'orbitLabel') },
+          h(DataScene, { kind: 'createProjectOrbit', className: 'dsh-wb-orbit', props: {
+            layout: orbit, selectedId: selected, highlightId: linked, motion, onHover: setLinked, onSelect: pick } },
+            h('div', { className: 'dsh-wb-sceneTip', 'data-scene-tooltip': '', 'aria-hidden': true },
+              linkedNode ? [h('strong', { key: 'name' }, linkedNode.name), h('span', { key: 'meta' }, projectMeta(linkedNode.id))] : null)),
+          h('p', { className: 'dsh-wb-sceneLegend' }, wb(t, 'orbitLegend'))) : null,
         projects.length === 0 ? h(WBEmpty, null, wb(t, 'noProjects')) : h('div', { className: 'dsh-wb-projectGrid' },
           h('button', { type: 'button', className: 'dsh-wb-projectCard dsh-todos-focusable', 'aria-pressed': selected === '', onClick: () => setSelected('') },
             h('strong', null, wb(t, 'allProjects')), h('span', null, wb(t, 'selectedTasks', { count: state.items.length }))),
-          ...projects.map((project) => h('button', { key: project.id, type: 'button', className: 'dsh-wb-projectCard dsh-todos-focusable',
-            'aria-pressed': selected === project.id, onClick: () => { setSelected(project.id); setAssigned(null); } },
-            h('strong', null, project.name), h('span', null, project.goal || wb(t, project.status === 'archived' ? 'archived' : 'active'))))),
+          ...projects.map((project) => h('button', { key: project.id, type: 'button',
+            className: cx('dsh-wb-projectCard dsh-todos-focusable', linked === project.id && 'is-linked'),
+            'aria-pressed': selected === project.id, onClick: () => pick(project.id), ...linkProps(project.id) },
+            h('strong', null, project.name), h('span', null, project.goal || wb(t, project.status === 'archived' ? 'archived' : 'active')),
+            project.status === 'archived' ? null : h('small', { className: 'dsh-wb-projectMeta' }, projectMeta(project.id))))),
         selectedProject ? h('section', { className: 'dsh-wb-card' },
           h('div', { className: 'dsh-wb-sectionHead' }, h('h2', null, selectedProject.name), h(WBButton, { onClick: () => begin(selectedProject), disabled: busy }, wb(t, 'edit'))),
           h('p', { className: 'dsh-wb-prose' }, selectedProject.goal || wb(t, 'projectGoal')),
@@ -272,7 +329,7 @@
             h(WBButton, { type: 'submit', disabled: busy, primary: true }, wb(t, 'save')))));
     }
 
-    function WorkbenchPlanning({ t, state, mutate, busy }) {
+    function WorkbenchPlanning({ t, state, mutate, busy, motion }) {
       const [period, setPeriod] = useState('day');
       const [date, setDate] = useState(state.todayDate || localDateKey());
       const [title, setTitle] = useState('');
@@ -296,6 +353,13 @@
       const choices = state.items.filter((item) => (!item.done && item.status !== 'cancelled') || taskIds.includes(item.id));
       const stale = state.items.filter((item) => !item.done && item.status !== 'cancelled' && item.todayDate && item.todayDate < state.todayDate);
       const suggestions = Array.isArray(state.insights) ? state.insights : wbList(state.insights?.suggestions);
+      const [ringHover, setRingHover] = useState(null);
+      const ring = useMemo(() => sceneData('capacitySegments', { tasks: selected, capacityMinutes: capacity, bufferPercent: buffer }, null),
+        [taskIds.join(','), capacity, buffer, state.items]);
+      const percent = available > 0 ? Math.round((estimated / available) * 100) : 0;
+      const shownPlanned = useTweenedNumber(estimated, motion);
+      const shownPercent = useTweenedNumber(percent, motion);
+      const hovered = ring?.segments.find((segment) => segment.id === ringHover);
       const save = async (event) => {
         event.preventDefault();
         const result = await mutate({ op: 'plan.save', ...(existing ? { id: existing.id } : {}), period, date, title, taskIds,
@@ -316,13 +380,21 @@
                 value: buffer, onChange: (event) => { setBuffer(event.target.value); setDirty(true); setSaved(false); } })),
               h(WBField, { label: wb(t, 'planGoal'), wide: true }, h('textarea', { className: 'dsh-todos-input dsh-wb-textarea', rows: 3, maxLength: 8000,
                 placeholder: wb(t, 'planGoalHint'), value: title, onChange: (event) => { setTitle(event.target.value); setDirty(true); setSaved(false); } }))),
-            h('div', { className: cx('dsh-wb-capacity', estimated > available && 'dsh-wb-warning') },
-              h('strong', null, wb(t, 'planned', { value: estimated })), h('span', null, wb(t, 'usable', { value: available })),
-              unknown > 0 ? h('span', null, wb(t, 'unestimated', { count: unknown })) : null,
-              estimated > available ? h('p', { role: 'status' }, wb(t, 'overloaded')) : null),
+            h('div', { className: cx('dsh-wb-capacity dsh-wb-capacityRing', estimated > available && 'dsh-wb-warning') },
+              ring ? h(DataScene, { kind: 'createCapacityRing', className: 'dsh-wb-ring', props: { ring, motion, hoverId: ringHover, onHover: setRingHover } },
+                h('span', { className: 'dsh-wb-ringValue', 'aria-hidden': true }, `${shownPercent}%`)) : null,
+              h('div', { className: 'dsh-wb-capacityText' },
+                h('strong', null, wb(t, 'planned', { value: shownPlanned })), h('span', null, wb(t, 'usable', { value: available })),
+                unknown > 0 ? h('span', null, wb(t, 'unestimated', { count: unknown })) : null,
+                h('span', { className: 'dsh-todos-srOnly' }, wb(t, 'ringOf', { value: percent })),
+                // Always present so hovering never shifts the task list under the pointer.
+                ring ? h('span', { className: 'dsh-wb-ringReadout', 'aria-hidden': true }, hovered ? [hovered.title, ' · ', wb(t, 'minutes', { value: hovered.minutes }),
+                  hovered.zone === 'planned' ? null : ` · ${wb(t, `ringZone_${hovered.zone}`)}`] : '\u00a0') : null,
+                estimated > available ? h('p', { role: 'status' }, wb(t, 'overloaded')) : null)),
             h('fieldset', { className: 'dsh-wb-scope' }, h('legend', null, wb(t, 'chooseTasks')), h('p', { className: 'dsh-wb-hint' }, wb(t, 'selectHint')),
               choices.length === 0 ? h(WBEmpty, null, wb(t, 'noTasks')) : h('div', { className: 'dsh-wb-taskChoices' },
-                ...choices.map((item) => h('label', { key: item.id, className: 'dsh-wb-taskChoice' },
+                ...choices.map((item) => h('label', { key: item.id, className: cx('dsh-wb-taskChoice', ringHover === item.id && 'is-linked'),
+                  onMouseEnter: () => setRingHover(item.id), onMouseLeave: () => setRingHover(null) },
                   h('input', { type: 'checkbox', checked: taskIds.includes(item.id), onChange: (event) => {
                     setTaskIds(event.target.checked ? [...taskIds, item.id] : taskIds.filter((id) => id !== item.id)); setDirty(true); setSaved(false);
                   } }), h('span', null, item.title, h('small', null, wbProjectName(state, item.projectId, t), item.quadrant ? ` · ${item.quadrant.toUpperCase()}` : '')),

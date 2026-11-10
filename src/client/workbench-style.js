@@ -91,7 +91,69 @@
 .dsh-wb-archiveItem { padding:16px; border:1px solid var(--todo-border); border-radius:10px; background:var(--todo-surface); }
 .dsh-wb-taskFilters { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:14px 0; }
 .dsh-wb-taskFilters > label { flex:1 1 180px; max-width:320px; }
+/* Nav: one pill that travels to the current view. */
+.dsh-wb-nav { position:relative; }
+.dsh-wb-navButton { position:relative; z-index:1; }
+.dsh-wb-navIndicator { position:absolute; left:0; top:0; z-index:0; width:var(--nav-w,0); height:var(--nav-h,0); transform:translate(var(--nav-x,0),var(--nav-y,0)); border:1px solid var(--todo-border); border-radius:9px; background:var(--todo-tint); opacity:0; pointer-events:none; transition:transform .28s cubic-bezier(.2,.8,.2,1), width .28s cubic-bezier(.2,.8,.2,1), height .28s, opacity .18s; }
+.dsh-wb-nav[data-nav-ready] .dsh-wb-navIndicator { opacity:1; }
+.dsh-wb-nav[data-nav-instant] .dsh-wb-navIndicator { transition:none; }
+.dsh-wb-nav[data-nav-ready] .dsh-wb-navButton[aria-current=page] { background:transparent; border-color:transparent; }
+
+/* Data scenes: the canvas is decoration; HTML beside it carries the meaning. */
+.dsh-wb-scene { position:relative; overflow:hidden; }
+.dsh-wb-scene > canvas { position:absolute; inset:0; width:100% !important; height:100% !important; display:block; }
+.dsh-wb-scene[data-renderer=fallback] { display:none; }
+.dsh-wb-sceneLayer { position:absolute; inset:0; pointer-events:none; }
+.dsh-wb-card.dsh-wb-orbitCard { padding:0; overflow:hidden; }
+.dsh-wb-orbit { height:280px; touch-action:pan-y; cursor:grab; }
+.dsh-wb-orbit[data-hovering] { cursor:pointer; }
+.dsh-wb-orbit[data-dragging] { cursor:grabbing; }
+.dsh-wb-sceneTip { position:absolute; left:0; top:0; display:flex; flex-direction:column; gap:2px; max-width:220px; padding:8px 10px; border:1px solid var(--todo-border); border-radius:8px; background:var(--todo-bg); box-shadow:0 6px 18px rgb(0 0 0 / .10); font-size:12px; color:var(--todo-muted); opacity:0; transition:opacity .15s; will-change:transform; }
+.dsh-wb-sceneTip strong { color:var(--todo-text); font-size:13px; overflow-wrap:anywhere; }
+.dsh-wb-sceneTip[data-visible] { opacity:1; }
+.dsh-wb-sceneLegend { margin:0; padding:10px 18px 14px; border-top:1px solid var(--todo-border); font-size:12px; color:var(--todo-muted); }
+.dsh-wb-projectMeta { margin-top:auto; font-size:11px; color:var(--todo-muted); font-variant-numeric:tabular-nums; }
+.dsh-wb-projectCard.is-linked { border-color:var(--todo-accent); }
+.dsh-wb-capacityRing { flex-wrap:nowrap; align-items:center; gap:16px; }
+.dsh-wb-capacityText { display:flex; flex-wrap:wrap; align-items:baseline; gap:7px 16px; min-width:0; }
+.dsh-wb-ring { flex:none; width:112px; height:112px; }
+.dsh-wb-ringValue { position:absolute; inset:0; display:grid; place-items:center; font-size:15px; font-weight:600; color:var(--todo-text); font-variant-numeric:tabular-nums; }
+.dsh-wb-ringReadout { flex-basis:100%; min-width:0; color:var(--todo-text) !important; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.dsh-wb-taskChoice.is-linked { background:var(--todo-hover); }
+.dsh-wb-activityCard .dsh-wb-hint { margin:-8px 0 12px; font-size:12px; color:var(--todo-muted); }
+.dsh-wb-terrain { height:260px; margin:0 -8px; cursor:pointer; touch-action:pan-y; }
+.dsh-wb-sceneReadout { min-height:1.6em; margin:8px 0 12px; font-size:12px; color:var(--todo-muted); font-variant-numeric:tabular-nums; }
+.dsh-wb-dayRow { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:6px; }
+.dsh-wb-dayButton { position:relative; display:flex; flex-direction:column; align-items:center; gap:2px; min-height:56px; padding:8px 2px 10px; border:1px solid var(--todo-border); border-radius:9px; background:var(--todo-bg); color:var(--todo-muted); font:inherit; font-size:11px; cursor:pointer; overflow:hidden; }
+.dsh-wb-dayButton strong { color:var(--todo-text); font-size:15px; font-variant-numeric:tabular-nums; }
+.dsh-wb-dayButton[data-today] strong { color:var(--todo-accent-text); }
+.dsh-wb-dayButton:hover, .dsh-wb-dayButton.is-linked { border-color:var(--todo-accent); background:var(--todo-tint); }
+.dsh-wb-dayLevel { position:absolute; left:0; right:0; bottom:0; height:3px; background:var(--todo-accent); transform:scaleX(var(--level,0)); transform-origin:left; opacity:.7; }
+
+/* Motion: short, purposeful, and fully off under reduced motion. */
+@keyframes dsh-wb-rise { from { opacity:0; transform:translateY(8px); } }
+@keyframes dsh-wb-pop { 0% { opacity:0; transform:scale(.96); } 100% { opacity:1; transform:none; } }
+@keyframes dsh-wb-flash { 0% { box-shadow:0 0 0 0 color-mix(in srgb, var(--todo-accent) 35%, transparent); } 100% { box-shadow:0 0 0 10px transparent; } }
+.dsh-wb-stack > * { animation:dsh-wb-rise .32s cubic-bezier(.2,.8,.2,1) both; }
+.dsh-wb-stack > :nth-child(2) { animation-delay:.04s; }
+.dsh-wb-stack > :nth-child(3) { animation-delay:.08s; }
+.dsh-wb-stack > :nth-child(n+4) { animation-delay:.12s; }
+.dsh-wb-timeline > li, .dsh-wb-plainList > li { animation:dsh-wb-rise .26s cubic-bezier(.2,.8,.2,1) both; }
+.dsh-wb-disclosure[open] > :not(summary) { animation:dsh-wb-rise .22s cubic-bezier(.2,.8,.2,1) both; }
+.dsh-wb-actions [role=status], .dsh-wb-capacity [role=status] { animation:dsh-wb-pop .2s ease-out both; }
+.dsh-wb-flash { animation:dsh-wb-flash .8s ease-out; }
+.dsh-wb-projectCard, .dsh-wb-documentCard, .dsh-wb-dayButton { transition:transform .2s cubic-bezier(.2,.8,.2,1), box-shadow .2s, border-color .18s, background .18s; }
+@media (hover:hover) {
+  .dsh-wb-projectCard:hover:not(:disabled), .dsh-wb-projectCard.is-linked, .dsh-wb-documentCard:hover:not(:disabled) { transform:translateY(-2px); box-shadow:0 6px 16px -8px color-mix(in srgb, var(--todo-text) 30%, transparent); }
+}
+.dsh-todos-page .dsh-wb-projectCard:active:not(:disabled), .dsh-todos-page .dsh-wb-documentCard:active:not(:disabled) { transform:scale(.985); transition-duration:.08s; }
+.dsh-todos-page button:active:not(:disabled):not(.dsh-wb-projectCard):not(.dsh-wb-documentCard) { transform:scale(.97); }
 @container todos (max-width:600px) {
+  .dsh-wb-orbit { height:220px; }
+  .dsh-wb-terrain { height:200px; }
+  .dsh-wb-ring { width:96px; height:96px; }
+  .dsh-wb-dayRow { gap:4px; }
+  .dsh-wb-dayButton { min-height:52px; }
   .dsh-wb-nav { padding:8px 10px; gap:3px; justify-content:space-between; }
   .dsh-wb-navButton { flex:1; padding:8px 6px; gap:4px; font-size:12px; }
   .dsh-wb-count { font-size:10px; padding:0 3px; min-width:16px; }

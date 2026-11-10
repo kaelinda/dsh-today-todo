@@ -45,11 +45,11 @@ export function buildClient() {
   // The renderer and Three.js are embedded locally inside a lazy function. No
   // CDN, eval, script injection, extra Host endpoint, or runtime dependency.
   const scene = buildSync({
-    entryPoints: [join(SOURCE_DIR, 'focus-scene.js')],
+    entryPoints: [join(SOURCE_DIR, 'scenes.js')],
     bundle: true,
     write: false,
     format: 'iife',
-    globalName: 'DSHFocusScene',
+    globalName: 'DSHScenes',
     platform: 'browser',
     target: 'es2020',
     // Keep vendor shader literals on escaped lines, avoiding upstream GLSL
@@ -58,7 +58,7 @@ export function buildClient() {
     minify: true,
     legalComments: 'inline',
   }).outputFiles[0].text;
-  return expand(ENTRY).replace('// @bundle focus-scene', () => scene.trimEnd());
+  return expand(ENTRY).replace('// @bundle scenes', () => scene.trimEnd());
 }
 
 /**

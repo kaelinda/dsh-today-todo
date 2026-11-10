@@ -66,6 +66,13 @@
       'insight.wip': '同时进行中 {count} 项，建议先收敛到 1–3 项。',
       'insight.postponed': '“{title}”已改期 {times} 次，建议检查范围、依赖或估时。',
       'insight.blocker': '同一任务近四周记录 {times} 次阻塞，请核对是否存在共同原因。',
+      orbitLabel: '项目星图', orbitLegend: '星体越大待办越多，越亮最近越活跃。拖动可旋转，点击星体选择项目。',
+      projectMeta: '{open} 项待办 · {when}', activeWhen: '{when}有进展', noActivity: '暂无进展',
+      ringZone_buffer: '占用缓冲', ringZone_overflow: '超出容量', ringOf: '可安排时间的 {value}%',
+      activityTitle: '最近 7 天', activityHint: '按专注时长、进展记录和完成任务堆叠。点选日期，把下方草稿范围设为当天。',
+      activitySummary: '专注 {focus} 分钟 · 进展 {logs} 条 · 完成 {done} 项', activityPeak: '最活跃：{day} {from}–{to} 时',
+      activityCell: '{day} {from}–{to} 时', activityEmpty: '这 7 天还没有记录。专注、进展和完成的任务会在这里堆起来。',
+      dayPick: '{day}：{summary}。设为报告日期',
       'insight.calibration': '{samples} 个已完成任务的记录专注 / 估时中位数为 {ratio} 倍。记录可能不完整，仅作下次估时参考。',
     };
     const WORKBENCH_EN = {
@@ -136,6 +143,13 @@
       'insight.wip': '{count} tasks are in progress. Consider focusing on 1–3 at a time.',
       'insight.postponed': '“{title}” has been postponed {times} times. Recheck its scope, dependencies, or estimate.',
       'insight.blocker': 'The same task has {times} blocker records in the past four weeks. Check for a shared cause.',
+      orbitLabel: 'Project orbit', orbitLegend: 'Larger bodies hold more open tasks; brighter ones moved recently. Drag to turn, click a body to select it.',
+      projectMeta: '{open} open · {when}', activeWhen: 'active {when}', noActivity: 'No recent activity',
+      ringZone_buffer: 'uses buffer', ringZone_overflow: 'over capacity', ringOf: '{value}% of available time',
+      activityTitle: 'Last 7 days', activityHint: 'Stacked from focus time, progress notes and finished tasks. Pick a day to set the draft range below to it.',
+      activitySummary: '{focus} min focus · {logs} updates · {done} done', activityPeak: 'Busiest: {day} {from}:00–{to}:00',
+      activityCell: '{day} {from}:00–{to}:00', activityEmpty: 'Nothing recorded in these 7 days yet. Focus, updates and finished tasks will build up here.',
+      dayPick: '{day}: {summary}. Use as report date',
       'insight.calibration': 'Across {samples} completed tasks, recorded focus time was a median of {ratio} times the estimate. Records may be incomplete; use this only as a guide.',
     };
     Object.assign(zh, Object.fromEntries(Object.entries(WORKBENCH_ZH).map(([key, value]) => [`wb.${key}`, value])));
