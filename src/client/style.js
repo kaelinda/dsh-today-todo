@@ -10,6 +10,12 @@
   --todo-accent: var(--dsw-alias-state-business-primary, var(--dsw-alias-brand-primary));
   --todo-tint: color-mix(in srgb, var(--todo-accent) 7%, var(--todo-bg));
   --todo-accent-text: color-mix(in srgb, var(--todo-accent) 65%, var(--todo-text));
+  /* Filled accent surfaces carry inverted text. The Host's light accent alone
+     gives white labels only 4.2:1, so deepen it toward the text colour: this
+     lightens in dark themes and darkens in light ones, keeping >=4.5:1 both ways. */
+  --todo-accent-fill: color-mix(in srgb, var(--todo-accent) 85%, var(--todo-text));
+  --todo-accent-fill-hover: color-mix(in srgb, var(--todo-accent) 74%, var(--todo-text));
+  --todo-on-accent: var(--dsw-alias-label-primary-inverted, #fff);
   --todo-focus-color: var(--dsw-focus-ring-color, var(--todo-accent));
   --todo-focus-shadow: 0 0 0 3px color-mix(in srgb, var(--todo-focus-color) 18%, transparent);
   width:100%; min-width:0; height:100%; min-height:0; display:flex; overflow:hidden;
@@ -31,9 +37,7 @@
 [data-platform=darwin] .dsh-todos-content { padding-top:calc(48px + var(--dsh-frame-top-clearance,0px)); }
 .dsh-todos-heading { display:flex; align-items:center; justify-content:space-between; gap:24px; margin-bottom:28px; }
 .dsh-todos-headingCopy { min-width:0; }
-.dsh-todos-eyebrow { display:flex; align-items:center; gap:8px; margin:0 0 12px; color:var(--todo-muted); font-size:12px; font-weight:500; letter-spacing:.12em; }
 .dsh-todos-heading h1 { margin:0; font-size:30px; font-weight:650; line-height:1.3; letter-spacing:-.035em; }
-.dsh-todos-subtitle { margin:10px 0 0; color:var(--todo-muted); font-size:13px; }
 .dsh-todos-viewSwitch { flex:none; display:inline-flex; align-items:center; gap:4px; padding:4px; border:1px solid var(--todo-border); border-radius:12px; background:var(--todo-surface); }
 .dsh-todos-viewButton { display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:34px; padding:0 12px; border:1px solid transparent; border-radius:8px; background:transparent; color:var(--todo-muted); font-size:12px; cursor:pointer; white-space:nowrap; }
 .dsh-todos-viewButton:hover:where(:not(:disabled)) { color:var(--todo-text); background:var(--todo-hover); }
@@ -53,8 +57,8 @@
 .dsh-todos-addField:has(> .dsh-todos-addInput:focus) { border-color:var(--todo-focus-color); box-shadow:var(--todo-focus-shadow); }
 .dsh-todos-addInput { flex:1; min-width:0; padding:6px 0; border:none; background:transparent; color:var(--todo-text); font-size:14px; line-height:24px; outline:none; }
 .dsh-todos-addInput::placeholder, .dsh-todos-input::placeholder, .dsh-todos-tagInput::placeholder { color:var(--todo-muted); opacity:.85; }
-.dsh-todos-addButton { flex:none; display:flex; align-items:center; justify-content:center; gap:6px; min-height:40px; padding:0 14px; border:none; border-radius:8px; background:var(--todo-accent); color:var(--dsw-alias-label-primary-inverted,#fff); font-size:13px; font-weight:600; cursor:pointer; }
-.dsh-todos-addButton:hover:not(:disabled) { background:color-mix(in srgb,var(--todo-accent) 88%,var(--todo-text)); }
+.dsh-todos-addButton { flex:none; display:flex; align-items:center; justify-content:center; gap:6px; min-height:40px; padding:0 14px; border:none; border-radius:8px; background:var(--todo-accent-fill); color:var(--todo-on-accent); font-size:13px; font-weight:600; cursor:pointer; }
+.dsh-todos-addButton:hover:not(:disabled) { background:var(--todo-accent-fill-hover); }
 .dsh-todos-page .dsh-todos-addButton:disabled { opacity:1; background:var(--todo-hover); color:var(--todo-muted); }
 .dsh-todos-toolbar { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; padding-bottom:12px; border-bottom:1px solid var(--todo-border); }
 .dsh-todos-scopeTabs { display:flex; flex-wrap:wrap; align-items:center; gap:4px; }
@@ -65,7 +69,7 @@
 .dsh-todos-scopeTab[aria-pressed=true] .dsh-todos-scopeCount { background:color-mix(in srgb,var(--todo-accent) 12%,var(--todo-bg)); }
 .dsh-todos-filterButton { display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:34px; padding:0 10px; border:1px solid var(--todo-border); border-radius:8px; background:transparent; color:var(--todo-muted); font-size:12px; cursor:pointer; }
 .dsh-todos-filterButton:hover:where(:not(:disabled)), .dsh-todos-filterButtonOn { background:var(--todo-tint); color:var(--todo-accent-text); border-color:color-mix(in srgb,var(--todo-accent) 30%,var(--todo-border)); }
-.dsh-todos-filterBadge { min-width:18px; height:18px; padding:0 4px; border-radius:5px; background:var(--todo-accent); color:var(--dsw-alias-label-primary-inverted,#fff); font-size:12px; text-align:center; }
+.dsh-todos-filterBadge { min-width:18px; height:18px; padding:0 4px; border-radius:5px; background:var(--todo-accent-fill); color:var(--todo-on-accent); font-size:12px; text-align:center; }
 .dsh-todos-filterPanel { display:flex; flex-direction:column; gap:14px; margin-top:12px; padding:16px; border:1px solid var(--todo-border); border-radius:12px; background:var(--todo-surface); animation:dsh-todos-panel-in .18s ease; }
 .dsh-todos-filterRow, .dsh-todos-detailRow { display:flex; align-items:flex-start; gap:16px; }
 .dsh-todos-filterLabel, .dsh-todos-detailLabel { flex:0 0 56px; font-size:12px; line-height:32px; color:var(--todo-muted); }
@@ -90,7 +94,7 @@
 .dsh-todos-check, .dsh-todos-zenCheck { position:relative; flex:none; width:22px; height:22px; padding:0; display:inline-flex; align-items:center; justify-content:center; border:1.5px solid var(--dsw-alias-border-l2); border-radius:7px; background:var(--todo-bg); color:transparent; cursor:pointer; }
 .dsh-todos-check::before, .dsh-todos-zenCheck::before { content:''; position:absolute; inset:-11px; }
 .dsh-todos-check:hover:where(:not(:disabled)) { border-color:var(--todo-accent); }
-.dsh-todos-check[aria-checked=true] { color:var(--dsw-alias-label-primary-inverted,#fff); background:var(--todo-accent); border-color:var(--todo-accent); }
+.dsh-todos-check[aria-checked=true] { color:var(--todo-on-accent); background:var(--todo-accent-fill); border-color:var(--todo-accent-fill); }
 .dsh-todos-rowContent { flex:1; min-width:0; }
 .dsh-todos-rowTitle { display:block; max-width:100%; padding:0; border:0; border-radius:3px; background:transparent; color:var(--todo-text); font:inherit; font-size:14px; line-height:1.65; text-align:left; overflow-wrap:anywhere; cursor:pointer; }
 .dsh-todos-rowTitle:hover:where(:not(:disabled)) { color:var(--todo-accent-text); }
@@ -106,7 +110,7 @@
 .dsh-todos-todayMark { display:inline-flex; align-items:center; gap:4px; color:var(--todo-accent-text); font-size:12px; }
 .dsh-todos-todayMark svg { width:12px; height:12px; }
 .dsh-todos-staleDay { font-size:12px; }
-.dsh-todos-tagChip { max-width:100%; padding:1px 5px; border:0; border-radius:4px; background:var(--todo-surface); color:var(--todo-muted); font-size:12px; line-height:20px; overflow-wrap:anywhere; cursor:pointer; }
+.dsh-todos-tagChip { display:inline-flex; align-items:center; min-height:24px; max-width:100%; padding:1px 5px; border:0; border-radius:4px; background:var(--todo-surface); color:var(--todo-muted); font-size:12px; line-height:20px; overflow-wrap:anywhere; cursor:pointer; }
 .dsh-todos-tagChip:hover:where(:not(:disabled)), .dsh-todos-tagChip[aria-pressed=true] { background:var(--todo-tint); color:var(--todo-accent-text); }
 .dsh-todos-sessionLink { display:inline-flex; align-items:center; gap:3px; max-width:200px; min-width:0; padding:0; border:0; border-radius:4px; color:var(--todo-muted); background:transparent; font-size:12px; cursor:pointer; }
 .dsh-todos-sessionLink span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -405,7 +409,6 @@
   .dsh-todos-content { padding:24px 16px; }
   .dsh-todos-heading { align-items:flex-start; flex-direction:column; margin-bottom:20px; }
   .dsh-todos-heading h1 { font-size:27px; }
-  .dsh-todos-eyebrow { margin-bottom:8px; }
   .dsh-todos-viewSwitch { align-self:flex-start; }
   .dsh-todos-focusCard { gap:12px; padding:14px; margin-bottom:22px; }
   .dsh-todos-focusTime { display:none; }
@@ -441,6 +444,10 @@
   .dsh-todos-rowToggle, .dsh-todos-rowIcon, .dsh-todos-iconButton, .dsh-todos-tagRemove { min-width:44px; }
   .dsh-todos-rowMeta, .dsh-todos-optionRow, .dsh-todos-filterChips, .dsh-todos-tagEditRow { gap:8px; }
   .dsh-todos-tagChip { padding:4px 8px; }
+  .dsh-todos-page .dsh-wb-disclosure > summary { padding-block:12px; }
+  .dsh-todos-page .dsh-wb-checkLabel { min-height:44px; }
+  /* iOS Safari zooms the page into any focused field set below 16px. */
+  .dsh-todos-page :is(input, textarea, select):not([type=checkbox]) { font-size:16px; }
   .dsh-todos-zenActions { flex-direction:column; }
 }
 @media (prefers-reduced-motion:reduce) {

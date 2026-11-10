@@ -56,8 +56,6 @@ window.__ModuleLoader__.load({
     const zh = {
       panel: '工作台',
       'page.title': '任务',
-      'page.eyebrow': '我的工作台',
-      'page.subtitle': '理清待办，把时间留给重要的事。',
       'page.focus': '今日专注',
       'page.focusHint': '{count} 项待办 · 一次专注一件事',
       'add.hint': '记下一件事',
@@ -182,8 +180,6 @@ window.__ModuleLoader__.load({
     const en = {
       panel: 'Workbench',
       'page.title': 'Tasks',
-      'page.eyebrow': 'MY WORKSPACE',
-      'page.subtitle': 'A little clarity. More room for what matters.',
       'page.focus': 'Focus today',
       'page.focusHint': '{count} to do · One thing at a time',
       'add.hint': 'Make room for your next idea',
@@ -306,7 +302,6 @@ window.__ModuleLoader__.load({
     };
 
     const WORKBENCH_ZH = {
-      title: '个人工作台', subtitle: '安排工作，记录进展，把经验带入下一次行动。',
       nav: '工作台导航', today: '今天', tasks: '任务', projects: '项目', planning: '规划', review: '回顾',
       project: '项目标签', allProjects: '所有项目', unassigned: '未归属', projectName: '项目名称', projectGoal: '目标与完成标准',
       newProject: '新建项目', editProject: '编辑项目', noProjects: '先建立一个项目，为任务、报告和复盘确定范围。',
@@ -377,7 +372,6 @@ window.__ModuleLoader__.load({
       'insight.calibration': '{samples} 个已完成任务的记录专注 / 估时中位数为 {ratio} 倍。记录可能不完整，仅作下次估时参考。',
     };
     const WORKBENCH_EN = {
-      title: 'Personal workbench', subtitle: 'Plan your work, record progress, and carry learning into action.',
       nav: 'Workbench navigation', today: 'Today', tasks: 'Tasks', projects: 'Projects', planning: 'Planning', review: 'Reflect',
       project: 'Project', allProjects: 'All projects', unassigned: 'Unassigned', projectName: 'Project name', projectGoal: 'Goal and success criteria',
       newProject: 'New project', editProject: 'Edit project', noProjects: 'Create a project to connect tasks, reports, and reviews.',
@@ -747,6 +741,12 @@ window.__ModuleLoader__.load({
   --todo-accent: var(--dsw-alias-state-business-primary, var(--dsw-alias-brand-primary));
   --todo-tint: color-mix(in srgb, var(--todo-accent) 7%, var(--todo-bg));
   --todo-accent-text: color-mix(in srgb, var(--todo-accent) 65%, var(--todo-text));
+  /* Filled accent surfaces carry inverted text. The Host's light accent alone
+     gives white labels only 4.2:1, so deepen it toward the text colour: this
+     lightens in dark themes and darkens in light ones, keeping >=4.5:1 both ways. */
+  --todo-accent-fill: color-mix(in srgb, var(--todo-accent) 85%, var(--todo-text));
+  --todo-accent-fill-hover: color-mix(in srgb, var(--todo-accent) 74%, var(--todo-text));
+  --todo-on-accent: var(--dsw-alias-label-primary-inverted, #fff);
   --todo-focus-color: var(--dsw-focus-ring-color, var(--todo-accent));
   --todo-focus-shadow: 0 0 0 3px color-mix(in srgb, var(--todo-focus-color) 18%, transparent);
   width:100%; min-width:0; height:100%; min-height:0; display:flex; overflow:hidden;
@@ -768,9 +768,7 @@ window.__ModuleLoader__.load({
 [data-platform=darwin] .dsh-todos-content { padding-top:calc(48px + var(--dsh-frame-top-clearance,0px)); }
 .dsh-todos-heading { display:flex; align-items:center; justify-content:space-between; gap:24px; margin-bottom:28px; }
 .dsh-todos-headingCopy { min-width:0; }
-.dsh-todos-eyebrow { display:flex; align-items:center; gap:8px; margin:0 0 12px; color:var(--todo-muted); font-size:12px; font-weight:500; letter-spacing:.12em; }
 .dsh-todos-heading h1 { margin:0; font-size:30px; font-weight:650; line-height:1.3; letter-spacing:-.035em; }
-.dsh-todos-subtitle { margin:10px 0 0; color:var(--todo-muted); font-size:13px; }
 .dsh-todos-viewSwitch { flex:none; display:inline-flex; align-items:center; gap:4px; padding:4px; border:1px solid var(--todo-border); border-radius:12px; background:var(--todo-surface); }
 .dsh-todos-viewButton { display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:34px; padding:0 12px; border:1px solid transparent; border-radius:8px; background:transparent; color:var(--todo-muted); font-size:12px; cursor:pointer; white-space:nowrap; }
 .dsh-todos-viewButton:hover:where(:not(:disabled)) { color:var(--todo-text); background:var(--todo-hover); }
@@ -790,8 +788,8 @@ window.__ModuleLoader__.load({
 .dsh-todos-addField:has(> .dsh-todos-addInput:focus) { border-color:var(--todo-focus-color); box-shadow:var(--todo-focus-shadow); }
 .dsh-todos-addInput { flex:1; min-width:0; padding:6px 0; border:none; background:transparent; color:var(--todo-text); font-size:14px; line-height:24px; outline:none; }
 .dsh-todos-addInput::placeholder, .dsh-todos-input::placeholder, .dsh-todos-tagInput::placeholder { color:var(--todo-muted); opacity:.85; }
-.dsh-todos-addButton { flex:none; display:flex; align-items:center; justify-content:center; gap:6px; min-height:40px; padding:0 14px; border:none; border-radius:8px; background:var(--todo-accent); color:var(--dsw-alias-label-primary-inverted,#fff); font-size:13px; font-weight:600; cursor:pointer; }
-.dsh-todos-addButton:hover:not(:disabled) { background:color-mix(in srgb,var(--todo-accent) 88%,var(--todo-text)); }
+.dsh-todos-addButton { flex:none; display:flex; align-items:center; justify-content:center; gap:6px; min-height:40px; padding:0 14px; border:none; border-radius:8px; background:var(--todo-accent-fill); color:var(--todo-on-accent); font-size:13px; font-weight:600; cursor:pointer; }
+.dsh-todos-addButton:hover:not(:disabled) { background:var(--todo-accent-fill-hover); }
 .dsh-todos-page .dsh-todos-addButton:disabled { opacity:1; background:var(--todo-hover); color:var(--todo-muted); }
 .dsh-todos-toolbar { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; padding-bottom:12px; border-bottom:1px solid var(--todo-border); }
 .dsh-todos-scopeTabs { display:flex; flex-wrap:wrap; align-items:center; gap:4px; }
@@ -802,7 +800,7 @@ window.__ModuleLoader__.load({
 .dsh-todos-scopeTab[aria-pressed=true] .dsh-todos-scopeCount { background:color-mix(in srgb,var(--todo-accent) 12%,var(--todo-bg)); }
 .dsh-todos-filterButton { display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:34px; padding:0 10px; border:1px solid var(--todo-border); border-radius:8px; background:transparent; color:var(--todo-muted); font-size:12px; cursor:pointer; }
 .dsh-todos-filterButton:hover:where(:not(:disabled)), .dsh-todos-filterButtonOn { background:var(--todo-tint); color:var(--todo-accent-text); border-color:color-mix(in srgb,var(--todo-accent) 30%,var(--todo-border)); }
-.dsh-todos-filterBadge { min-width:18px; height:18px; padding:0 4px; border-radius:5px; background:var(--todo-accent); color:var(--dsw-alias-label-primary-inverted,#fff); font-size:12px; text-align:center; }
+.dsh-todos-filterBadge { min-width:18px; height:18px; padding:0 4px; border-radius:5px; background:var(--todo-accent-fill); color:var(--todo-on-accent); font-size:12px; text-align:center; }
 .dsh-todos-filterPanel { display:flex; flex-direction:column; gap:14px; margin-top:12px; padding:16px; border:1px solid var(--todo-border); border-radius:12px; background:var(--todo-surface); animation:dsh-todos-panel-in .18s ease; }
 .dsh-todos-filterRow, .dsh-todos-detailRow { display:flex; align-items:flex-start; gap:16px; }
 .dsh-todos-filterLabel, .dsh-todos-detailLabel { flex:0 0 56px; font-size:12px; line-height:32px; color:var(--todo-muted); }
@@ -827,7 +825,7 @@ window.__ModuleLoader__.load({
 .dsh-todos-check, .dsh-todos-zenCheck { position:relative; flex:none; width:22px; height:22px; padding:0; display:inline-flex; align-items:center; justify-content:center; border:1.5px solid var(--dsw-alias-border-l2); border-radius:7px; background:var(--todo-bg); color:transparent; cursor:pointer; }
 .dsh-todos-check::before, .dsh-todos-zenCheck::before { content:''; position:absolute; inset:-11px; }
 .dsh-todos-check:hover:where(:not(:disabled)) { border-color:var(--todo-accent); }
-.dsh-todos-check[aria-checked=true] { color:var(--dsw-alias-label-primary-inverted,#fff); background:var(--todo-accent); border-color:var(--todo-accent); }
+.dsh-todos-check[aria-checked=true] { color:var(--todo-on-accent); background:var(--todo-accent-fill); border-color:var(--todo-accent-fill); }
 .dsh-todos-rowContent { flex:1; min-width:0; }
 .dsh-todos-rowTitle { display:block; max-width:100%; padding:0; border:0; border-radius:3px; background:transparent; color:var(--todo-text); font:inherit; font-size:14px; line-height:1.65; text-align:left; overflow-wrap:anywhere; cursor:pointer; }
 .dsh-todos-rowTitle:hover:where(:not(:disabled)) { color:var(--todo-accent-text); }
@@ -843,7 +841,7 @@ window.__ModuleLoader__.load({
 .dsh-todos-todayMark { display:inline-flex; align-items:center; gap:4px; color:var(--todo-accent-text); font-size:12px; }
 .dsh-todos-todayMark svg { width:12px; height:12px; }
 .dsh-todos-staleDay { font-size:12px; }
-.dsh-todos-tagChip { max-width:100%; padding:1px 5px; border:0; border-radius:4px; background:var(--todo-surface); color:var(--todo-muted); font-size:12px; line-height:20px; overflow-wrap:anywhere; cursor:pointer; }
+.dsh-todos-tagChip { display:inline-flex; align-items:center; min-height:24px; max-width:100%; padding:1px 5px; border:0; border-radius:4px; background:var(--todo-surface); color:var(--todo-muted); font-size:12px; line-height:20px; overflow-wrap:anywhere; cursor:pointer; }
 .dsh-todos-tagChip:hover:where(:not(:disabled)), .dsh-todos-tagChip[aria-pressed=true] { background:var(--todo-tint); color:var(--todo-accent-text); }
 .dsh-todos-sessionLink { display:inline-flex; align-items:center; gap:3px; max-width:200px; min-width:0; padding:0; border:0; border-radius:4px; color:var(--todo-muted); background:transparent; font-size:12px; cursor:pointer; }
 .dsh-todos-sessionLink span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -1142,7 +1140,6 @@ window.__ModuleLoader__.load({
   .dsh-todos-content { padding:24px 16px; }
   .dsh-todos-heading { align-items:flex-start; flex-direction:column; margin-bottom:20px; }
   .dsh-todos-heading h1 { font-size:27px; }
-  .dsh-todos-eyebrow { margin-bottom:8px; }
   .dsh-todos-viewSwitch { align-self:flex-start; }
   .dsh-todos-focusCard { gap:12px; padding:14px; margin-bottom:22px; }
   .dsh-todos-focusTime { display:none; }
@@ -1178,6 +1175,10 @@ window.__ModuleLoader__.load({
   .dsh-todos-rowToggle, .dsh-todos-rowIcon, .dsh-todos-iconButton, .dsh-todos-tagRemove { min-width:44px; }
   .dsh-todos-rowMeta, .dsh-todos-optionRow, .dsh-todos-filterChips, .dsh-todos-tagEditRow { gap:8px; }
   .dsh-todos-tagChip { padding:4px 8px; }
+  .dsh-todos-page .dsh-wb-disclosure > summary { padding-block:12px; }
+  .dsh-todos-page .dsh-wb-checkLabel { min-height:44px; }
+  /* iOS Safari zooms the page into any focused field set below 16px. */
+  .dsh-todos-page :is(input, textarea, select):not([type=checkbox]) { font-size:16px; }
   .dsh-todos-zenActions { flex-direction:column; }
 }
 @media (prefers-reduced-motion:reduce) {
@@ -1194,12 +1195,11 @@ window.__ModuleLoader__.load({
 .dsh-wb-navButton[aria-current=page] { background:var(--todo-tint); border-color:var(--todo-border); color:var(--todo-accent-text); font-weight:600; }
 .dsh-wb-count { padding:0 5px; min-width:19px; border-radius:5px; background:var(--todo-surface); font-size:11px; font-variant-numeric:tabular-nums; }
 .dsh-wb-stack { display:flex; flex-direction:column; gap:20px; }
-.dsh-wb-stack h2 { margin:0; font-size:22px; line-height:1.4; font-weight:600; }
-.dsh-wb-stack h3 { margin:0 0 14px; font-size:16px; font-weight:600; line-height:1.5; }
-.dsh-wb-stack h4 { margin:0 0 10px; font-size:14px; font-weight:600; }
+.dsh-wb-stack h2 { margin:0 0 14px; font-size:16px; font-weight:600; line-height:1.5; }
+.dsh-wb-stack h3 { margin:0 0 10px; font-size:14px; font-weight:600; }
 .dsh-wb-card { min-width:0; padding:22px; border:1px solid var(--todo-border); border-radius:14px; background:var(--todo-surface); }
 .dsh-wb-sectionHead { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; }
-.dsh-wb-sectionHead :is(h2,h3,h4) { margin:0; }
+.dsh-wb-sectionHead :is(h2,h3) { margin:0; }
 .dsh-wb-form { display:flex; flex-direction:column; gap:16px; }
 .dsh-wb-formGrid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px 16px; }
 .dsh-wb-field { display:flex; flex-direction:column; align-items:stretch; gap:7px; min-width:0; }
@@ -1214,8 +1214,8 @@ window.__ModuleLoader__.load({
 .dsh-wb-actions { display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:8px; }
 .dsh-wb-button { display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:36px; padding:7px 13px; border:1px solid var(--todo-border); border-radius:8px; background:var(--todo-bg); color:var(--todo-text); font-size:12px; line-height:1.4; cursor:pointer; }
 .dsh-wb-button:hover:not(:disabled) { background:var(--todo-hover); border-color:var(--dsw-alias-border-l2); }
-.dsh-wb-primary { background:var(--todo-accent); border-color:var(--todo-accent); color:var(--dsw-alias-label-primary-inverted,#fff); font-weight:550; }
-.dsh-wb-primary:hover:not(:disabled) { background:var(--todo-accent); border-color:var(--todo-accent); filter:brightness(.94); }
+.dsh-wb-primary { background:var(--todo-accent-fill); border-color:var(--todo-accent-fill); color:var(--todo-on-accent); font-weight:550; }
+.dsh-wb-primary:hover:not(:disabled) { background:var(--todo-accent-fill-hover); border-color:var(--todo-accent-fill-hover); }
 .dsh-wb-empty { margin:0; padding:24px 4px; color:var(--todo-muted); font-size:13px; line-height:1.8; }
 .dsh-wb-projectGrid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(210px,100%),1fr)); gap:12px; }
 .dsh-wb-projectCard { display:flex; flex-direction:column; align-items:flex-start; gap:8px; min-width:0; min-height:100px; padding:18px; text-align:left; border:1px solid var(--todo-border); border-radius:12px; background:var(--todo-bg); color:var(--todo-text); font:inherit; cursor:pointer; }
@@ -1226,10 +1226,10 @@ window.__ModuleLoader__.load({
 .dsh-wb-prose { margin:8px 0 12px; white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.8; }
 .dsh-wb-inline { display:flex; align-items:center; flex-wrap:wrap; gap:10px; }
 .dsh-wb-inline > select { flex:1 1 190px; }
-.dsh-wb-disclosure { margin-top:16px; border-top:1px solid var(--todo-border); padding-top:14px; }
-.dsh-wb-disclosure > summary { width:fit-content; cursor:pointer; font-size:13px; color:var(--todo-accent-text); border-radius:4px; }
+.dsh-wb-disclosure { margin-top:16px; border-top:1px solid var(--todo-border); padding-top:8px; }
+.dsh-wb-disclosure > summary { padding-block:6px; width:fit-content; cursor:pointer; font-size:13px; color:var(--todo-accent-text); border-radius:4px; }
 .dsh-wb-disclosure > summary:focus-visible { outline:2px solid var(--todo-focus-color); outline-offset:4px; }
-.dsh-wb-disclosure[open] > summary { margin-bottom:16px; }
+.dsh-wb-disclosure[open] > summary { margin-bottom:10px; }
 .dsh-wb-card.dsh-wb-disclosure { margin:0; padding:20px; }
 .dsh-wb-timeline { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:0; }
 .dsh-wb-timeline > li { min-width:0; padding:14px 0; border-bottom:1px solid var(--todo-border); overflow-wrap:anywhere; }
@@ -1552,9 +1552,9 @@ window.__ModuleLoader__.load({
         setAssigned(count);
       };
       return h('div', { className: 'dsh-wb-stack' },
-        h('div', { className: 'dsh-wb-sectionHead' }, h('h2', null, wb(t, 'projects')), h(WBButton, { primary: true, onClick: () => begin(null), disabled: busy }, wb(t, 'newProject'))),
+        h('div', { className: 'dsh-wb-sectionHead' }, h(WBButton, { primary: true, onClick: () => begin(null), disabled: busy }, wb(t, 'newProject'))),
         editing ? h('form', { className: 'dsh-wb-card dsh-wb-form', onSubmit: save },
-          h('h3', null, wb(t, editing === 'new' ? 'newProject' : 'editProject')),
+          h('h2', null, wb(t, editing === 'new' ? 'newProject' : 'editProject')),
           h('div', { className: 'dsh-wb-formGrid' },
             h(WBField, { label: wb(t, 'projectName') }, h('input', { className: 'dsh-todos-input', value: draft.name, maxLength: 120, required: true,
               onChange: (event) => setDraft({ ...draft, name: event.target.value }) })),
@@ -1571,7 +1571,7 @@ window.__ModuleLoader__.load({
             'aria-pressed': selected === project.id, onClick: () => { setSelected(project.id); setAssigned(null); } },
             h('strong', null, project.name), h('span', null, project.goal || wb(t, project.status === 'archived' ? 'archived' : 'active'))))),
         selectedProject ? h('section', { className: 'dsh-wb-card' },
-          h('div', { className: 'dsh-wb-sectionHead' }, h('h3', null, selectedProject.name), h(WBButton, { onClick: () => begin(selectedProject), disabled: busy }, wb(t, 'edit'))),
+          h('div', { className: 'dsh-wb-sectionHead' }, h('h2', null, selectedProject.name), h(WBButton, { onClick: () => begin(selectedProject), disabled: busy }, wb(t, 'edit'))),
           h('p', { className: 'dsh-wb-prose' }, selectedProject.goal || wb(t, 'projectGoal')),
           h('div', { className: 'dsh-wb-actions' }, h(WBButton, { onClick: () => onProjectTasks(selected) }, wb(t, 'projectTasks')),
             h(WBButton, { onClick: () => onProjectReview(selected), primary: true }, wb(t, 'projectReports'))),
@@ -1581,15 +1581,15 @@ window.__ModuleLoader__.load({
               h('option', { value: '' }, wb(t, 'sourceTag')), ...tags.map((entry) => h('option', { key: entry, value: entry }, entry))),
               h(WBButton, { onClick: () => void assign(), disabled: busy || !tag }, wb(t, 'assignTag'))),
             assigned !== null ? h('p', { role: 'status' }, wb(t, 'tagAssigned', { count: assigned })) : null) : null) : null,
-        h('section', { className: 'dsh-wb-card' }, h('h3', null, wb(t, 'log')), h(WorkbenchLogForm, { t, state, mutate, busy, projectId: selected || null })),
-        h('section', { className: 'dsh-wb-card' }, h('div', { className: 'dsh-wb-sectionHead' }, h('h3', null, wb(t, 'records')), h('span', { className: 'dsh-wb-hint' }, wb(t, 'logsRecent'))),
+        h('section', { className: 'dsh-wb-card' }, h('h2', null, wb(t, 'log')), h(WorkbenchLogForm, { t, state, mutate, busy, projectId: selected || null })),
+        h('section', { className: 'dsh-wb-card' }, h('div', { className: 'dsh-wb-sectionHead' }, h('h2', null, wb(t, 'records')), h('span', { className: 'dsh-wb-hint' }, wb(t, 'logsRecent'))),
           logs.length === 0 ? h(WBEmpty, null, wb(t, 'noRecords')) : h('ul', { className: 'dsh-wb-timeline' },
             ...logs.slice(0, 40).map((log) => h('li', { key: log.id },
               h('div', { className: 'dsh-wb-meta' }, h('span', { className: 'dsh-wb-badge' }, wb(t, `log.${log.kind}`)), wbProjectName(state, log.projectId, t), wbFormatTime(log.at ?? log.createdAt, state, t)),
               h('p', { className: 'dsh-wb-prose' }, log.text), log.taskId ? h('span', { className: 'dsh-wb-hint' }, log.taskTitle || wbTaskName(state, log.taskId, t)) : null,
               log.url && /^https?:\/\//i.test(log.url) ? h('a', { href: log.url, target: '_blank', rel: 'noreferrer', className: 'dsh-wb-link' }, log.url) : null,
               log.minutes ? h('span', { className: 'dsh-wb-hint' }, wb(t, 'minutes', { value: log.minutes })) : null)))),
-        h('section', { className: 'dsh-wb-card' }, h('h3', null, wb(t, 'projectTasks')),
+        h('section', { className: 'dsh-wb-card' }, h('h2', null, wb(t, 'projectTasks')),
           projectTasks.length === 0 ? h(WBEmpty, null, wb(t, 'noTasks')) : h('ul', { className: 'dsh-wb-plainList' },
             ...projectTasks.slice(0, 30).map((item) => h('li', { key: item.id }, h('span', null, item.title), h('span', { className: 'dsh-wb-badge' }, wb(t, `status.${item.status ?? (item.done ? 'done' : 'todo')}`)))))));
     }
@@ -1645,7 +1645,7 @@ window.__ModuleLoader__.load({
         if (result) { setDirty(false); setSaved(true); }
       };
       return h('div', { className: 'dsh-wb-stack' },
-        h('section', { className: 'dsh-wb-card' }, h('div', { className: 'dsh-wb-sectionHead' }, h('h2', null, wb(t, 'planning')),
+        h('section', { className: 'dsh-wb-card' }, h('div', { className: 'dsh-wb-sectionHead' }, h('h2', null, wb(t, period === 'day' ? 'dailyPlan' : 'weeklyPlan')),
           h('div', { className: 'dsh-todos-viewSwitch' }, ...['day', 'week'].map((value) => h('button', { key: value, type: 'button', className: 'dsh-todos-viewButton dsh-todos-focusable',
             'aria-pressed': period === value, onClick: () => { setPeriod(value); setDirty(false); setSaved(false); } }, wb(t, value === 'day' ? 'dailyPlan' : 'weeklyPlan'))))),
           h('form', { className: 'dsh-wb-form', onSubmit: save },
@@ -1673,18 +1673,18 @@ window.__ModuleLoader__.load({
               wb(t, 'baselineCount', { count: (existing.baselineTaskIds ?? []).length }), ' — ', wb(t, 'planBaseline')) : null,
             h('div', { className: 'dsh-wb-actions' }, saved ? h('span', { role: 'status' }, wb(t, 'saved')) : null,
               h(WBButton, { type: 'submit', primary: true, disabled: busy || !date }, wb(t, existing?.committedAt ? 'updatePlan' : 'commitPlan'))))),
-        h('section', { className: 'dsh-wb-card' }, h('h3', null, wb(t, 'reschedule')),
+        h('section', { className: 'dsh-wb-card' }, h('h2', null, wb(t, 'reschedule')),
           stale.length ? h('ul', { className: 'dsh-wb-plainList' }, ...stale.slice(0, 20).map((item) => h('li', { key: item.id }, h('span', null, item.title),
             h(WBButton, { disabled: busy, onClick: () => void mutate({ op: 'update', id: item.id, today: true }) }, t('row.todayAdd'))))) : h(WBEmpty, null, wb(t, 'noReschedule'))),
-        h('section', { className: 'dsh-wb-card' }, h('h3', null, wb(t, 'suggestions')),
+        h('section', { className: 'dsh-wb-card' }, h('h2', null, wb(t, 'suggestions')),
           suggestions.length ? h('ul', { className: 'dsh-wb-timeline' }, ...suggestions.map((item, index) => h('li', { key: item.id ?? index },
             h('p', null, wbInsightText(t, item, state)),
             item.taskIds?.length ? h('small', null, item.taskIds.map((id) => wbTaskName(state, id, t)).join(' · ')) : null))) : h(WBEmpty, null, wb(t, 'noSuggestions'))),
-        h('section', { className: 'dsh-wb-card' }, h('h3', null, wb(t, 'planHistory')),
+        h('section', { className: 'dsh-wb-card' }, h('h2', null, wb(t, 'planHistory')),
           wbList(state.plans).length ? h('ul', { className: 'dsh-wb-plainList' }, ...wbList(state.plans).slice(0, 20).map((plan) => h('li', { key: plan.id },
             h('span', null, plan.date, ' · ', wb(t, plan.period === 'week' ? 'weeklyPlan' : 'dailyPlan'), h('small', null, plan.title)),
             h(WBButton, { onClick: () => { setPeriod(plan.period); setDate(plan.date); setDirty(false); } }, wb(t, 'edit'))))) : h(WBEmpty, null, wb(t, 'noPlan'))),
-        h('section', { className: 'dsh-wb-card' }, h('h3', null, wb(t, 'focusHistory')), h('p', { className: 'dsh-wb-hint' }, wb(t, 'focusHint')),
+        h('section', { className: 'dsh-wb-card' }, h('h2', null, wb(t, 'focusHistory')), h('p', { className: 'dsh-wb-hint' }, wb(t, 'focusHint')),
           wbList(state.focusSessions).length ? h('ul', { className: 'dsh-wb-plainList' }, ...wbList(state.focusSessions).slice(0, 20).map((session) => h('li', { key: session.id },
             h('span', null, session.taskTitle ?? wbTaskName(state, session.taskId, t), h('small', null, wbFormatTime(session.startedAt, state, t))),
             h('span', null, wb(t, 'minutes', { value: session.minutes ?? Math.round((session.durationMs ?? 0) / 60000) }))))) : h(WBEmpty, null, wb(t, 'noRecords'))),
@@ -1766,7 +1766,7 @@ window.__ModuleLoader__.load({
       };
       const recordStatus = record.status === 'final' ? 'final' : record.type === 'review' ? 'pendingReview' : 'draft';
       return h('section', { className: 'dsh-wb-card dsh-wb-editor' },
-        h('div', { className: 'dsh-wb-sectionHead' }, h('h3', null, record.title), h('span', { className: 'dsh-wb-badge' }, wb(t, recordStatus))),
+        h('div', { className: 'dsh-wb-sectionHead' }, h('h2', null, record.title), h('span', { className: 'dsh-wb-badge' }, wb(t, recordStatus))),
         h('p', { className: 'dsh-wb-hint' }, `${record.startDate} — ${wbDateShift(record.endDate, -1)} · ${record.timezone ?? state.settings?.timezone ?? ''}`),
         h('p', { className: 'dsh-wb-hint' }, wb(t, record.type === 'review' ? 'privateReview' : 'reportHint')),
         dirty && record.currentRevisionId !== sourceRevision ? h('p', { className: 'dsh-wb-warning', role: 'alert' }, wb(t, 'changedElsewhere')) : null,
@@ -1799,7 +1799,7 @@ window.__ModuleLoader__.load({
             ...wbList(facts.logs).map((log) => h('li', { key: log.id }, h('span', { className: 'dsh-wb-badge' }, wb(t, `log.${log.kind}`)), ' ', log.text,
               h('small', null, wbFormatTime(log.at, state, t)))),
             !facts.activityCount ? h('li', null, wb(t, 'noRecords')) : null) : h(WBEmpty, null, wb(t, 'noRecords'))),
-        record.type === 'review' ? h('div', { className: 'dsh-wb-actionSection' }, h('h4', null, wb(t, 'actions')),
+        record.type === 'review' ? h('div', { className: 'dsh-wb-actionSection' }, h('h3', null, wb(t, 'actions')),
           wbList(record.actions).length ? h('ul', { className: 'dsh-wb-plainList' }, ...record.actions.map((item) => h('li', { key: item.taskId },
             h('span', null, item.title, h('small', null, item.successCriteria || '', item.checkDate ? ` · ${item.checkDate}` : '')),
             h('span', { className: 'dsh-wb-badge' }, wb(t, `status.${state.items.find((task) => task.id === item.taskId)?.status ?? 'todo'}`))))) : null,
@@ -1827,7 +1827,7 @@ window.__ModuleLoader__.load({
       const locale = String(t('zen.locale')).startsWith('en') ? 'en-US' : 'zh-CN';
       const weekdayNames = Array.from({ length: 7 }, (_, index) => new Intl.DateTimeFormat(locale, { weekday: 'short', timeZone: 'UTC' }).format(new Date(Date.UTC(2026, 10, 8 + index))));
       return h('form', { className: 'dsh-wb-card dsh-wb-form', onSubmit: save },
-        h('h3', null, wb(t, routine ? 'editRoutine' : 'newRoutine')),
+        h('h2', null, wb(t, routine ? 'editRoutine' : 'newRoutine')),
         h('div', { className: 'dsh-wb-formGrid' },
           h(WBField, { label: wb(t, 'routineName'), wide: true }, h('input', { className: 'dsh-todos-input', value: fields.name, maxLength: 200, required: true, onChange: change('name') })),
           h(WBField, { label: wb(t, 'documentType') }, h('select', { className: 'dsh-todos-input', value: fields.kind, onChange: change('kind') },
@@ -1871,14 +1871,14 @@ window.__ModuleLoader__.load({
       const routines = wbList(state.routines);
       const runs = wbList(state.runs).filter((run) => !runFilter || run.routineId === runFilter);
       return h('div', { className: 'dsh-wb-stack' },
-        h('div', { className: 'dsh-wb-sectionHead' }, h('h3', null, wb(t, 'routines')), h(WBButton, { primary: true, onClick: () => setEditing({}), disabled: busy }, wb(t, 'newRoutine'))),
+        h('div', { className: 'dsh-wb-sectionHead' }, h('h2', null, wb(t, 'routines')), h(WBButton, { primary: true, onClick: () => setEditing({}), disabled: busy }, wb(t, 'newRoutine'))),
         h('p', { className: 'dsh-wb-hint' }, wb(t, 'automationHint')),
         state.automation?.errors?.length ? h('div', { className: 'dsh-wb-warning', role: 'status' },
           ...state.automation.errors.map((error, index) => h('p', { key: error.routineId ?? index }, routines.find((rule) => rule.id === error.routineId)?.name ?? '', ' · ', error.message))) : null,
         state.automation?.olderMissed?.length ? h('p', { className: 'dsh-wb-hint' }, wb(t, 'missedPeriods'), ' ', state.automation.olderMissed.reduce((sum, entry) => sum + Number(entry.count || 0), 0)) : null,
         editing ? h(WorkbenchRoutineForm, { key: editing.id ?? 'new', t, state, mutate, busy, routine: editing.id ? editing : null, defaultProjects, onClose: () => setEditing(null) }) : null,
         !routines.length ? h(WBEmpty, null, wb(t, 'noRoutines')) : routines.map((routine) => h('section', { key: routine.id, className: 'dsh-wb-card' },
-          h('div', { className: 'dsh-wb-sectionHead' }, h('h4', null, routine.name), h('span', { className: 'dsh-wb-badge' }, wb(t, routine.enabled ? 'enabled' : 'paused'))),
+          h('div', { className: 'dsh-wb-sectionHead' }, h('h3', null, routine.name), h('span', { className: 'dsh-wb-badge' }, wb(t, routine.enabled ? 'enabled' : 'paused'))),
           h('p', { className: 'dsh-wb-meta' }, wb(t, routine.kind === 'review' ? `${routine.reportKind}Review` : routine.reportKind), ' · ',
             routine.projectIds?.length ? routine.projectIds.map((id) => wbProjectName(state, id, t)).join(' / ') : wb(t, 'allProjects'), ' · ', routine.time, ' ', routine.timezone),
           wbList(routine.nextRuns).length ? h('p', { className: 'dsh-wb-hint' }, wb(t, 'nextRuns'), ' · ', wbList(routine.nextRuns).map((run) => wbFormatTime(run.scheduledAt, { settings: { timezone: routine.timezone } }, t)).join(' / ')) : null,
@@ -1892,7 +1892,7 @@ window.__ModuleLoader__.load({
             h('div', { className: 'dsh-wb-actions' },
               h(WBButton, { disabled: busy || !routine.enabled, onClick: () => void mutate({ op: 'routine.snooze', id: routine.id, minutes: 60 }) }, wb(t, 'snooze')),
               h(WBButton, { disabled: busy, onClick: () => void mutate({ op: 'routine.skip', id: routine.id }) }, wb(t, 'skipPeriod')))))),
-        h('section', { className: 'dsh-wb-card' }, h('h3', null, wb(t, 'runHistory')),
+        h('section', { className: 'dsh-wb-card' }, h('h2', null, wb(t, 'runHistory')),
           !runs.length ? h(WBEmpty, null, wb(t, 'noRuns')) : h('ul', { className: 'dsh-wb-timeline' }, ...runs.slice(0, 40).map((run) => h('li', { key: run.id },
             h('div', { className: 'dsh-wb-sectionHead' }, h('strong', null, routines.find((routine) => routine.id === run.routineId)?.name ?? run.name ?? wb(t, 'routines')),
               h('span', { className: 'dsh-wb-badge' }, wb(t, `run.${run.status}`))),
@@ -1952,7 +1952,7 @@ window.__ModuleLoader__.load({
         message ? h('p', { className: 'dsh-wb-warning', role: 'status' }, message) : null,
         tab === 'routines' ? h(WorkbenchRoutines, { t, state, mutate, busy, defaultProjects: projectIds, onDocument: (record) => { setSelectedDocument(record); setTab(record.type === 'review' ? 'reviews' : 'reports'); } }) : h(React.Fragment, null,
           h('form', { className: 'dsh-wb-card dsh-wb-form', onSubmit: generate },
-            h('h3', null, wb(t, 'generate')),
+            h('h2', null, wb(t, 'generate')),
             h('div', { className: 'dsh-wb-formGrid' },
               h(WBField, { label: wb(t, 'documentType') }, h('select', { className: 'dsh-todos-input', value: kind, onChange: (event) => {
                 const value = event.target.value; const range = wbDefaultWindow(value, state.todayDate || localDateKey(), state.settings?.weekStartsOn ?? 1);
@@ -3044,9 +3044,7 @@ window.__ModuleLoader__.load({
         return h('section', { className: 'dsh-todos-page dsh-wb-page', 'aria-label': wb(t, section), 'data-testid': `dsh-workbench-${section}` },
           h('style', null, STYLE + WORKBENCH_STYLE),
           h('div', { className: 'dsh-todos-pane' }, navigation, h('div', { className: 'dsh-todos-scroll' }, h('div', { className: 'dsh-todos-content' },
-            h('div', { className: 'dsh-todos-heading' }, h('div', { className: 'dsh-todos-headingCopy' },
-              h('p', { className: 'dsh-todos-eyebrow' }, h(TodoIcon, { size: 16 }), wb(t, 'title')),
-              h('h1', null, wb(t, section)), h('p', { className: 'dsh-todos-subtitle' }, wb(t, 'subtitle')))),
+            h('div', { className: 'dsh-todos-heading' }, h('div', { className: 'dsh-todos-headingCopy' }, h('h1', null, wb(t, section)))),
             notice ? h('p', { className: 'dsh-todos-notice dsh-todos-noticeError', role: 'alert' }, notice.text) : null,
             state.phase === 'error' ? h('p', { className: 'dsh-todos-notice dsh-todos-noticeError', role: 'alert' }, t('error.load', { message: state.error })) : null,
             section === 'projects' ? h(WorkbenchProjects, { t, state, mutate, busy,
@@ -3092,9 +3090,7 @@ window.__ModuleLoader__.load({
           h('div', { className: 'dsh-todos-content' },
             h('div', { className: 'dsh-todos-heading' },
               h('div', { className: 'dsh-todos-headingCopy' },
-                h('p', { className: 'dsh-todos-eyebrow' }, h(TodoIcon, { size: 16 }), t('page.eyebrow')),
-                h('h1', null, t('page.title')),
-                h('p', { className: 'dsh-todos-subtitle' }, t('page.subtitle'))),
+                h('h1', null, t('page.title'))),
               h('div', { className: 'dsh-todos-viewSwitch', role: 'group', 'aria-label': t('view.label') },
                 h('button', {
                   type: 'button',

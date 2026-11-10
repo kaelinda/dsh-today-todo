@@ -1,8 +1,6 @@
     const zh = {
       panel: '工作台',
       'page.title': '任务',
-      'page.eyebrow': '我的工作台',
-      'page.subtitle': '理清待办，把时间留给重要的事。',
       'page.focus': '今日专注',
       'page.focusHint': '{count} 项待办 · 一次专注一件事',
       'add.hint': '记下一件事',
@@ -127,8 +125,6 @@
     const en = {
       panel: 'Workbench',
       'page.title': 'Tasks',
-      'page.eyebrow': 'MY WORKSPACE',
-      'page.subtitle': 'A little clarity. More room for what matters.',
       'page.focus': 'Focus today',
       'page.focusHint': '{count} to do · One thing at a time',
       'add.hint': 'Make room for your next idea',

@@ -54,7 +54,7 @@
       };
       const recordStatus = record.status === 'final' ? 'final' : record.type === 'review' ? 'pendingReview' : 'draft';
       return h('section', { className: 'dsh-wb-card dsh-wb-editor' },
-        h('div', { className: 'dsh-wb-sectionHead' }, h('h3', null, record.title), h('span', { className: 'dsh-wb-badge' }, wb(t, recordStatus))),
+        h('div', { className: 'dsh-wb-sectionHead' }, h('h2', null, record.title), h('span', { className: 'dsh-wb-badge' }, wb(t, recordStatus))),
         h('p', { className: 'dsh-wb-hint' }, `${record.startDate} — ${wbDateShift(record.endDate, -1)} · ${record.timezone ?? state.settings?.timezone ?? ''}`),
         h('p', { className: 'dsh-wb-hint' }, wb(t, record.type === 'review' ? 'privateReview' : 'reportHint')),
         dirty && record.currentRevisionId !== sourceRevision ? h('p', { className: 'dsh-wb-warning', role: 'alert' }, wb(t, 'changedElsewhere')) : null,
@@ -87,7 +87,7 @@
             ...wbList(facts.logs).map((log) => h('li', { key: log.id }, h('span', { className: 'dsh-wb-badge' }, wb(t, `log.${log.kind}`)), ' ', log.text,
               h('small', null, wbFormatTime(log.at, state, t)))),
             !facts.activityCount ? h('li', null, wb(t, 'noRecords')) : null) : h(WBEmpty, null, wb(t, 'noRecords'))),
-        record.type === 'review' ? h('div', { className: 'dsh-wb-actionSection' }, h('h4', null, wb(t, 'actions')),
+        record.type === 'review' ? h('div', { className: 'dsh-wb-actionSection' }, h('h3', null, wb(t, 'actions')),
           wbList(record.actions).length ? h('ul', { className: 'dsh-wb-plainList' }, ...record.actions.map((item) => h('li', { key: item.taskId },
             h('span', null, item.title, h('small', null, item.successCriteria || '', item.checkDate ? ` · ${item.checkDate}` : '')),
             h('span', { className: 'dsh-wb-badge' }, wb(t, `status.${state.items.find((task) => task.id === item.taskId)?.status ?? 'todo'}`))))) : null,
@@ -115,7 +115,7 @@
       const locale = String(t('zen.locale')).startsWith('en') ? 'en-US' : 'zh-CN';
       const weekdayNames = Array.from({ length: 7 }, (_, index) => new Intl.DateTimeFormat(locale, { weekday: 'short', timeZone: 'UTC' }).format(new Date(Date.UTC(2026, 10, 8 + index))));
       return h('form', { className: 'dsh-wb-card dsh-wb-form', onSubmit: save },
-        h('h3', null, wb(t, routine ? 'editRoutine' : 'newRoutine')),
+        h('h2', null, wb(t, routine ? 'editRoutine' : 'newRoutine')),
         h('div', { className: 'dsh-wb-formGrid' },
           h(WBField, { label: wb(t, 'routineName'), wide: true }, h('input', { className: 'dsh-todos-input', value: fields.name, maxLength: 200, required: true, onChange: change('name') })),
           h(WBField, { label: wb(t, 'documentType') }, h('select', { className: 'dsh-todos-input', value: fields.kind, onChange: change('kind') },
@@ -159,14 +159,14 @@
       const routines = wbList(state.routines);
       const runs = wbList(state.runs).filter((run) => !runFilter || run.routineId === runFilter);
       return h('div', { className: 'dsh-wb-stack' },
-        h('div', { className: 'dsh-wb-sectionHead' }, h('h3', null, wb(t, 'routines')), h(WBButton, { primary: true, onClick: () => setEditing({}), disabled: busy }, wb(t, 'newRoutine'))),
+        h('div', { className: 'dsh-wb-sectionHead' }, h('h2', null, wb(t, 'routines')), h(WBButton, { primary: true, onClick: () => setEditing({}), disabled: busy }, wb(t, 'newRoutine'))),
         h('p', { className: 'dsh-wb-hint' }, wb(t, 'automationHint')),
         state.automation?.errors?.length ? h('div', { className: 'dsh-wb-warning', role: 'status' },
           ...state.automation.errors.map((error, index) => h('p', { key: error.routineId ?? index }, routines.find((rule) => rule.id === error.routineId)?.name ?? '', ' · ', error.message))) : null,
         state.automation?.olderMissed?.length ? h('p', { className: 'dsh-wb-hint' }, wb(t, 'missedPeriods'), ' ', state.automation.olderMissed.reduce((sum, entry) => sum + Number(entry.count || 0), 0)) : null,
         editing ? h(WorkbenchRoutineForm, { key: editing.id ?? 'new', t, state, mutate, busy, routine: editing.id ? editing : null, defaultProjects, onClose: () => setEditing(null) }) : null,
         !routines.length ? h(WBEmpty, null, wb(t, 'noRoutines')) : routines.map((routine) => h('section', { key: routine.id, className: 'dsh-wb-card' },
-          h('div', { className: 'dsh-wb-sectionHead' }, h('h4', null, routine.name), h('span', { className: 'dsh-wb-badge' }, wb(t, routine.enabled ? 'enabled' : 'paused'))),
+          h('div', { className: 'dsh-wb-sectionHead' }, h('h3', null, routine.name), h('span', { className: 'dsh-wb-badge' }, wb(t, routine.enabled ? 'enabled' : 'paused'))),
           h('p', { className: 'dsh-wb-meta' }, wb(t, routine.kind === 'review' ? `${routine.reportKind}Review` : routine.reportKind), ' · ',
             routine.projectIds?.length ? routine.projectIds.map((id) => wbProjectName(state, id, t)).join(' / ') : wb(t, 'allProjects'), ' · ', routine.time, ' ', routine.timezone),
           wbList(routine.nextRuns).length ? h('p', { className: 'dsh-wb-hint' }, wb(t, 'nextRuns'), ' · ', wbList(routine.nextRuns).map((run) => wbFormatTime(run.scheduledAt, { settings: { timezone: routine.timezone } }, t)).join(' / ')) : null,
@@ -180,7 +180,7 @@
             h('div', { className: 'dsh-wb-actions' },
               h(WBButton, { disabled: busy || !routine.enabled, onClick: () => void mutate({ op: 'routine.snooze', id: routine.id, minutes: 60 }) }, wb(t, 'snooze')),
               h(WBButton, { disabled: busy, onClick: () => void mutate({ op: 'routine.skip', id: routine.id }) }, wb(t, 'skipPeriod')))))),
-        h('section', { className: 'dsh-wb-card' }, h('h3', null, wb(t, 'runHistory')),
+        h('section', { className: 'dsh-wb-card' }, h('h2', null, wb(t, 'runHistory')),
           !runs.length ? h(WBEmpty, null, wb(t, 'noRuns')) : h('ul', { className: 'dsh-wb-timeline' }, ...runs.slice(0, 40).map((run) => h('li', { key: run.id },
             h('div', { className: 'dsh-wb-sectionHead' }, h('strong', null, routines.find((routine) => routine.id === run.routineId)?.name ?? run.name ?? wb(t, 'routines')),
               h('span', { className: 'dsh-wb-badge' }, wb(t, `run.${run.status}`))),
@@ -240,7 +240,7 @@
         message ? h('p', { className: 'dsh-wb-warning', role: 'status' }, message) : null,
         tab === 'routines' ? h(WorkbenchRoutines, { t, state, mutate, busy, defaultProjects: projectIds, onDocument: (record) => { setSelectedDocument(record); setTab(record.type === 'review' ? 'reviews' : 'reports'); } }) : h(React.Fragment, null,
           h('form', { className: 'dsh-wb-card dsh-wb-form', onSubmit: generate },
-            h('h3', null, wb(t, 'generate')),
+            h('h2', null, wb(t, 'generate')),
             h('div', { className: 'dsh-wb-formGrid' },
               h(WBField, { label: wb(t, 'documentType') }, h('select', { className: 'dsh-todos-input', value: kind, onChange: (event) => {
                 const value = event.target.value; const range = wbDefaultWindow(value, state.todayDate || localDateKey(), state.settings?.weekStartsOn ?? 1);

@@ -1,5 +1,4 @@
     const WORKBENCH_ZH = {
-      title: '个人工作台', subtitle: '安排工作，记录进展，把经验带入下一次行动。',
       nav: '工作台导航', today: '今天', tasks: '任务', projects: '项目', planning: '规划', review: '回顾',
       project: '项目标签', allProjects: '所有项目', unassigned: '未归属', projectName: '项目名称', projectGoal: '目标与完成标准',
       newProject: '新建项目', editProject: '编辑项目', noProjects: '先建立一个项目，为任务、报告和复盘确定范围。',
@@ -70,7 +69,6 @@
       'insight.calibration': '{samples} 个已完成任务的记录专注 / 估时中位数为 {ratio} 倍。记录可能不完整，仅作下次估时参考。',
     };
     const WORKBENCH_EN = {
-      title: 'Personal workbench', subtitle: 'Plan your work, record progress, and carry learning into action.',
       nav: 'Workbench navigation', today: 'Today', tasks: 'Tasks', projects: 'Projects', planning: 'Planning', review: 'Reflect',
       project: 'Project', allProjects: 'All projects', unassigned: 'Unassigned', projectName: 'Project name', projectGoal: 'Goal and success criteria',
       newProject: 'New project', editProject: 'Edit project', noProjects: 'Create a project to connect tasks, reports, and reviews.',
