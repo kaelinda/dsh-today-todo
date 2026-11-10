@@ -7,59 +7,59 @@ const DAY_MS = 86_400_000;
 const list = (value) => Array.isArray(value) ? value : [];
 const clamp01 = (value) => Math.min(1, Math.max(0, value));
 
-/** Orbit radii, innermost first; the most active projects ride closest to the core. */
-export const ORBIT_RADII = [2.15, 3.05, 3.95];
-/** ponytail: more than 12 bodies stop reading as individual projects; the cards still list all. */
-export const MAX_ORBIT_PROJECTS = 12;
+/** A project with open work and no progress for this many days counts as stalled. */
+export const STALL_DAYS = 7;
+const PRIORITY = { P0: 0, P1: 1, P2: 2, P3: 3 };
 
 /**
- * Place projects on orbits.
- * Size follows open work, brightness follows how recently anything happened.
- * @returns {{ nodes: object[], totalOpen: number }}
+ * What each project needs from you: progress, overdue work, how long since
+ * anything moved, and the next task to pick up. Sorted so projects needing
+ * attention come first; archived projects go last.
  */
-export function projectOrbitLayout({ projects, items, logs, now = Date.now() }) {
+export function projectHealth({ projects, items, logs, today, now = Date.now() }) {
   const lastActivity = new Map();
   const touch = (id, at) => {
     if (!id || !Number.isFinite(at)) return;
     if (!lastActivity.has(id) || lastActivity.get(id) < at) lastActivity.set(id, at);
   };
   for (const log of list(logs)) touch(log.projectId, log.at ?? log.createdAt);
-  for (const item of list(items)) touch(item.projectId, item.completedAt ?? item.updatedAt);
-  const open = new Map();
-  let totalOpen = 0;
+  const work = new Map();
   for (const item of list(items)) {
-    if (item.done || item.status === 'cancelled') continue;
-    totalOpen += 1;
-    if (item.projectId) open.set(item.projectId, (open.get(item.projectId) ?? 0) + 1);
+    if (!item.projectId || item.status === 'cancelled') continue;
+    if (item.done) touch(item.projectId, item.completedAt);
+    const entry = work.get(item.projectId) ?? { open: [], done: 0 };
+    if (item.done) entry.done += 1; else entry.open.push(item);
+    work.set(item.projectId, entry);
   }
-  const active = list(projects).filter((project) => project.status !== 'archived');
-  const ranked = active.map((project) => {
-    const at = lastActivity.get(project.id) ?? null;
-    // Full brightness inside two days, fading to a floor over two weeks.
-    const activity = at === null ? 0 : clamp01(1 - Math.max(0, now - at - 2 * DAY_MS) / (12 * DAY_MS));
-    return { id: project.id, name: project.name, open: open.get(project.id) ?? 0, lastAt: at, activity };
-  }).sort((a, b) => b.activity - a.activity || b.open - a.open || String(a.name).localeCompare(String(b.name)))
-    .slice(0, MAX_ORBIT_PROJECTS);
-  const perRing = ORBIT_RADII.map(() => []);
-  ranked.forEach((node, index) => perRing[index % ORBIT_RADII.length].push(node));
-  const nodes = [];
-  perRing.forEach((ring, ringIndex) => ring.forEach((node, slot) => {
-    nodes.push({
-      ...node,
-      ring: ringIndex,
-      radius: ORBIT_RADII[ringIndex],
-      // Spread bodies evenly per ring and stagger rings so they never stack.
-      phase: (slot / ring.length) * Math.PI * 2 + ringIndex * 0.9,
-      size: 0.55 + Math.min(1, Math.sqrt(node.open) / 4) * 0.75,
-    });
-  }));
-  return { nodes, totalOpen };
+  const overdue = (item) => Boolean(item.dueDate && today && item.dueDate < today);
+  // Overdue first, then the nearest due date, then today's picks, then priority.
+  const urgency = (a, b) => Number(overdue(b)) - Number(overdue(a))
+    || (a.dueDate || '9999') .localeCompare(b.dueDate || '9999')
+    || Number(b.todayDate === today) - Number(a.todayDate === today)
+    || (PRIORITY[a.priority] ?? 9) - (PRIORITY[b.priority] ?? 9)
+    || (a.createdAt ?? 0) - (b.createdAt ?? 0);
+  const never = Number.MAX_SAFE_INTEGER;
+  return list(projects).map((project) => {
+    const { open, done } = work.get(project.id) ?? { open: [], done: 0 };
+    const lastAt = lastActivity.get(project.id) ?? null;
+    const idleDays = lastAt === null ? null : Math.max(0, Math.floor((now - lastAt) / DAY_MS));
+    const archived = project.status === 'archived';
+    const next = [...open].sort(urgency)[0] ?? null;
+    return {
+      id: project.id, name: project.name, archived,
+      open: open.length, done, overdue: open.filter(overdue).length,
+      progress: open.length + done > 0 ? done / (open.length + done) : 0,
+      lastAt, idleDays,
+      stalled: !archived && open.length > 0 && (idleDays === null || idleDays >= STALL_DAYS),
+      next: next && { id: next.id, title: next.title, dueDate: next.dueDate ?? null, overdue: overdue(next) },
+    };
+  }).sort((a, b) => Number(a.archived) - Number(b.archived) || b.overdue - a.overdue || Number(b.stalled) - Number(a.stalled)
+    || (b.idleDays ?? never) - (a.idleDays ?? never) || b.open - a.open || String(a.name).localeCompare(String(b.name)));
 }
 
 /**
- * Split a capacity ring into one arc per selected task.
- * The ring spans the larger of capacity and planned work, so overload stays visible.
- * Fractions run 0..1 clockwise from the top.
+ * Split the capacity bar into one segment per selected task, in the order given.
+ * The bar spans the larger of capacity and planned work, so overload stays visible.
  */
 export function capacitySegments({ tasks, capacityMinutes, bufferPercent }) {
   const capacity = Math.max(0, Number(capacityMinutes) || 0);

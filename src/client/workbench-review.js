@@ -193,7 +193,8 @@
               if (result?.data?.document) onDocument(result.data.document); } }, wb(t, 'edit')) : null)))));
     }
 
-    function WorkbenchActivity({ t, state, motion, onPickDay }) {
+    /** Last seven days by time of day as a heatmap; the readout and day buttons carry the numbers. */
+    function WorkbenchActivity({ t, state, onPickDay }) {
       const grid = useMemo(() => sceneData('activityGrid', { logs: state.logs, focusSessions: state.focusSessions, items: state.items,
         archivedItems: state.archivedItems, endDate: state.todayDate || localDateKey(), timezone: state.settings?.timezone }, null),
       [state.revision, state.todayDate, state.settings?.timezone]);
@@ -209,11 +210,18 @@
       const readout = cell ? `${range(cell, 'activityCell')} · ${summary(cell)}`
         : day !== null ? `${format(grid.perDay[day].date, { month: 'numeric', day: 'numeric', weekday: 'short' })} · ${summary(grid.perDay[day])}`
           : grid.max === 0 ? wb(t, 'activityEmpty') : `${summary(grid.totals)} · ${range(grid.peak, 'activityPeak')}`;
+      const cellsByBucket = Array.from({ length: grid.buckets }, (_, bucket) => grid.cells.filter((entry) => entry.bucket === bucket));
       return h('section', { className: 'dsh-wb-card dsh-wb-activityCard' },
         h('h2', null, wb(t, 'activityTitle')),
         h('p', { className: 'dsh-wb-hint' }, wb(t, 'activityHint')),
-        h(DataScene, { kind: 'createActivityTerrain', className: 'dsh-wb-terrain',
-          props: { grid, motion, highlightDay: day ?? cell?.day ?? null, onHover: setCell, onPickDay } }),
+        h('div', { className: 'dsh-wb-heatmap', 'aria-hidden': true, onMouseLeave: () => setCell(null) },
+          ...cellsByBucket.flatMap((row, bucket) => [
+            h('span', { key: `h${bucket}`, className: 'dsh-wb-heatHour' }, bucket % 3 === 0 ? wb(t, 'hourMark', { hour: bucket * grid.hoursPerBucket }) : ''),
+            ...row.map((entry) => h('span', { key: `${entry.day}-${bucket}`,
+              className: cx('dsh-wb-heatCell', cell === entry && 'is-linked', (day ?? cell?.day) === entry.day && 'is-day'),
+              style: { '--level': grid.max > 0 ? entry.value / grid.max : 0 }, 'data-empty': entry.value === 0 ? '' : undefined,
+              onMouseEnter: () => setCell(entry), onClick: () => onPickDay(entry.date) })),
+          ])),
         h('p', { className: 'dsh-wb-sceneReadout' }, readout),
         h('div', { className: 'dsh-wb-dayRow' }, ...grid.perDay.map((entry) => h('button', {
           key: entry.date, type: 'button',
@@ -284,7 +292,7 @@
             'aria-pressed': tab === key, onClick: () => changeTab(key) }, wb(t, key)))),
         message ? h('p', { className: 'dsh-wb-warning', role: 'status' }, message) : null,
         tab === 'routines' ? h(WorkbenchRoutines, { t, state, mutate, busy, defaultProjects: projectIds, onDocument: (record) => { setSelectedDocument(record); setTab(record.type === 'review' ? 'reviews' : 'reports'); } }) : h(React.Fragment, null,
-          h(WorkbenchActivity, { t, state, motion, onPickDay: pickDay }),
+          h(WorkbenchActivity, { t, state, onPickDay: pickDay }),
           h('form', { ref: formRef, key: `form-${flash > 0}`, className: cx('dsh-wb-card dsh-wb-form', flash > 0 && 'dsh-wb-flash'), onSubmit: generate },
             h('h2', null, wb(t, 'generate')),
             h('div', { className: 'dsh-wb-formGrid' },

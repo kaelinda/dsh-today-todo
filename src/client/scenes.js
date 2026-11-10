@@ -1,4 +1,3 @@
-/** Bundle entry for every Three.js view; one lazily evaluated copy of Three.js. */
+/** Bundle entry: the focus scene (with one lazily evaluated copy of Three.js) and pure workbench data shaping. */
 export { createFocusScene } from './focus-scene.js';
-export { createProjectOrbit, createCapacityRing, createActivityTerrain } from './data-scenes.js';
-export { projectOrbitLayout, capacitySegments, activityGrid } from './scene-data.js';
+export { projectHealth, capacitySegments, activityGrid } from './scene-data.js';

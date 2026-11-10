@@ -57,12 +57,6 @@
         }).format(new Date(value));
       } catch { return String(value); }
     };
-    function wbRelative(at, t) {
-      if (!Number.isFinite(at)) return null;
-      const formatter = new Intl.RelativeTimeFormat(t('zen.locale') === 'en-US' ? 'en' : 'zh-CN', { numeric: 'auto' });
-      const days = Math.max(0, Math.floor((Date.now() - at) / 86_400_000));
-      return days < 30 ? formatter.format(-days, 'day') : formatter.format(-Math.floor(days / 30), 'month');
-    }
     const wbStorage = {
       get(key) { try { return localStorage.getItem(key); } catch { return null; } },
       set(key, value) { try { localStorage.setItem(key, value); } catch { /* Optional local recovery. */ } },
@@ -213,7 +207,29 @@
           h(WorkbenchLogForm, { t, state, mutate, busy, taskId: item.id, projectId: item.projectId, compact: true })));
     }
 
-    function WorkbenchProjects({ t, state, mutate, busy, motion, onProjectTasks, onProjectReview }) {
+    /** One project at a glance: how far along, what is late, how long it has been quiet, what to do next. */
+    function WBProjectCard({ t, project, health, pressed, onClick }) {
+      const archived = project.status === 'archived';
+      const total = health ? health.open + health.done : 0;
+      const idle = health?.idleDays;
+      const quiet = idle === null || idle === undefined ? wb(t, 'noActivity')
+        : idle === 0 ? wb(t, 'activeToday') : wb(t, 'idleDays', { days: idle });
+      return h('button', { type: 'button', className: cx('dsh-wb-projectCard dsh-todos-focusable', health?.stalled && 'is-stalled'), 'aria-pressed': pressed, onClick },
+        h('span', { className: 'dsh-wb-projectTitle' }, h('strong', null, project.name),
+          archived ? h('span', { className: 'dsh-wb-badge' }, wb(t, 'archived')) : null,
+          health?.overdue ? h('span', { className: 'dsh-wb-badge is-error' }, wb(t, 'overdueCount', { count: health.overdue })) : null,
+          health?.stalled ? h('span', { className: 'dsh-wb-badge is-warn' }, quiet) : null),
+        project.goal ? h('span', { className: 'dsh-wb-projectGoal' }, project.goal) : null,
+        health && total > 0 ? h('span', { className: 'dsh-wb-progress' },
+          h('span', { className: 'dsh-wb-progressTrack', 'aria-hidden': true }, h('span', { style: { width: `${Math.round(health.progress * 100)}%` } })),
+          h('span', { className: 'dsh-wb-progressText' }, wb(t, 'progressText', { done: health.done, total, percent: Math.round(health.progress * 100) }),
+            health.stalled || archived ? null : ` · ${quiet}`)) : null,
+        health && !archived ? h('small', { className: 'dsh-wb-projectMeta' },
+          health.next ? h('span', { className: cx(health.next.overdue && 'is-error') }, wb(t, 'nextTask'), health.next.title)
+            : [wb(t, 'noOpenTasks'), health.stalled ? null : ` · ${quiet}`]) : null);
+    }
+
+    function WorkbenchProjects({ t, state, mutate, busy, onProjectTasks, onProjectReview }) {
       const projects = wbList(state.projects);
       const [selected, setSelected] = useState('');
       const [editing, setEditing] = useState(null);
@@ -224,19 +240,13 @@
       const projectTasks = wbList(state.items).filter((item) => !selected || item.projectId === selected);
       const logs = wbList(state.logs).filter((log) => !selected || log.projectId === selected);
       const tags = [...new Set(wbList(state.items).flatMap((item) => item.tags ?? []))].sort();
-      const [linked, setLinked] = useState(null);
-      const orbit = useMemo(() => sceneData('projectOrbitLayout', { projects, items: state.items, logs: state.logs }, { nodes: [], totalOpen: 0 }),
-        [state.projects, state.items, state.logs]);
-      const nodes = new Map(orbit.nodes.map((node) => [node.id, node]));
-      const openBy = new Map();
-      for (const item of wbList(state.items)) if (item.projectId && !item.done && item.status !== 'cancelled') openBy.set(item.projectId, (openBy.get(item.projectId) ?? 0) + 1);
-      const projectMeta = (id) => {
-        const when = wbRelative(nodes.get(id)?.lastAt ?? NaN, t);
-        return wb(t, 'projectMeta', { open: openBy.get(id) ?? 0, when: when ? wb(t, 'activeWhen', { when }) : wb(t, 'noActivity') });
-      };
+      // Projects needing attention first: overdue, then stalled, then longest idle.
+      const health = useMemo(() => sceneData('projectHealth', { projects, items: state.items, logs: state.logs, today: state.todayDate }, null),
+        [state.projects, state.items, state.logs, state.todayDate]);
+      const byId = new Map(projects.map((project) => [project.id, project]));
+      const ordered = health ? health.map((entry) => byId.get(entry.id)).filter(Boolean) : projects;
+      const healthOf = new Map((health ?? []).map((entry) => [entry.id, entry]));
       const pick = (id) => { setSelected(id); setAssigned(null); };
-      const linkProps = (id) => ({ onMouseEnter: () => setLinked(id), onMouseLeave: () => setLinked(null), onFocus: () => setLinked(id), onBlur: () => setLinked(null) });
-      const linkedNode = linked ? nodes.get(linked) : null;
       const begin = (project) => {
         setEditing(project?.id ?? 'new'); setDraft({ name: project?.name ?? '', goal: project?.goal ?? '', status: project?.status ?? 'active' });
       };
@@ -271,20 +281,11 @@
               onChange: (event) => setDraft({ ...draft, goal: event.target.value }) }))),
           h('div', { className: 'dsh-wb-actions' }, h(WBButton, { onClick: () => setEditing(null) }, wb(t, 'cancel')),
             h(WBButton, { type: 'submit', primary: true, disabled: busy || !draft.name.trim() }, wb(t, 'save')))) : null,
-        orbit.nodes.length ? h('section', { className: 'dsh-wb-card dsh-wb-orbitCard', 'aria-label': wb(t, 'orbitLabel') },
-          h(DataScene, { kind: 'createProjectOrbit', className: 'dsh-wb-orbit', props: {
-            layout: orbit, selectedId: selected, highlightId: linked, motion, onHover: setLinked, onSelect: pick } },
-            h('div', { className: 'dsh-wb-sceneTip', 'data-scene-tooltip': '', 'aria-hidden': true },
-              linkedNode ? [h('strong', { key: 'name' }, linkedNode.name), h('span', { key: 'meta' }, projectMeta(linkedNode.id))] : null)),
-          h('p', { className: 'dsh-wb-sceneLegend' }, wb(t, 'orbitLegend'))) : null,
         projects.length === 0 ? h(WBEmpty, null, wb(t, 'noProjects')) : h('div', { className: 'dsh-wb-projectGrid' },
           h('button', { type: 'button', className: 'dsh-wb-projectCard dsh-todos-focusable', 'aria-pressed': selected === '', onClick: () => setSelected('') },
             h('strong', null, wb(t, 'allProjects')), h('span', null, wb(t, 'selectedTasks', { count: state.items.length }))),
-          ...projects.map((project) => h('button', { key: project.id, type: 'button',
-            className: cx('dsh-wb-projectCard dsh-todos-focusable', linked === project.id && 'is-linked'),
-            'aria-pressed': selected === project.id, onClick: () => pick(project.id), ...linkProps(project.id) },
-            h('strong', null, project.name), h('span', null, project.goal || wb(t, project.status === 'archived' ? 'archived' : 'active')),
-            project.status === 'archived' ? null : h('small', { className: 'dsh-wb-projectMeta' }, projectMeta(project.id))))),
+          ...ordered.map((project) => h(WBProjectCard, { key: project.id, t, project, health: healthOf.get(project.id), pressed: selected === project.id,
+            onClick: () => pick(project.id) }))),
         selectedProject ? h('section', { className: 'dsh-wb-card' },
           h('div', { className: 'dsh-wb-sectionHead' }, h('h2', null, selectedProject.name), h(WBButton, { onClick: () => begin(selectedProject), disabled: busy }, wb(t, 'edit'))),
           h('p', { className: 'dsh-wb-prose' }, selectedProject.goal || wb(t, 'projectGoal')),
@@ -353,13 +354,15 @@
       const choices = state.items.filter((item) => (!item.done && item.status !== 'cancelled') || taskIds.includes(item.id));
       const stale = state.items.filter((item) => !item.done && item.status !== 'cancelled' && item.todayDate && item.todayDate < state.todayDate);
       const suggestions = Array.isArray(state.insights) ? state.insights : wbList(state.insights?.suggestions);
-      const [ringHover, setRingHover] = useState(null);
-      const ring = useMemo(() => sceneData('capacitySegments', { tasks: selected, capacityMinutes: capacity, bufferPercent: buffer }, null),
-        [taskIds.join(','), capacity, buffer, state.items]);
-      const percent = available > 0 ? Math.round((estimated / available) * 100) : 0;
+      const [barHover, setBarHover] = useState(null);
+      // In the order you picked them, so the tasks added last are the ones flagged as over.
+      const bar = useMemo(() => sceneData('capacitySegments', { capacityMinutes: capacity, bufferPercent: buffer,
+        tasks: taskIds.map((id) => state.items.find((item) => item.id === id)).filter(Boolean) }, null),
+      [taskIds.join(','), capacity, buffer, state.items]);
+      const over = new Set((bar?.segments ?? []).filter((segment) => segment.zone !== 'planned').map((segment) => segment.id));
       const shownPlanned = useTweenedNumber(estimated, motion);
-      const shownPercent = useTweenedNumber(percent, motion);
-      const hovered = ring?.segments.find((segment) => segment.id === ringHover);
+      const hovered = bar?.segments.find((segment) => segment.id === barHover);
+      const dropOver = () => { setTaskIds(taskIds.filter((id) => !over.has(id))); setDirty(true); setSaved(false); };
       const save = async (event) => {
         event.preventDefault();
         const result = await mutate({ op: 'plan.save', ...(existing ? { id: existing.id } : {}), period, date, title, taskIds,
@@ -380,25 +383,33 @@
                 value: buffer, onChange: (event) => { setBuffer(event.target.value); setDirty(true); setSaved(false); } })),
               h(WBField, { label: wb(t, 'planGoal'), wide: true }, h('textarea', { className: 'dsh-todos-input dsh-wb-textarea', rows: 3, maxLength: 8000,
                 placeholder: wb(t, 'planGoalHint'), value: title, onChange: (event) => { setTitle(event.target.value); setDirty(true); setSaved(false); } }))),
-            h('div', { className: cx('dsh-wb-capacity dsh-wb-capacityRing', estimated > available && 'dsh-wb-warning') },
-              ring ? h(DataScene, { kind: 'createCapacityRing', className: 'dsh-wb-ring', props: { ring, motion, hoverId: ringHover, onHover: setRingHover } },
-                h('span', { className: 'dsh-wb-ringValue', 'aria-hidden': true }, `${shownPercent}%`)) : null,
-              h('div', { className: 'dsh-wb-capacityText' },
+            h('div', { className: cx('dsh-wb-capacity dsh-wb-capacityPlan', estimated > available && 'dsh-wb-warning') },
+              h('div', { className: 'dsh-wb-capacityHead' },
                 h('strong', null, wb(t, 'planned', { value: shownPlanned })), h('span', null, wb(t, 'usable', { value: available })),
-                unknown > 0 ? h('span', null, wb(t, 'unestimated', { count: unknown })) : null,
-                h('span', { className: 'dsh-todos-srOnly' }, wb(t, 'ringOf', { value: percent })),
-                // Always present so hovering never shifts the task list under the pointer.
-                ring ? h('span', { className: 'dsh-wb-ringReadout', 'aria-hidden': true }, hovered ? [hovered.title, ' · ', wb(t, 'minutes', { value: hovered.minutes }),
-                  hovered.zone === 'planned' ? null : ` · ${wb(t, `ringZone_${hovered.zone}`)}`] : '\u00a0') : null,
-                estimated > available ? h('p', { role: 'status' }, wb(t, 'overloaded')) : null)),
+                unknown > 0 ? h('span', null, wb(t, 'unestimated', { count: unknown })) : null),
+              bar ? h('div', { className: 'dsh-wb-bar', 'aria-hidden': true },
+                ...bar.segments.map((segment) => h('span', { key: segment.id,
+                  className: cx('dsh-wb-barSegment', `is-${segment.zone}`, barHover === segment.id && 'is-linked'),
+                  style: { left: `${segment.start * 100}%`, width: `${(segment.end - segment.start) * 100}%` },
+                  onMouseEnter: () => setBarHover(segment.id), onMouseLeave: () => setBarHover(null) })),
+                h('i', { className: 'dsh-wb-barMark', style: { left: `${bar.usableAt * 100}%` } }),
+                bar.capacityAt < 1 ? h('i', { className: 'dsh-wb-barMark is-capacity', style: { left: `${bar.capacityAt * 100}%` } }) : null) : null,
+              // Always present so hovering never shifts the task list under the pointer.
+              bar ? h('p', { className: 'dsh-wb-barReadout', 'aria-hidden': true }, hovered
+                ? [hovered.title, ' · ', wb(t, 'minutes', { value: hovered.minutes }), hovered.zone === 'planned' ? null : ` · ${wb(t, 'overTag')}`]
+                : wb(t, 'barLegend')) : null,
+              estimated > available ? h('div', { className: 'dsh-wb-overload' },
+                h('p', { role: 'status' }, wb(t, 'overloaded')),
+                over.size ? h(WBButton, { onClick: dropOver }, wb(t, 'dropOver', { count: over.size })) : null) : null),
             h('fieldset', { className: 'dsh-wb-scope' }, h('legend', null, wb(t, 'chooseTasks')), h('p', { className: 'dsh-wb-hint' }, wb(t, 'selectHint')),
               choices.length === 0 ? h(WBEmpty, null, wb(t, 'noTasks')) : h('div', { className: 'dsh-wb-taskChoices' },
-                ...choices.map((item) => h('label', { key: item.id, className: cx('dsh-wb-taskChoice', ringHover === item.id && 'is-linked'),
-                  onMouseEnter: () => setRingHover(item.id), onMouseLeave: () => setRingHover(null) },
+                ...choices.map((item) => h('label', { key: item.id, className: cx('dsh-wb-taskChoice', barHover === item.id && 'is-linked'),
+                  onMouseEnter: () => setBarHover(item.id), onMouseLeave: () => setBarHover(null) },
                   h('input', { type: 'checkbox', checked: taskIds.includes(item.id), onChange: (event) => {
                     setTaskIds(event.target.checked ? [...taskIds, item.id] : taskIds.filter((id) => id !== item.id)); setDirty(true); setSaved(false);
                   } }), h('span', null, item.title, h('small', null, wbProjectName(state, item.projectId, t), item.quadrant ? ` · ${item.quadrant.toUpperCase()}` : '')),
-                  h('span', { className: 'dsh-wb-hint' }, item.estimateMinutes == null ? wb(t, 'unknown') : wb(t, 'minutes', { value: item.estimateMinutes })))))),
+                  h('span', { className: 'dsh-wb-hint' }, over.has(item.id) ? h('span', { className: 'dsh-wb-badge is-warn' }, wb(t, 'overTag')) : null,
+                    item.estimateMinutes == null ? wb(t, 'unknown') : wb(t, 'minutes', { value: item.estimateMinutes })))))),
             existing?.committedAt ? h('p', { className: 'dsh-wb-hint' }, wb(t, 'confirmed'), ' · ', wbFormatTime(existing.committedAt, state, t), ' · ',
               wb(t, 'baselineCount', { count: (existing.baselineTaskIds ?? []).length }), ' — ', wb(t, 'planBaseline')) : null,
             h('div', { className: 'dsh-wb-actions' }, saved ? h('span', { role: 'status' }, wb(t, 'saved')) : null,

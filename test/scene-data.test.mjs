@@ -1,36 +1,33 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { activityGrid, capacitySegments, MAX_ORBIT_PROJECTS, ORBIT_RADII, projectOrbitLayout } from '../src/client/scene-data.js';
+import { activityGrid, capacitySegments, projectHealth, STALL_DAYS } from '../src/client/scene-data.js';
 
 const DAY = 86_400_000;
 const NOW = Date.UTC(2026, 10, 10, 4);
 
-test('orbit layout sizes by open work, lights by recency, and skips archived projects', () => {
-  const { nodes, totalOpen } = projectOrbitLayout({
-    now: NOW,
-    projects: [{ id: 'a', name: 'Alpha' }, { id: 'b', name: 'Beta' }, { id: 'z', name: 'Old', status: 'archived' }],
+test('project health surfaces overdue and stalled projects with their next task', () => {
+  const health = projectHealth({
+    now: NOW, today: '2026-11-10',
+    projects: [{ id: 'calm', name: 'Calm' }, { id: 'late', name: 'Late' }, { id: 'idle', name: 'Idle' }, { id: 'old', name: 'Old', status: 'archived' }],
     items: [
-      { id: 1, projectId: 'a' }, { id: 2, projectId: 'a' }, { id: 3, projectId: 'a', done: true, completedAt: NOW - 20 * DAY },
-      { id: 4, projectId: 'b', status: 'cancelled' }, { id: 5 },
+      { id: 1, projectId: 'calm', title: 'C1', priority: 'P2' }, { id: 2, projectId: 'calm', title: 'C0', priority: 'P0' },
+      { id: 3, projectId: 'calm', done: true, completedAt: NOW - DAY },
+      { id: 4, projectId: 'late', title: 'Soon', dueDate: '2026-11-12' }, { id: 5, projectId: 'late', title: 'Missed', dueDate: '2026-11-08' },
+      { id: 6, projectId: 'idle', title: 'Waiting' }, { id: 7, projectId: 'idle', status: 'cancelled' },
+      { id: 8, projectId: 'old', title: 'Ancient', dueDate: '2020-01-01' },
     ],
-    logs: [{ projectId: 'b', at: NOW - DAY }],
+    logs: [{ projectId: 'late', at: NOW - 2 * DAY }, { projectId: 'idle', at: NOW - (STALL_DAYS + 1) * DAY }],
   });
-  assert.equal(totalOpen, 3);
-  assert.deepEqual(nodes.map((node) => node.id), ['b', 'a'], 'recent activity rides the inner orbit first');
-  const [beta, alpha] = nodes;
-  assert.equal(beta.activity, 1);
-  assert.equal(alpha.open, 2);
-  assert.ok(alpha.size > beta.size, 'more open work draws a larger body');
-  assert.equal(beta.radius, ORBIT_RADII[0]);
-  assert.equal(alpha.radius, ORBIT_RADII[1]);
-});
-
-test('orbit layout caps visible bodies and spreads each ring evenly', () => {
-  const projects = Array.from({ length: 20 }, (_, index) => ({ id: `p${index}`, name: `P${String(index).padStart(2, '0')}` }));
-  const { nodes } = projectOrbitLayout({ projects, items: [], logs: [], now: NOW });
-  assert.equal(nodes.length, MAX_ORBIT_PROJECTS);
-  const inner = nodes.filter((node) => node.ring === 0).map((node) => node.phase);
-  assert.ok(Math.abs((inner[1] - inner[0]) - (Math.PI * 2) / inner.length) < 1e-9);
+  assert.deepEqual(health.map((entry) => entry.id), ['late', 'idle', 'calm', 'old'], 'overdue, then stalled, archived last');
+  const [late, idle, calm, old] = health;
+  assert.equal(late.overdue, 1);
+  assert.deepEqual(late.next, { id: 5, title: 'Missed', dueDate: '2026-11-08', overdue: true });
+  assert.equal(idle.stalled, true);
+  assert.equal(idle.idleDays, STALL_DAYS + 1);
+  assert.equal(calm.stalled, false);
+  assert.equal(calm.next.title, 'C0', 'priority breaks ties without due dates');
+  assert.equal(calm.progress, 1 / 3);
+  assert.equal(old.stalled, false, 'archived projects never nag');
 });
 
 test('capacity segments mark buffer and overflow and widen the ring past capacity', () => {

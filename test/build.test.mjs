@@ -34,6 +34,6 @@ test('the bundled vendor code remains valid JavaScript inside the Host factory',
   const artifact = readFileSync(ARTIFACT, 'utf8');
   assert.doesNotThrow(() => new Script(artifact));
   assert.match(artifact, /getSceneRuntime/);
-  for (const scene of ['createFocusScene', 'createProjectOrbit', 'createCapacityRing', 'createActivityTerrain']) assert.match(artifact, new RegExp(scene));
+  for (const scene of ['createFocusScene', 'projectHealth', 'activityGrid']) assert.match(artifact, new RegExp(scene));
   assert.match(readFileSync(join(ROOT, 'THIRD_PARTY_NOTICES.md'), 'utf8'), /three\.js authors/);
 });

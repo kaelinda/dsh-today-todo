@@ -1072,7 +1072,7 @@
             h('div', { className: 'dsh-todos-heading' }, h('div', { className: 'dsh-todos-headingCopy' }, h('h1', null, wb(t, section)))),
             notice ? h('p', { className: 'dsh-todos-notice dsh-todos-noticeError', role: 'alert' }, notice.text) : null,
             state.phase === 'error' ? h('p', { className: 'dsh-todos-notice dsh-todos-noticeError', role: 'alert' }, t('error.load', { message: state.error })) : null,
-            section === 'projects' ? h(WorkbenchProjects, { t, state, mutate, busy, motion: sceneMotion && !reducedMotion,
+            section === 'projects' ? h(WorkbenchProjects, { t, state, mutate, busy,
               onProjectTasks: (id) => { setProjectFilter(id); navigate('tasks'); },
               onProjectReview: (id) => navigate('review', { projectIds: [id], routines: true }) }) : null,
             section === 'planning' ? h(WorkbenchPlanning, { t, state, mutate, busy, motion: sceneMotion && !reducedMotion }) : null,
